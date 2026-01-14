@@ -4,7 +4,8 @@ import { StyleSheet, TouchableOpacity, View, Text, Dimensions, ScrollView, Press
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RotateCw } from 'lucide-react-native';
+import { RotateCw, Home } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Svg, { Polygon } from 'react-native-svg';
 
@@ -318,6 +319,12 @@ export default function CameraScreen() {
   const [paletteKey, setPaletteKey] = useState<ColorPaletteKey>('lightSpring');
   const cameraRef = useRef<CameraView>(null);
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+
+  function goHome() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/');
+  }
 
   if (!permission) {
     return (
@@ -394,7 +401,10 @@ export default function CameraScreen() {
 
         {/* Top controls */}
         <View style={[styles.topControls, { paddingTop: insets.top + 12 }]}>
-          <View>
+          <Pressable style={styles.homeButton} onPress={goHome}>
+            <Home size={24} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
+          <View style={styles.paletteLabelContainer}>
             <Text style={styles.paletteLabel}>{currentPalette.name}</Text>
             <Text style={styles.paletteDescription}>{currentPalette.description}</Text>
           </View>
@@ -517,8 +527,21 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  homeButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paletteLabelContainer: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 8,
   },
   paletteLabel: {
     fontSize: 20,
