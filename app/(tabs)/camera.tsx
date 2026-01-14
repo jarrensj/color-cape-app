@@ -1,12 +1,13 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useRef } from 'react';
-import { StyleSheet, TouchableOpacity, View, Text, Dimensions, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Text, Dimensions, ScrollView, Pressable, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RotateCw, Home } from 'lucide-react-native';
+import { RotateCw, Home, Download } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import * as MediaLibrary from 'expo-media-library';
 import Svg, { Polygon } from 'react-native-svg';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -326,6 +327,26 @@ export default function CameraScreen() {
     router.push('/');
   }
 
+  async function savePhoto() {
+    if (!photo) return;
+
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant permission to save photos to your gallery.');
+        return;
+      }
+
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await MediaLibrary.saveToLibraryAsync(photo);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert('Saved!', 'Photo saved to your gallery.');
+    } catch (error) {
+      console.error('Error saving photo:', error);
+      Alert.alert('Error', 'Failed to save photo.');
+    }
+  }
+
   if (!permission) {
     return (
       <View style={styles.container}>
@@ -386,6 +407,10 @@ export default function CameraScreen() {
         <View style={[styles.photoButtonContainer, { paddingBottom: insets.bottom + 20 }]}>
           <TouchableOpacity style={styles.retakeButton} onPress={retake}>
             <Text style={styles.retakeButtonText}>Retake</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.saveButton} onPress={savePhoto}>
+            <Download size={20} color="#000000" strokeWidth={2} />
+            <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -637,16 +662,35 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+    gap: 16,
   },
   retakeButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingVertical: 14,
-    paddingHorizontal: 32,
+    paddingHorizontal: 28,
     borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   retakeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  saveButton: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#000000',
