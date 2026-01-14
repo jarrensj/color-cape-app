@@ -8,6 +8,7 @@ import { RotateCw, Home, Download } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
+import { captureRef } from 'react-native-view-shot';
 import Svg, { Polygon } from 'react-native-svg';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -319,6 +320,7 @@ export default function CameraScreen() {
   const [photo, setPhoto] = useState<string | null>(null);
   const [paletteKey, setPaletteKey] = useState<ColorPaletteKey>('lightSpring');
   const cameraRef = useRef<CameraView>(null);
+  const viewShotRef = useRef<View>(null);
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -328,7 +330,7 @@ export default function CameraScreen() {
   }
 
   async function savePhoto() {
-    if (!photo) return;
+    if (!photo || !viewShotRef.current) return;
 
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -338,9 +340,16 @@ export default function CameraScreen() {
       }
 
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      await MediaLibrary.saveToLibraryAsync(photo);
+
+      // Capture the view with the overlay
+      const uri = await captureRef(viewShotRef, {
+        format: 'jpg',
+        quality: 1,
+      });
+
+      await MediaLibrary.saveToLibraryAsync(uri);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Saved!', 'Photo saved to your gallery.');
+      Alert.alert('Saved!', 'Photo with color overlay saved to your gallery.');
     } catch (error) {
       console.error('Error saving photo:', error);
       Alert.alert('Error', 'Failed to save photo.');
@@ -401,9 +410,11 @@ export default function CameraScreen() {
     return (
       <View style={styles.fullScreen}>
         <StatusBar style="light" />
-        <Image source={{ uri: photo }} style={styles.preview} contentFit="cover" />
-        {/* Keep the color cape overlay on the photo */}
-        <ColorCape colors={currentPalette.colors} />
+        {/* Capturable view with photo and overlay */}
+        <View ref={viewShotRef} style={styles.captureView} collapsable={false}>
+          <Image source={{ uri: photo }} style={styles.preview} contentFit="cover" />
+          <ColorCape colors={currentPalette.colors} />
+        </View>
         <View style={[styles.photoButtonContainer, { paddingBottom: insets.bottom + 20 }]}>
           <TouchableOpacity style={styles.retakeButton} onPress={retake}>
             <Text style={styles.retakeButtonText}>Retake</Text>
@@ -500,6 +511,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   preview: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  captureView: {
     ...StyleSheet.absoluteFillObject,
   },
   permissionContainer: {
