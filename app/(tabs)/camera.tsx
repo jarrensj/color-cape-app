@@ -263,6 +263,16 @@ const colorPalettes = {
       { name: 'Deep Blue', hex: '#00008B' },
     ],
   },
+  lightBlues: {
+    name: 'Light Blues',
+    description: 'Soft and serene',
+    colors: [
+      { name: 'Ice Blue', hex: '#E0F7FA' },
+      { name: 'Powder Blue', hex: '#B0E0E6' },
+      { name: 'Sky Blue', hex: '#87CEEB' },
+      { name: 'Light Steel Blue', hex: '#B0C4DE' },
+    ],
+  },
 };
 
 type ColorPaletteKey = keyof typeof colorPalettes;
