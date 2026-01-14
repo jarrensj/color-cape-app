@@ -382,9 +382,10 @@ export default function TestScreen() {
       if (phase === 'undertone') {
         setStep('intro');
       } else {
-        // Go back to undertone compare
+        // Can't go back to undertone compare (photos cleared), restart test
+        setStep('intro');
         setPhase('undertone');
-        setStep('compare');
+        setUndertone(null);
       }
     } else if (step === 'capture2') {
       setStep('capture1');
@@ -393,9 +394,11 @@ export default function TestScreen() {
       setStep('capture2');
       setPhoto2(null);
     } else if (step === 'result') {
-      setPhase('intensity');
-      setStep('compare');
+      // Go back to intensity capture1, not compare (photos cleared)
+      setStep('capture1');
       setIntensity(null);
+      setPhoto1(null);
+      setPhoto2(null);
     }
   };
 
