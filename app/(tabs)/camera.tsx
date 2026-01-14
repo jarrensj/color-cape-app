@@ -279,15 +279,25 @@ type ColorPaletteKey = keyof typeof colorPalettes;
 
 // Component to create the draping cape with vertical color strips
 function ColorCape({ colors }: { colors: { name: string; hex: string }[] }) {
+  const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string } | null>(null);
   const centerX = screenWidth / 2;
   const centerY = screenHeight * 0.50;
   const neckRadius = 120;
-  const capeRadius = Math.max(screenWidth, screenHeight) * 2; // Made longer
+  const capeRadius = Math.max(screenWidth, screenHeight) * 2;
   const segmentCount = colors.length;
   const anglePerSegment = Math.PI / segmentCount;
 
+  const handleLongPress = (color: { name: string; hex: string }) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSelectedColor(color);
+  };
+
+  const handlePressOut = () => {
+    setSelectedColor(null);
+  };
+
   return (
-    <View style={styles.capeContainer} pointerEvents="none">
+    <View style={styles.capeContainer} pointerEvents="box-none">
       <Svg
         width={screenWidth}
         height={screenHeight}
@@ -316,10 +326,22 @@ function ColorCape({ colors }: { colors: { name: string; hex: string }[] }) {
               opacity={0.85}
               stroke="#FFFFFF"
               strokeWidth={2}
+              onLongPress={() => handleLongPress(color)}
+              onPressOut={handlePressOut}
+              delayLongPress={300}
             />
           );
         })}
       </Svg>
+
+      {/* Color info tooltip */}
+      {selectedColor && (
+        <View style={styles.colorTooltip}>
+          <View style={[styles.colorSwatch, { backgroundColor: selectedColor.hex }]} />
+          <Text style={styles.colorName}>{selectedColor.name}</Text>
+          <Text style={styles.colorHex}>{selectedColor.hex}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -567,7 +589,37 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    pointerEvents: 'none',
+  },
+  colorTooltip: {
+    position: 'absolute',
+    top: screenHeight * 0.35,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    minWidth: 150,
+  },
+  colorSwatch: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    marginBottom: 12,
+  },
+  colorName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  colorHex: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#CCCCCC',
+    fontFamily: 'monospace',
   },
   topControls: {
     position: 'absolute',
