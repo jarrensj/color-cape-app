@@ -1,6 +1,6 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useRef } from 'react';
-import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -425,17 +425,35 @@ export default function TestScreen() {
   const selectOption = (option: 'left' | 'right') => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    if (phase === 'undertone') {
-      setUndertone(option === 'left' ? 'cool' : 'warm');
-      // Move to intensity phase
-      setPhase('intensity');
-      setStep('capture1');
-      setPhoto1(null);
-      setPhoto2(null);
-    } else {
-      setIntensity(option === 'left' ? 'bright' : 'muted');
-      setStep('result');
-    }
+    const labels = getLabels();
+    const selectedLabel = option === 'left' ? labels.left : labels.right;
+
+    Alert.alert(
+      'Confirm Selection',
+      `You selected "${selectedLabel}". Continue?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Continue',
+          onPress: () => {
+            if (phase === 'undertone') {
+              setUndertone(option === 'left' ? 'cool' : 'warm');
+              // Move to intensity phase
+              setPhase('intensity');
+              setStep('capture1');
+              setPhoto1(null);
+              setPhoto2(null);
+            } else {
+              setIntensity(option === 'left' ? 'bright' : 'muted');
+              setStep('result');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const getSeason = (): Season => {
