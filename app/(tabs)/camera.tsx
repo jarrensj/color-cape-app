@@ -11,60 +11,253 @@ import Svg, { Polygon } from 'react-native-svg';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const colorPalettes = {
-  spring: {
-    name: 'Spring',
-    description: 'Warm, light, and bright',
+  lightSpring: {
+    name: 'Light Spring',
+    description: 'Light, warm, and fresh',
     colors: [
       { name: 'Peach', hex: '#FFCC99' },
+      { name: 'Light Coral', hex: '#F08080' },
+      { name: 'Buttercup', hex: '#F9E547' },
+      { name: 'Mint', hex: '#98FB98' },
+      { name: 'Sky Blue', hex: '#87CEEB' },
+      { name: 'Lavender', hex: '#E6E6FA' },
+      { name: 'Warm Pink', hex: '#FFB6C1' },
+      { name: 'Ivory', hex: '#FFFFF0' },
+    ],
+  },
+  warmSpring: {
+    name: 'Warm Spring',
+    description: 'Golden, vibrant, and sunny',
+    colors: [
       { name: 'Coral', hex: '#FF7F50' },
-      { name: 'Warm Red', hex: '#E63946' },
-      { name: 'Warm Yellow', hex: '#FFD60A' },
-      { name: 'Olive Green', hex: '#B8A800' },
-      { name: 'Warm Blue', hex: '#457B9D' },
-      { name: 'Warm Pink', hex: '#FF69B4' },
+      { name: 'Tangerine', hex: '#FF9966' },
+      { name: 'Golden Yellow', hex: '#FFD700' },
+      { name: 'Grass Green', hex: '#7CFC00' },
+      { name: 'Turquoise', hex: '#40E0D0' },
+      { name: 'Salmon', hex: '#FA8072' },
+      { name: 'Apricot', hex: '#FBCEB1' },
       { name: 'Warm White', hex: '#FFF8F0' },
     ],
   },
-  summer: {
-    name: 'Summer',
-    description: 'Cool, soft, and muted',
+  brightSpring: {
+    name: 'Bright Spring',
+    description: 'Clear, warm, and vivid',
     colors: [
-      { name: 'Dusty Rose', hex: '#D8B0B0' },
-      { name: 'Cool Red', hex: '#C41E3A' },
-      { name: 'Mauve', hex: '#AF8EDA' },
-      { name: 'Soft Blue', hex: '#6B8CAE' },
-      { name: 'Teal', hex: '#367588' },
-      { name: 'Cool Pink', hex: '#E75480' },
-      { name: 'Gray Green', hex: '#7BA99F' },
-      { name: 'White', hex: '#F5F5F5' },
+      { name: 'Bright Coral', hex: '#FF6B6B' },
+      { name: 'Orange Red', hex: '#FF4500' },
+      { name: 'Bright Yellow', hex: '#FFEF00' },
+      { name: 'Kelly Green', hex: '#4CBB17' },
+      { name: 'Aqua', hex: '#00FFFF' },
+      { name: 'Hot Pink', hex: '#FF69B4' },
+      { name: 'Electric Blue', hex: '#7DF9FF' },
+      { name: 'Pure White', hex: '#FFFFFF' },
     ],
   },
-  autumn: {
-    name: 'Autumn',
-    description: 'Warm, deep, and earthy',
+  lightSummer: {
+    name: 'Light Summer',
+    description: 'Soft, cool, and delicate',
     colors: [
-      { name: 'Rust', hex: '#B7410E' },
-      { name: 'Deep Orange', hex: '#CC5500' },
-      { name: 'Burnt Red', hex: '#8B4513' },
-      { name: 'Olive', hex: '#556B2F' },
-      { name: 'Gold', hex: '#D4AF37' },
-      { name: 'Warm Brown', hex: '#704214' },
-      { name: 'Deep Plum', hex: '#662D4E' },
+      { name: 'Powder Pink', hex: '#FFB6C1' },
+      { name: 'Rose', hex: '#E8ADAA' },
+      { name: 'Lavender', hex: '#B4A7D6' },
+      { name: 'Periwinkle', hex: '#CCCCFF' },
+      { name: 'Powder Blue', hex: '#B0E0E6' },
+      { name: 'Sage', hex: '#B2AC88' },
+      { name: 'Mauve', hex: '#E0B0FF' },
+      { name: 'Soft White', hex: '#F5F5F5' },
+    ],
+  },
+  coolSummer: {
+    name: 'Cool Summer',
+    description: 'Cool, soft, and elegant',
+    colors: [
+      { name: 'Dusty Rose', hex: '#D8B0B0' },
+      { name: 'Raspberry', hex: '#E30B5C' },
+      { name: 'Soft Plum', hex: '#8E4585' },
+      { name: 'Blue Gray', hex: '#6699CC' },
+      { name: 'Teal', hex: '#367588' },
+      { name: 'Cool Pink', hex: '#E75480' },
+      { name: 'Slate Blue', hex: '#6A5ACD' },
+      { name: 'Cocoa', hex: '#875F5F' },
+    ],
+  },
+  softSummer: {
+    name: 'Soft Summer',
+    description: 'Muted, cool, and gentle',
+    colors: [
+      { name: 'Dusty Pink', hex: '#D4A5A5' },
+      { name: 'Soft Red', hex: '#CD5C5C' },
+      { name: 'Mauve', hex: '#AF8EDA' },
+      { name: 'Soft Blue', hex: '#6B8CAE' },
+      { name: 'Gray Green', hex: '#7BA99F' },
+      { name: 'Taupe', hex: '#8B8589' },
+      { name: 'Plum', hex: '#8E4585' },
+      { name: 'Off White', hex: '#FAF0E6' },
+    ],
+  },
+  softAutumn: {
+    name: 'Soft Autumn',
+    description: 'Muted, warm, and earthy',
+    colors: [
+      { name: 'Camel', hex: '#C19A6B' },
+      { name: 'Terracotta', hex: '#E2725B' },
+      { name: 'Soft Olive', hex: '#808000' },
+      { name: 'Dusty Teal', hex: '#5F9EA0' },
+      { name: 'Warm Gray', hex: '#A89F91' },
+      { name: 'Soft Coral', hex: '#F88379' },
+      { name: 'Mushroom', hex: '#9F8170' },
       { name: 'Cream', hex: '#F5E6D3' },
     ],
   },
-  winter: {
-    name: 'Winter',
-    description: 'Cool, bright, and dramatic',
+  warmAutumn: {
+    name: 'Warm Autumn',
+    description: 'Rich, warm, and spicy',
+    colors: [
+      { name: 'Rust', hex: '#B7410E' },
+      { name: 'Pumpkin', hex: '#FF7518' },
+      { name: 'Gold', hex: '#D4AF37' },
+      { name: 'Olive', hex: '#556B2F' },
+      { name: 'Teal', hex: '#008080' },
+      { name: 'Warm Brown', hex: '#704214' },
+      { name: 'Burnt Orange', hex: '#CC5500' },
+      { name: 'Buff', hex: '#F0DC82' },
+    ],
+  },
+  deepAutumn: {
+    name: 'Deep Autumn',
+    description: 'Deep, warm, and intense',
+    colors: [
+      { name: 'Burgundy', hex: '#800020' },
+      { name: 'Deep Orange', hex: '#CC5500' },
+      { name: 'Bronze', hex: '#CD7F32' },
+      { name: 'Forest Green', hex: '#228B22' },
+      { name: 'Deep Teal', hex: '#004953' },
+      { name: 'Chocolate', hex: '#7B3F00' },
+      { name: 'Deep Plum', hex: '#662D4E' },
+      { name: 'Mahogany', hex: '#C04000' },
+    ],
+  },
+  deepWinter: {
+    name: 'Deep Winter',
+    description: 'Deep, cool, and striking',
+    colors: [
+      { name: 'Burgundy', hex: '#722F37' },
+      { name: 'Ruby', hex: '#E0115F' },
+      { name: 'Emerald', hex: '#50C878' },
+      { name: 'Sapphire', hex: '#0F52BA' },
+      { name: 'Deep Purple', hex: '#301934' },
+      { name: 'Black', hex: '#0A0A0A' },
+      { name: 'Pine', hex: '#01796F' },
+      { name: 'Charcoal', hex: '#36454F' },
+    ],
+  },
+  coolWinter: {
+    name: 'Cool Winter',
+    description: 'Cool, icy, and dramatic',
     colors: [
       { name: 'Icy Pink', hex: '#FF1493' },
-      { name: 'Ruby Red', hex: '#E0115F' },
+      { name: 'Fuchsia', hex: '#FF00FF' },
       { name: 'Royal Blue', hex: '#4169E1' },
-      { name: 'Cool Green', hex: '#00AA44' },
+      { name: 'Emerald', hex: '#00A86B' },
       { name: 'Purple', hex: '#800080' },
       { name: 'Navy', hex: '#001F3F' },
-      { name: 'Pure Black', hex: '#0A0A0A' },
+      { name: 'Pure Black', hex: '#000000' },
       { name: 'Pure White', hex: '#FFFFFF' },
+    ],
+  },
+  brightWinter: {
+    name: 'Bright Winter',
+    description: 'Vivid, cool, and bold',
+    colors: [
+      { name: 'Hot Pink', hex: '#FF69B4' },
+      { name: 'True Red', hex: '#FF0000' },
+      { name: 'Electric Blue', hex: '#0000FF' },
+      { name: 'Bright Green', hex: '#00FF00' },
+      { name: 'Violet', hex: '#8B00FF' },
+      { name: 'Lemon Yellow', hex: '#FFF44F' },
+      { name: 'Cyan', hex: '#00FFFF' },
+      { name: 'Pure White', hex: '#FFFFFF' },
+    ],
+  },
+  // 4-color palettes
+  warmNeutrals: {
+    name: 'Warm Neutrals',
+    description: 'Earthy and natural',
+    colors: [
+      { name: 'Cream', hex: '#F5E6D3' },
+      { name: 'Camel', hex: '#C19A6B' },
+      { name: 'Chocolate', hex: '#7B3F00' },
+      { name: 'Terracotta', hex: '#E2725B' },
+    ],
+  },
+  coolNeutrals: {
+    name: 'Cool Neutrals',
+    description: 'Soft and sophisticated',
+    colors: [
+      { name: 'Off White', hex: '#FAF0E6' },
+      { name: 'Gray', hex: '#808080' },
+      { name: 'Charcoal', hex: '#36454F' },
+      { name: 'Navy', hex: '#001F3F' },
+    ],
+  },
+  jewel: {
+    name: 'Jewel Tones',
+    description: 'Rich and luxurious',
+    colors: [
+      { name: 'Emerald', hex: '#50C878' },
+      { name: 'Sapphire', hex: '#0F52BA' },
+      { name: 'Ruby', hex: '#E0115F' },
+      { name: 'Amethyst', hex: '#9966CC' },
+    ],
+  },
+  pastel: {
+    name: 'Pastels',
+    description: 'Light and airy',
+    colors: [
+      { name: 'Blush', hex: '#FFB6C1' },
+      { name: 'Mint', hex: '#98FB98' },
+      { name: 'Lavender', hex: '#E6E6FA' },
+      { name: 'Sky', hex: '#87CEEB' },
+    ],
+  },
+  earth: {
+    name: 'Earth Tones',
+    description: 'Grounded and warm',
+    colors: [
+      { name: 'Olive', hex: '#556B2F' },
+      { name: 'Rust', hex: '#B7410E' },
+      { name: 'Mustard', hex: '#FFDB58' },
+      { name: 'Forest', hex: '#228B22' },
+    ],
+  },
+  monochrome: {
+    name: 'Black & White',
+    description: 'Classic contrast',
+    colors: [
+      { name: 'White', hex: '#FFFFFF' },
+      { name: 'Light Gray', hex: '#D3D3D3' },
+      { name: 'Dark Gray', hex: '#404040' },
+      { name: 'Black', hex: '#000000' },
+    ],
+  },
+  sunset: {
+    name: 'Sunset',
+    description: 'Warm and glowing',
+    colors: [
+      { name: 'Golden', hex: '#FFD700' },
+      { name: 'Orange', hex: '#FF8C00' },
+      { name: 'Coral', hex: '#FF6B6B' },
+      { name: 'Magenta', hex: '#FF0080' },
+    ],
+  },
+  ocean: {
+    name: 'Ocean',
+    description: 'Cool and calming',
+    colors: [
+      { name: 'Seafoam', hex: '#98D7C2' },
+      { name: 'Aqua', hex: '#00CED1' },
+      { name: 'Teal', hex: '#008080' },
+      { name: 'Deep Blue', hex: '#00008B' },
     ],
   },
 };
@@ -122,7 +315,7 @@ export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('front');
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
-  const [paletteKey, setPaletteKey] = useState<ColorPaletteKey>('spring');
+  const [paletteKey, setPaletteKey] = useState<ColorPaletteKey>('lightSpring');
   const cameraRef = useRef<CameraView>(null);
   const insets = useSafeAreaInsets();
 
