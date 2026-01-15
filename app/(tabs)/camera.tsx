@@ -4,7 +4,7 @@ import { StyleSheet, TouchableOpacity, View, Text, Dimensions, ScrollView, Press
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RotateCw, Home, Download } from 'lucide-react-native';
+import { RotateCw, Home, Download, ChevronLeft } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
@@ -597,7 +597,9 @@ export default function CameraScreen() {
 
         {/* Bottom controls */}
         <View style={[styles.bottomControls, { paddingBottom: insets.bottom + 20 }]}>
-          <View style={styles.placeholder} />
+          <Pressable style={styles.backButton} onPress={goHome}>
+            <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
           <Pressable style={styles.captureButton} onPress={takePicture}>
             <View style={styles.captureButtonInner} />
           </Pressable>
@@ -801,6 +803,14 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 50,
     height: 50,
+  },
+  backButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   captureButton: {
     width: 80,
