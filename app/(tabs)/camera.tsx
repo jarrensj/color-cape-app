@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { captureRef } from 'react-native-view-shot';
-import Svg, { Polygon } from 'react-native-svg';
+import Svg, { Polygon, Path } from 'react-native-svg';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -273,6 +273,67 @@ const colorPalettes = {
       { name: 'Light Steel Blue', hex: '#B0C4DE' },
     ],
   },
+  // Single color capes
+  singleWhite: {
+    name: 'White',
+    description: 'Pure and clean',
+    colors: [{ name: 'Pure White', hex: '#FFFFFF' }],
+  },
+  singleBlack: {
+    name: 'Black',
+    description: 'Bold and timeless',
+    colors: [{ name: 'Pure Black', hex: '#000000' }],
+  },
+  singleNavy: {
+    name: 'Navy',
+    description: 'Classic and elegant',
+    colors: [{ name: 'Navy Blue', hex: '#001F3F' }],
+  },
+  singleBurgundy: {
+    name: 'Burgundy',
+    description: 'Rich and refined',
+    colors: [{ name: 'Burgundy', hex: '#800020' }],
+  },
+  singleForest: {
+    name: 'Forest Green',
+    description: 'Natural and grounding',
+    colors: [{ name: 'Forest Green', hex: '#228B22' }],
+  },
+  singleCoral: {
+    name: 'Coral',
+    description: 'Warm and vibrant',
+    colors: [{ name: 'Coral', hex: '#FF7F50' }],
+  },
+  singleLavender: {
+    name: 'Lavender',
+    description: 'Soft and dreamy',
+    colors: [{ name: 'Lavender', hex: '#E6E6FA' }],
+  },
+  singleMustard: {
+    name: 'Mustard',
+    description: 'Warm and earthy',
+    colors: [{ name: 'Mustard', hex: '#FFDB58' }],
+  },
+  singleBlush: {
+    name: 'Blush',
+    description: 'Soft and feminine',
+    colors: [{ name: 'Blush Pink', hex: '#FFB6C1' }],
+  },
+  singleTeal: {
+    name: 'Teal',
+    description: 'Cool and sophisticated',
+    colors: [{ name: 'Teal', hex: '#008080' }],
+  },
+  singleCamel: {
+    name: 'Camel',
+    description: 'Neutral and warm',
+    colors: [{ name: 'Camel', hex: '#C19A6B' }],
+  },
+  singleRuby: {
+    name: 'Ruby',
+    description: 'Bold and passionate',
+    colors: [{ name: 'Ruby Red', hex: '#E0115F' }],
+  },
 };
 
 type ColorPaletteKey = keyof typeof colorPalettes;
@@ -296,6 +357,9 @@ function ColorCape({ colors }: { colors: { name: string; hex: string }[] }) {
     setSelectedColor(null);
   };
 
+  // For single color, render a semicircle using Path
+  const isSingleColor = colors.length === 1;
+
   return (
     <View style={styles.capeContainer} pointerEvents="box-none">
       <Svg
@@ -303,35 +367,56 @@ function ColorCape({ colors }: { colors: { name: string; hex: string }[] }) {
         height={screenHeight}
         style={StyleSheet.absoluteFill}
       >
-        {colors.map((color, index) => {
-          const startAngle = index * anglePerSegment;
-          const endAngle = (index + 1) * anglePerSegment;
+        {isSingleColor ? (
+          // Single color: draw a semicircle from the neck down
+          <Path
+            d={`
+              M ${centerX + neckRadius} ${centerY}
+              A ${neckRadius} ${neckRadius} 0 0 1 ${centerX - neckRadius} ${centerY}
+              L ${centerX - capeRadius} ${centerY}
+              L ${centerX - capeRadius} ${screenHeight + capeRadius}
+              L ${centerX + capeRadius} ${screenHeight + capeRadius}
+              L ${centerX + capeRadius} ${centerY}
+              Z
+            `}
+            fill={colors[0].hex}
+            opacity={0.85}
+            onLongPress={() => handleLongPress(colors[0])}
+            onPressOut={handlePressOut}
+            delayLongPress={300}
+          />
+        ) : (
+          // Multiple colors: draw polygon segments
+          colors.map((color, index) => {
+            const startAngle = index * anglePerSegment;
+            const endAngle = (index + 1) * anglePerSegment;
 
-          const x1 = centerX + Math.cos(startAngle) * neckRadius;
-          const y1 = centerY + Math.sin(startAngle) * neckRadius;
-          const x2 = centerX + Math.cos(endAngle) * neckRadius;
-          const y2 = centerY + Math.sin(endAngle) * neckRadius;
-          const x3 = centerX + Math.cos(endAngle) * capeRadius;
-          const y3 = centerY + Math.sin(endAngle) * capeRadius;
-          const x4 = centerX + Math.cos(startAngle) * capeRadius;
-          const y4 = centerY + Math.sin(startAngle) * capeRadius;
+            const x1 = centerX + Math.cos(startAngle) * neckRadius;
+            const y1 = centerY + Math.sin(startAngle) * neckRadius;
+            const x2 = centerX + Math.cos(endAngle) * neckRadius;
+            const y2 = centerY + Math.sin(endAngle) * neckRadius;
+            const x3 = centerX + Math.cos(endAngle) * capeRadius;
+            const y3 = centerY + Math.sin(endAngle) * capeRadius;
+            const x4 = centerX + Math.cos(startAngle) * capeRadius;
+            const y4 = centerY + Math.sin(startAngle) * capeRadius;
 
-          const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
+            const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
 
-          return (
-            <Polygon
-              key={index}
-              points={points}
-              fill={color.hex}
-              opacity={0.85}
-              stroke="#FFFFFF"
-              strokeWidth={2}
-              onLongPress={() => handleLongPress(color)}
-              onPressOut={handlePressOut}
-              delayLongPress={300}
-            />
-          );
-        })}
+            return (
+              <Polygon
+                key={index}
+                points={points}
+                fill={color.hex}
+                opacity={0.85}
+                stroke="#FFFFFF"
+                strokeWidth={2}
+                onLongPress={() => handleLongPress(color)}
+                onPressOut={handlePressOut}
+                delayLongPress={300}
+              />
+            );
+          })
+        )}
       </Svg>
 
       {/* Color info tooltip */}
