@@ -273,6 +273,15 @@ const colorPalettes = {
       { name: 'Light Steel Blue', hex: '#B0C4DE' },
     ],
   },
+  // Duo palettes
+  blackPink: {
+    name: 'Black Pink',
+    description: 'Bold and iconic',
+    colors: [
+      { name: 'Black', hex: '#000000' },
+      { name: 'Light Pink', hex: '#FFB6C1' },
+    ],
+  },
   // Single color capes
   singleWhite: {
     name: 'White',
