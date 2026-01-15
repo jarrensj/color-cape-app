@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Pressable, Dimensions } from 'react-native';
+import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -12,6 +13,13 @@ import Animated, {
   useSharedValue,
   Easing,
 } from 'react-native-reanimated';
+
+// Onboarding images for each slide
+const slideImages = [
+  require('@/assets/images/unicorn.png'),
+  require('@/assets/images/unicorn-suit.png'),
+  require('@/assets/images/unicorn-cape.png'),
+];
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -222,6 +230,11 @@ export default function OnboardingScreen() {
 
       {/* Question */}
       <View style={styles.content}>
+        <Image
+          source={slideImages[currentQuestion]}
+          style={styles.slideImage}
+          contentFit="contain"
+        />
         <Text style={styles.questionText}>{question.question}</Text>
 
         <View style={styles.optionsContainer}>
@@ -289,6 +302,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
+  },
+  slideImage: {
+    width: 150,
+    height: 150,
+    alignSelf: 'center',
+    marginBottom: 24,
   },
   questionText: {
     fontSize: 28,
