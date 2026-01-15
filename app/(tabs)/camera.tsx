@@ -532,7 +532,11 @@ export default function CameraScreen() {
           <Image source={{ uri: photo }} style={styles.preview} contentFit="cover" />
           <ColorCape colors={currentPalette.colors} />
         </View>
+        {/* Bottom controls */}
         <View style={[styles.photoButtonContainer, { paddingBottom: insets.bottom + 20 }]}>
+          <Pressable style={styles.backButton} onPress={goHome}>
+            <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
           <TouchableOpacity style={styles.retakeButton} onPress={retake}>
             <Text style={styles.retakeButtonText}>Retake</Text>
           </TouchableOpacity>
