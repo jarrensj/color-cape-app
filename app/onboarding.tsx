@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Pressable, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,14 +6,107 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useOnboarding } from '@/context/onboarding-context';
+import Animated, {
+  useAnimatedStyle,
+  withTiming,
+  useSharedValue,
+  Easing,
+} from 'react-native-reanimated';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Soft pastel rainbow colors
+const rainbowColors = [
+  '#FF6B6B', // Soft red
+  '#FFA06B', // Soft orange
+  '#FFD93D', // Soft yellow
+  '#6BCB77', // Soft green
+  '#4D96FF', // Soft blue
+  '#9B59B6', // Soft purple
+  '#FF6BD6', // Soft pink
+  '#45B7D1', // Soft cyan
+];
 
 type Question = {
   id: string;
   question: string;
   options: { label: string; value: string }[];
 };
+
+// Small confetti dots scattered around the screen
+const confettiDots = [
+  // Slide 2 dots (first wave)
+  { x: 30, y: 120, size: 8 },
+  { x: screenWidth - 50, y: 180, size: 10 },
+  { x: 60, y: screenHeight - 200, size: 6 },
+  { x: screenWidth - 40, y: screenHeight - 280, size: 8 },
+  { x: screenWidth / 2 + 60, y: 100, size: 7 },
+  { x: 25, y: screenHeight / 2 - 50, size: 9 },
+  // Slide 3 dots (second wave)
+  { x: screenWidth - 70, y: 280, size: 6 },
+  { x: 80, y: 220, size: 7 },
+  { x: screenWidth - 30, y: screenHeight / 2 + 80, size: 8 },
+  { x: 45, y: screenHeight - 320, size: 6 },
+  { x: screenWidth / 2 - 40, y: screenHeight - 180, size: 9 },
+  { x: screenWidth - 60, y: screenHeight - 150, size: 7 },
+  { x: 70, y: 350, size: 5 },
+  { x: screenWidth - 45, y: 400, size: 6 },
+  { x: 35, y: screenHeight / 2 + 120, size: 8 },
+  { x: screenWidth / 2 + 80, y: 250, size: 5 },
+];
+
+// Confetti dot component
+function ConfettiDot({
+  color,
+  x,
+  y,
+  size,
+  visible,
+}: {
+  color: string;
+  x: number;
+  y: number;
+  size: number;
+  visible: boolean;
+}) {
+  const scale = useSharedValue(0);
+
+  useEffect(() => {
+    if (visible) {
+      scale.value = withTiming(1, {
+        duration: 400,
+        easing: Easing.out(Easing.back(2)),
+      });
+    } else {
+      scale.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.in(Easing.cubic),
+      });
+    }
+  }, [visible]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: scale.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          left: x,
+          top: y,
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: color,
+        },
+        animatedStyle,
+      ]}
+    />
+  );
+}
 
 const questions: Question[] = [
   {
@@ -82,9 +175,30 @@ export default function OnboardingScreen() {
     }
   };
 
+  // Determine which dots are visible based on current slide
+  const isDotVisible = (dotIndex: number) => {
+    if (currentQuestion === 0) return false; // Slide 1: no dots
+    if (currentQuestion === 1) return dotIndex < 6; // Slide 2: first 6 dots
+    return true; // Slide 3: all dots
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
+
+      {/* Confetti dots */}
+      <View style={styles.dotsContainer}>
+        {confettiDots.map((dot, index) => (
+          <ConfettiDot
+            key={index}
+            color={rainbowColors[index % rainbowColors.length]}
+            x={dot.x}
+            y={dot.y}
+            size={dot.size}
+            visible={isDotVisible(index)}
+          />
+        ))}
+      </View>
 
       {/* Progress indicator */}
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
@@ -140,6 +254,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  dotsContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
   },
   header: {
     paddingHorizontal: 24,
