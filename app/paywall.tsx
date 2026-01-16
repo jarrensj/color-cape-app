@@ -8,11 +8,6 @@ export default function PaywallScreen() {
   const router = useRouter();
   const { setHasSeenPaywall, checkSubscriptionStatus, currentOffering } = useRevenueCat();
 
-  const handleDismiss = async () => {
-    await setHasSeenPaywall(true);
-    router.replace('/(tabs)');
-  };
-
   const handlePurchaseCompleted = async () => {
     await checkSubscriptionStatus();
     await setHasSeenPaywall(true);
@@ -31,9 +26,8 @@ export default function PaywallScreen() {
       <RevenueCatUI.Paywall
         options={{
           offering: currentOffering ?? undefined,
-          displayCloseButton: true,
+          displayCloseButton: false,
         }}
-        onDismiss={handleDismiss}
         onPurchaseCompleted={handlePurchaseCompleted}
         onRestoreCompleted={handleRestoreCompleted}
       />
