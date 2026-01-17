@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, Share } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, Share, Linking } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw } from 'lucide-react-native';
+import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
@@ -107,6 +107,16 @@ export default function SettingsScreen() {
     } catch (error) {
       console.error('Error sharing:', error);
     }
+  };
+
+  const openPrivacyPolicy = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Linking.openURL('https://colorcape.app/privacy-policy');
+  };
+
+  const openTermsOfService = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Linking.openURL('https://colorcape.app/terms-of-service');
   };
 
   const triggerHighlight = (key: ColorPaletteKey) => {
@@ -491,6 +501,42 @@ export default function SettingsScreen() {
               <Text style={styles.settingDescription}>
                 Clear all data and restart onboarding
               </Text>
+            </View>
+          </Pressable>
+        </View>
+
+        {/* Legal Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Legal</Text>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingButton,
+              pressed && styles.settingButtonPressed,
+            ]}
+            onPress={openPrivacyPolicy}
+          >
+            <View style={[styles.settingIcon, styles.settingIconGray]}>
+              <Shield size={22} color="#8E8E93" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Privacy Policy</Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingButton,
+              styles.settingButtonMarginTop,
+              pressed && styles.settingButtonPressed,
+            ]}
+            onPress={openTermsOfService}
+          >
+            <View style={[styles.settingIcon, styles.settingIconGray]}>
+              <FileText size={22} color="#8E8E93" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Terms of Service</Text>
             </View>
           </Pressable>
         </View>
