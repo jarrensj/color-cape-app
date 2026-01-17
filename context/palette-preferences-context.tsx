@@ -2,6 +2,11 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ColorPaletteKey, defaultPaletteOrder } from '@/constants/palettes';
 
+type CustomCape = {
+  name: string;
+  colors: { name: string; hex: string }[];
+} | null;
+
 type PalettePreferences = {
   order: ColorPaletteKey[];
   enabled: Record<ColorPaletteKey, boolean>;
@@ -9,6 +14,7 @@ type PalettePreferences = {
 
 type PalettePreferencesContextType = {
   preferences: PalettePreferences;
+  customCape: CustomCape;
   isLoading: boolean;
   togglePalette: (key: ColorPaletteKey) => void;
   setAllEnabled: (enabled: boolean) => void;
@@ -16,11 +22,14 @@ type PalettePreferencesContextType = {
   movePaletteDown: (key: ColorPaletteKey) => void;
   getEnabledPalettes: () => ColorPaletteKey[];
   resetToDefaults: () => void;
+  saveCustomCape: (cape: CustomCape) => void;
+  deleteCustomCape: () => void;
 };
 
 const PalettePreferencesContext = createContext<PalettePreferencesContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'palette_preferences';
+const CUSTOM_CAPE_KEY = 'custom_cape';
 
 // Default: all palettes enabled
 const getDefaultPreferences = (): PalettePreferences => ({
@@ -33,10 +42,12 @@ const getDefaultPreferences = (): PalettePreferences => ({
 
 export function PalettePreferencesProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<PalettePreferences>(getDefaultPreferences());
+  const [customCape, setCustomCape] = useState<CustomCape>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadPreferences();
+    loadCustomCape();
   }, []);
 
   const loadPreferences = async () => {
@@ -67,6 +78,39 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newPrefs));
     } catch (error) {
       console.error('Error saving palette preferences:', error);
+    }
+  };
+
+  const loadCustomCape = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(CUSTOM_CAPE_KEY);
+      if (stored) {
+        setCustomCape(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading custom cape:', error);
+    }
+  };
+
+  const saveCustomCape = async (cape: CustomCape) => {
+    try {
+      if (cape) {
+        await AsyncStorage.setItem(CUSTOM_CAPE_KEY, JSON.stringify(cape));
+      } else {
+        await AsyncStorage.removeItem(CUSTOM_CAPE_KEY);
+      }
+      setCustomCape(cape);
+    } catch (error) {
+      console.error('Error saving custom cape:', error);
+    }
+  };
+
+  const deleteCustomCape = async () => {
+    try {
+      await AsyncStorage.removeItem(CUSTOM_CAPE_KEY);
+      setCustomCape(null);
+    } catch (error) {
+      console.error('Error deleting custom cape:', error);
     }
   };
 
@@ -130,6 +174,7 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
     <PalettePreferencesContext.Provider
       value={{
         preferences,
+        customCape,
         isLoading,
         togglePalette,
         setAllEnabled,
@@ -137,6 +182,8 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
         movePaletteDown,
         getEnabledPalettes,
         resetToDefaults,
+        saveCustomCape,
+        deleteCustomCape,
       }}
     >
       {children}

@@ -120,11 +120,12 @@ export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
   const [paletteKey, setPaletteKey] = useState<ColorPaletteKey | null>(null);
+  const [useCustomCape, setUseCustomCape] = useState(false);
   const cameraRef = useRef<CameraView>(null);
   const viewShotRef = useRef<View>(null);
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { getEnabledPalettes } = usePalettePreferences();
+  const { getEnabledPalettes, customCape } = usePalettePreferences();
 
   useEffect(() => {
     AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
@@ -204,6 +205,14 @@ export default function CameraScreen() {
 
   const currentPalette = currentPaletteKey ? colorPalettes[currentPaletteKey] : null;
 
+  // Get current colors based on whether we're using custom cape or regular palette
+  const getCurrentColors = () => {
+    if (useCustomCape && customCape) {
+      return customCape.colors;
+    }
+    return currentPalette?.colors || [];
+  };
+
   function toggleCameraFacing() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setFacing((current) => (current === 'back' ? 'front' : 'back'));
@@ -212,6 +221,12 @@ export default function CameraScreen() {
   function changePalette(newKey: ColorPaletteKey) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setPaletteKey(newKey);
+    setUseCustomCape(false);
+  }
+
+  function selectCustomCape() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setUseCustomCape(true);
   }
 
   async function takePicture() {
@@ -235,7 +250,7 @@ export default function CameraScreen() {
         {/* Capturable view with photo and overlay */}
         <View ref={viewShotRef} style={styles.captureView} collapsable={false}>
           <Image source={{ uri: photo }} style={styles.preview} contentFit="cover" />
-          <ColorCape colors={currentPalette.colors} opacity={capeOpacity} />
+          <ColorCape colors={getCurrentColors()} opacity={capeOpacity} />
         </View>
         {/* Bottom controls */}
         <View style={[styles.photoButtonContainer, { paddingBottom: insets.bottom + 20 }]}>
@@ -254,7 +269,7 @@ export default function CameraScreen() {
     );
   }
 
-  if (!currentPalette || enabledPalettes.length === 0) {
+  if ((!currentPalette && !customCape) || (enabledPalettes.length === 0 && !customCape)) {
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
@@ -266,12 +281,22 @@ export default function CameraScreen() {
     );
   }
 
+  // Get current label based on selection
+  const getCurrentLabel = () => {
+    if (useCustomCape && customCape) {
+      return { name: customCape.name, description: `${customCape.colors.length} custom colors` };
+    }
+    return currentPalette ? { name: currentPalette.name, description: currentPalette.description } : { name: '', description: '' };
+  };
+
+  const currentLabel = getCurrentLabel();
+
   return (
     <View style={styles.fullScreen}>
       <StatusBar style="light" />
       <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front' && mirrorEnabled}>
         {/* Color cape overlay */}
-        <ColorCape colors={currentPalette.colors} opacity={capeOpacity} />
+        <ColorCape colors={getCurrentColors()} opacity={capeOpacity} />
 
         {/* Top controls */}
         <View style={[styles.topControls, { paddingTop: insets.top + 12 }]}>
@@ -279,8 +304,8 @@ export default function CameraScreen() {
             <Home size={24} color="#FFFFFF" strokeWidth={2} />
           </Pressable>
           <View style={styles.paletteLabelContainer}>
-            <Text style={styles.paletteLabel}>{currentPalette.name}</Text>
-            <Text style={styles.paletteDescription}>{currentPalette.description}</Text>
+            <Text style={styles.paletteLabel}>{currentLabel.name}</Text>
+            <Text style={styles.paletteDescription}>{currentLabel.description}</Text>
           </View>
           <Pressable style={styles.flipButton} onPress={toggleCameraFacing}>
             <RotateCw size={24} color="#FFFFFF" strokeWidth={2} />
@@ -294,19 +319,38 @@ export default function CameraScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.paletteSelectorContent}
           >
+            {customCape && (
+              <Pressable
+                style={[
+                  styles.paletteButton,
+                  styles.customPaletteButton,
+                  useCustomCape && styles.paletteButtonActive,
+                ]}
+                onPress={selectCustomCape}
+              >
+                <Text
+                  style={[
+                    styles.paletteButtonText,
+                    useCustomCape && styles.paletteButtonTextActive,
+                  ]}
+                >
+                  {customCape.name}
+                </Text>
+              </Pressable>
+            )}
             {enabledPalettes.map((key) => (
               <Pressable
                 key={key}
                 style={[
                   styles.paletteButton,
-                  currentPaletteKey === key && styles.paletteButtonActive,
+                  currentPaletteKey === key && !useCustomCape && styles.paletteButtonActive,
                 ]}
                 onPress={() => changePalette(key)}
               >
                 <Text
                   style={[
                     styles.paletteButtonText,
-                    currentPaletteKey === key && styles.paletteButtonTextActive,
+                    currentPaletteKey === key && !useCustomCape && styles.paletteButtonTextActive,
                   ]}
                 >
                   {colorPalettes[key].name}
@@ -501,6 +545,10 @@ const styles = StyleSheet.create({
   paletteButtonActive: {
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderColor: 'rgba(255, 255, 255, 0.8)',
+  },
+  customPaletteButton: {
+    borderColor: 'rgba(90, 200, 250, 0.5)',
+    backgroundColor: 'rgba(90, 200, 250, 0.2)',
   },
   paletteButtonText: {
     fontSize: 14,

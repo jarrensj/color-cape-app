@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, Share, Linking } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, Share, Linking, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText } from 'lucide-react-native';
+import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
@@ -22,18 +22,42 @@ const OPACITY_OPTIONS = [
   { label: 'Full', value: 1.0 },
 ];
 
+const COLOR_COUNT_OPTIONS = [1, 2, 4, 8];
+
+const COLOR_PICKER_COLORS = [
+  // Reds & Pinks
+  '#FF0000', '#E0115F', '#FF1493', '#FF69B4', '#FFB6C1', '#800020',
+  // Oranges & Yellows
+  '#FF4500', '#FF7F50', '#FF9500', '#FFD700', '#FFEF00', '#FFDB58',
+  // Greens
+  '#00FF00', '#7CFC00', '#228B22', '#556B2F', '#008080', '#40E0D0',
+  // Blues
+  '#00FFFF', '#87CEEB', '#4169E1', '#0000FF', '#001F3F', '#0F52BA',
+  // Purples
+  '#8B00FF', '#9966CC', '#800080', '#E6E6FA', '#AF8EDA', '#301934',
+  // Neutrals
+  '#FFFFFF', '#F5F5F5', '#D3D3D3', '#808080', '#404040', '#000000',
+  // Browns & Earthy
+  '#F5E6D3', '#C19A6B', '#B7410E', '#7B3F00', '#E2725B', '#8B8589',
+];
+
 export default function SettingsScreen() {
   const [showCustomerCenter, setShowCustomerCenter] = useState(false);
   const [showPaletteSheet, setShowPaletteSheet] = useState(false);
+  const [showCustomCapeSheet, setShowCustomCapeSheet] = useState(false);
   const [highlightedKey, setHighlightedKey] = useState<ColorPaletteKey | null>(null);
   const [defaultFrontCamera, setDefaultFrontCamera] = useState(true);
   const [mirrorFrontCamera, setMirrorFrontCamera] = useState(true);
   const [capeOpacity, setCapeOpacity] = useState(0.85);
+  const [customColorCount, setCustomColorCount] = useState(4);
+  const [customColors, setCustomColors] = useState<string[]>(['#FF0000', '#00FF00', '#0000FF', '#FFD700']);
+  const [editingColorIndex, setEditingColorIndex] = useState<number | null>(null);
+  const [hexInput, setHexInput] = useState('');
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
-  const { preferences, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults } = usePalettePreferences();
+  const { preferences, customCape, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults, saveCustomCape, deleteCustomCape } = usePalettePreferences();
 
   useEffect(() => {
     AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
@@ -117,6 +141,103 @@ export default function SettingsScreen() {
   const openTermsOfService = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Linking.openURL('https://colorcape.app/terms-of-service');
+  };
+
+  const openCustomCapeCreator = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // If there's an existing custom cape, load it
+    if (customCape) {
+      setCustomColorCount(customCape.colors.length);
+      setCustomColors(customCape.colors.map(c => c.hex));
+    } else {
+      setCustomColorCount(4);
+      setCustomColors(['#FF0000', '#00FF00', '#0000FF', '#FFD700']);
+    }
+    setEditingColorIndex(null);
+    setShowCustomCapeSheet(true);
+  };
+
+  const handleColorCountChange = (count: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCustomColorCount(count);
+    // Adjust colors array
+    const defaultColors = ['#FF0000', '#FF7F50', '#FFD700', '#00FF00', '#00FFFF', '#0000FF', '#8B00FF', '#FF1493'];
+    const newColors = [...customColors];
+    while (newColors.length < count) {
+      newColors.push(defaultColors[newColors.length % defaultColors.length]);
+    }
+    setCustomColors(newColors.slice(0, count));
+    setEditingColorIndex(null);
+  };
+
+  const handleColorSelect = (color: string) => {
+    if (editingColorIndex !== null) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      const newColors = [...customColors];
+      newColors[editingColorIndex] = color;
+      setCustomColors(newColors);
+      setHexInput(color);
+    }
+  };
+
+  const handleHexInputChange = (text: string) => {
+    // Ensure it starts with # and only contains valid hex chars
+    let hex = text.toUpperCase();
+    if (!hex.startsWith('#')) {
+      hex = '#' + hex;
+    }
+    hex = '#' + hex.slice(1).replace(/[^0-9A-F]/g, '').slice(0, 6);
+    setHexInput(hex);
+
+    // Apply color if valid 4 or 7 character hex (# + 3 or 6 chars)
+    if (editingColorIndex !== null && (hex.length === 4 || hex.length === 7)) {
+      const newColors = [...customColors];
+      newColors[editingColorIndex] = hex;
+      setCustomColors(newColors);
+    }
+  };
+
+  const handleColorSlotPress = (index: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (editingColorIndex === index) {
+      setEditingColorIndex(null);
+      setHexInput('');
+    } else {
+      setEditingColorIndex(index);
+      setHexInput(customColors[index]);
+    }
+  };
+
+  const handleSaveCustomCape = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const cape = {
+      name: 'My Custom Cape',
+      colors: customColors.slice(0, customColorCount).map((hex, i) => ({
+        name: `Color ${i + 1}`,
+        hex,
+      })),
+    };
+    saveCustomCape(cape);
+    setShowCustomCapeSheet(false);
+  };
+
+  const handleDeleteCustomCape = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      'Delete Custom Cape',
+      'Are you sure you want to delete your custom cape?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteCustomCape();
+            setShowCustomCapeSheet(false);
+          },
+        },
+      ]
+    );
   };
 
   const triggerHighlight = (key: ColorPaletteKey) => {
@@ -311,6 +432,122 @@ export default function SettingsScreen() {
         </View>
       </Modal>
 
+      {/* Custom Cape Creator Modal */}
+      <Modal
+        visible={showCustomCapeSheet}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCustomCapeSheet(false)}
+      >
+        <View style={styles.sheetOverlay}>
+          <Pressable style={styles.sheetBackdrop} onPress={() => setShowCustomCapeSheet(false)} />
+          <View style={[styles.sheetContent, { paddingBottom: insets.bottom + 20, maxHeight: '90%' }]}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>{customCape ? 'Edit Custom Cape' : 'Create Custom Cape'}</Text>
+              <Pressable onPress={() => setShowCustomCapeSheet(false)} style={styles.sheetClose}>
+                <X size={24} color="#FFFFFF" />
+              </Pressable>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Color Count Selector */}
+              <Text style={styles.customCapeLabel}>Number of Colors</Text>
+              <View style={styles.colorCountSelector}>
+                {COLOR_COUNT_OPTIONS.map((count) => (
+                  <Pressable
+                    key={count}
+                    style={[
+                      styles.colorCountButton,
+                      customColorCount === count && styles.colorCountButtonActive,
+                    ]}
+                    onPress={() => handleColorCountChange(count)}
+                  >
+                    <Text
+                      style={[
+                        styles.colorCountButtonText,
+                        customColorCount === count && styles.colorCountButtonTextActive,
+                      ]}
+                    >
+                      {count}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              {/* Preview - tap to edit colors */}
+              <Text style={styles.customCapeLabel}>Tap a color to edit</Text>
+              <View style={styles.capePreview}>
+                {customColors.slice(0, customColorCount).map((color, index) => (
+                  <Pressable
+                    key={index}
+                    style={[
+                      styles.capePreviewSegment,
+                      { backgroundColor: color },
+                      editingColorIndex === index && styles.capePreviewSegmentEditing,
+                    ]}
+                    onPress={() => handleColorSlotPress(index)}
+                  />
+                ))}
+              </View>
+
+              {/* Color Picker */}
+              {editingColorIndex !== null && (
+                <>
+                  <Text style={styles.customCapeLabel}>Enter Hex Code</Text>
+                  <View style={styles.hexInputContainer}>
+                    <View style={[styles.hexPreview, { backgroundColor: hexInput.length >= 4 ? hexInput : '#000' }]} />
+                    <TextInput
+                      style={styles.hexInput}
+                      value={hexInput}
+                      onChangeText={handleHexInputChange}
+                      placeholder="#FFFFFF"
+                      placeholderTextColor="rgba(255,255,255,0.3)"
+                      autoCapitalize="characters"
+                      maxLength={7}
+                    />
+                  </View>
+
+                  <Text style={styles.customCapeLabel}>Or Pick a Color</Text>
+                  <View style={styles.colorPickerGrid}>
+                    {COLOR_PICKER_COLORS.map((color) => (
+                      <Pressable
+                        key={color}
+                        style={[
+                          styles.colorPickerItem,
+                          { backgroundColor: color },
+                          customColors[editingColorIndex] === color && styles.colorPickerItemSelected,
+                        ]}
+                        onPress={() => handleColorSelect(color)}
+                      />
+                    ))}
+                  </View>
+                </>
+              )}
+
+              {/* Action Buttons */}
+              <View style={styles.customCapeActions}>
+                {customCape && (
+                  <Pressable
+                    style={[styles.customCapeButton, styles.customCapeButtonDelete]}
+                    onPress={handleDeleteCustomCape}
+                  >
+                    <Trash2 size={18} color="#FF3B30" strokeWidth={2} />
+                    <Text style={styles.customCapeButtonDeleteText}>Delete</Text>
+                  </Pressable>
+                )}
+                <Pressable
+                  style={[styles.customCapeButton, styles.customCapeButtonSave]}
+                  onPress={handleSaveCustomCape}
+                >
+                  <Check size={18} color="#000000" strokeWidth={2} />
+                  <Text style={styles.customCapeButtonSaveText}>Save Cape</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Cape Palettes Section */}
         <View style={styles.section}>
@@ -333,6 +570,25 @@ export default function SettingsScreen() {
               <Text style={styles.settingLabel}>Cape Palettes</Text>
               <Text style={styles.settingDescription}>
                 {preferences.order.filter(k => preferences.enabled[k]).length} of {preferences.order.length} enabled
+              </Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingButton,
+              styles.settingButtonMarginTop,
+              pressed && styles.settingButtonPressed,
+            ]}
+            onPress={openCustomCapeCreator}
+          >
+            <View style={[styles.settingIcon, styles.settingIconCyan]}>
+              <Plus size={22} color="#5AC8FA" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>{customCape ? 'Edit Custom Cape' : 'Create Custom Cape'}</Text>
+              <Text style={styles.settingDescription}>
+                {customCape ? `${customCape.colors.length} colors` : 'Design your own color palette'}
               </Text>
             </View>
           </Pressable>
@@ -781,5 +1037,147 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.3)',
+  },
+  settingIconCyan: {
+    backgroundColor: 'rgba(90, 200, 250, 0.15)',
+  },
+  customCapeLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  customCapeSublabel: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.4)',
+    marginTop: -4,
+    marginBottom: 12,
+  },
+  colorCountSelector: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  colorCountButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center',
+  },
+  colorCountButtonActive: {
+    backgroundColor: 'rgba(90, 200, 250, 0.3)',
+  },
+  colorCountButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  colorCountButtonTextActive: {
+    color: '#5AC8FA',
+  },
+  colorSlotsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'center',
+  },
+  colorSlot: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  colorSlotEditing: {
+    borderColor: '#FFFFFF',
+    borderWidth: 3,
+  },
+  hexInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 12,
+  },
+  hexPreview: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  hexInput: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    fontFamily: 'monospace',
+    paddingVertical: 8,
+  },
+  colorPickerGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'center',
+  },
+  colorPickerItem: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  colorPickerItemSelected: {
+    borderColor: '#FFFFFF',
+    borderWidth: 3,
+  },
+  capePreview: {
+    flexDirection: 'row',
+    height: 60,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  capePreviewSegment: {
+    flex: 1,
+  },
+  capePreviewSegmentEditing: {
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  customCapeActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  customCapeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+  },
+  customCapeButtonDelete: {
+    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+  },
+  customCapeButtonDeleteText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FF3B30',
+  },
+  customCapeButtonSave: {
+    backgroundColor: '#FFFFFF',
+  },
+  customCapeButtonSaveText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
   },
 });
