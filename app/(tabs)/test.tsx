@@ -522,6 +522,10 @@ export default function TestScreen() {
           <Pressable style={styles.startButton} onPress={startTest}>
             <Text style={styles.startButtonText}>Start Test</Text>
           </Pressable>
+
+          <Pressable style={styles.goHomeButton} onPress={goHome}>
+            <Text style={styles.goHomeButtonText}>Go back home</Text>
+          </Pressable>
         </View>
       </View>
     );
@@ -822,6 +826,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#000000',
+  },
+  goHomeButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  goHomeButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   // Test screen styles
   testHeader: {
