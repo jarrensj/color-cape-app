@@ -18,6 +18,9 @@ import Animated, {
 // Onboarding images for each slide
 const slideImages = [
   require('@/assets/images/unicorn.png'),
+  require('@/assets/images/dressing-room-unicorn.png'),
+  require('@/assets/images/unicorn-test-taking.jpg'),
+  require('@/assets/images/selfie-unicorn.png'),
   require('@/assets/images/unicorn-suit.png'),
   require('@/assets/images/unicorn-cape.png'),
 ];
@@ -129,6 +132,36 @@ const questions: Question[] = [
     ],
   },
   {
+    id: 'overwhelmed',
+    question: 'Do you ever feel overwhelmed by color choices when shopping?',
+    options: [
+      { label: 'Yes, all the time!', value: 'always' },
+      { label: 'Sometimes', value: 'sometimes' },
+      { label: 'Not really', value: 'not_really' },
+      { label: 'I just grab and go', value: 'grab_and_go' },
+    ],
+  },
+  {
+    id: 'taken_test',
+    question: 'Have you ever taken a color analysis test?',
+    options: [
+      { label: 'Yes, I know my season', value: 'yes_know' },
+      { label: 'Yes, but I forgot my results', value: 'yes_forgot' },
+      { label: 'No, but I want to!', value: 'no_want_to' },
+      { label: "No, what's that?", value: 'no_whats_that' },
+    ],
+  },
+  {
+    id: 'preview_colors',
+    question: 'Would you like to see how different color palettes look on you?',
+    options: [
+      { label: 'Yes, that would be amazing!', value: 'yes_amazing' },
+      { label: "Sure, I'm curious", value: 'curious' },
+      { label: "Maybe, if it's easy", value: 'maybe' },
+      { label: 'I usually just guess', value: 'guess' },
+    ],
+  },
+  {
     id: 'confidence',
     question: 'How confident are you in choosing colors right now?',
     options: [
@@ -186,8 +219,11 @@ export default function OnboardingScreen() {
   // Determine which dots are visible based on current slide
   const isDotVisible = (dotIndex: number) => {
     if (currentQuestion === 0) return false; // Slide 1: no dots
-    if (currentQuestion === 1) return dotIndex < 6; // Slide 2: first 6 dots
-    return true; // Slide 3: all dots
+    if (currentQuestion === 1) return dotIndex < 3; // Slide 2
+    if (currentQuestion === 2) return dotIndex < 6; // Slide 3
+    if (currentQuestion === 3) return dotIndex < 9; // Slide 4
+    if (currentQuestion === 4) return dotIndex < 12; // Slide 5
+    return true; // Slide 6: all dots
   };
 
   return (
