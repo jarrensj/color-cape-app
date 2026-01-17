@@ -3,11 +3,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ColorPaletteKey, defaultPaletteOrder } from '@/constants/palettes';
 
 type CustomCape = {
+  id: string;
   name: string;
   colors: { name: string; hex: string }[];
   enabled: boolean;
   position: number; // Index in the combined list (0 = first)
-} | null;
+};
+
+const MAX_CUSTOM_CAPES = 3;
 
 type PalettePreferences = {
   order: ColorPaletteKey[];
@@ -16,7 +19,7 @@ type PalettePreferences = {
 
 type PalettePreferencesContextType = {
   preferences: PalettePreferences;
-  customCape: CustomCape;
+  customCapes: CustomCape[];
   isLoading: boolean;
   togglePalette: (key: ColorPaletteKey) => void;
   setAllEnabled: (enabled: boolean) => void;
@@ -24,11 +27,12 @@ type PalettePreferencesContextType = {
   movePaletteDown: (key: ColorPaletteKey) => void;
   getEnabledPalettes: () => ColorPaletteKey[];
   resetToDefaults: () => void;
-  saveCustomCape: (cape: CustomCape) => void;
-  deleteCustomCape: () => void;
-  toggleCustomCape: () => void;
-  moveCustomCapeUp: () => void;
-  moveCustomCapeDown: () => void;
+  saveCustomCape: (cape: Omit<CustomCape, 'id'> & { id?: string }) => void;
+  deleteCustomCape: (id: string) => void;
+  toggleCustomCape: (id: string) => void;
+  moveCustomCapeUp: (id: string) => void;
+  moveCustomCapeDown: (id: string) => void;
+  canAddCustomCape: () => boolean;
 };
 
 const PalettePreferencesContext = createContext<PalettePreferencesContextType | undefined>(undefined);
@@ -47,12 +51,12 @@ const getDefaultPreferences = (): PalettePreferences => ({
 
 export function PalettePreferencesProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<PalettePreferences>(getDefaultPreferences());
-  const [customCape, setCustomCape] = useState<CustomCape>(null);
+  const [customCapes, setCustomCapes] = useState<CustomCape[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadPreferences();
-    loadCustomCape();
+    loadCustomCapes();
   }, []);
 
   const loadPreferences = async () => {
@@ -86,79 +90,96 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
     }
   };
 
-  const loadCustomCape = async () => {
+  const loadCustomCapes = async () => {
     try {
       const stored = await AsyncStorage.getItem(CUSTOM_CAPE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Ensure defaults for older saved capes
-        setCustomCape({
-          ...parsed,
-          enabled: parsed.enabled ?? true,
-          position: parsed.position ?? 0,
-        });
+        // Handle migration from single cape to array
+        if (Array.isArray(parsed)) {
+          setCustomCapes(parsed.map((cape: any) => ({
+            ...cape,
+            id: cape.id ?? `custom-${Date.now()}-${Math.random()}`,
+            enabled: cape.enabled ?? true,
+            position: cape.position ?? 0,
+          })));
+        } else {
+          // Migrate single cape to array
+          const migrated = [{
+            ...parsed,
+            id: parsed.id ?? `custom-${Date.now()}`,
+            enabled: parsed.enabled ?? true,
+            position: parsed.position ?? 0,
+          }];
+          setCustomCapes(migrated);
+          await AsyncStorage.setItem(CUSTOM_CAPE_KEY, JSON.stringify(migrated));
+        }
       }
     } catch (error) {
-      console.error('Error loading custom cape:', error);
+      console.error('Error loading custom capes:', error);
     }
   };
 
-  const saveCustomCape = async (cape: CustomCape) => {
+  const saveCustomCapes = async (capes: CustomCape[]) => {
     try {
-      if (cape) {
-        await AsyncStorage.setItem(CUSTOM_CAPE_KEY, JSON.stringify(cape));
-      } else {
-        await AsyncStorage.removeItem(CUSTOM_CAPE_KEY);
-      }
-      setCustomCape(cape);
+      await AsyncStorage.setItem(CUSTOM_CAPE_KEY, JSON.stringify(capes));
+      setCustomCapes(capes);
     } catch (error) {
-      console.error('Error saving custom cape:', error);
+      console.error('Error saving custom capes:', error);
     }
   };
 
-  const deleteCustomCape = async () => {
-    try {
-      await AsyncStorage.removeItem(CUSTOM_CAPE_KEY);
-      setCustomCape(null);
-    } catch (error) {
-      console.error('Error deleting custom cape:', error);
+  const saveCustomCape = async (cape: Omit<CustomCape, 'id'> & { id?: string }) => {
+    const capeWithId: CustomCape = {
+      ...cape,
+      id: cape.id ?? `custom-${Date.now()}-${Math.random()}`,
+    };
+
+    const existingIndex = customCapes.findIndex(c => c.id === capeWithId.id);
+    let updated: CustomCape[];
+    if (existingIndex >= 0) {
+      updated = [...customCapes];
+      updated[existingIndex] = capeWithId;
+    } else {
+      if (customCapes.length >= MAX_CUSTOM_CAPES) return;
+      updated = [...customCapes, capeWithId];
     }
+    await saveCustomCapes(updated);
   };
 
-  const toggleCustomCape = async () => {
-    if (!customCape) return;
-    const updated = { ...customCape, enabled: !customCape.enabled };
-    try {
-      await AsyncStorage.setItem(CUSTOM_CAPE_KEY, JSON.stringify(updated));
-      setCustomCape(updated);
-    } catch (error) {
-      console.error('Error toggling custom cape:', error);
-    }
+  const deleteCustomCape = async (id: string) => {
+    const updated = customCapes.filter(c => c.id !== id);
+    await saveCustomCapes(updated);
   };
 
-  const moveCustomCapeUp = async () => {
-    if (!customCape || customCape.position <= 0) return;
-    const updated = { ...customCape, position: customCape.position - 1 };
-    try {
-      await AsyncStorage.setItem(CUSTOM_CAPE_KEY, JSON.stringify(updated));
-      setCustomCape(updated);
-    } catch (error) {
-      console.error('Error moving custom cape:', error);
-    }
+  const toggleCustomCape = async (id: string) => {
+    const updated = customCapes.map(c =>
+      c.id === id ? { ...c, enabled: !c.enabled } : c
+    );
+    await saveCustomCapes(updated);
   };
 
-  const moveCustomCapeDown = async () => {
-    if (!customCape) return;
-    const maxPosition = preferences.order.length;
-    if (customCape.position >= maxPosition) return;
-    const updated = { ...customCape, position: customCape.position + 1 };
-    try {
-      await AsyncStorage.setItem(CUSTOM_CAPE_KEY, JSON.stringify(updated));
-      setCustomCape(updated);
-    } catch (error) {
-      console.error('Error moving custom cape:', error);
-    }
+  const moveCustomCapeUp = async (id: string) => {
+    const cape = customCapes.find(c => c.id === id);
+    if (!cape || cape.position <= 0) return;
+    const updated = customCapes.map(c =>
+      c.id === id ? { ...c, position: c.position - 1 } : c
+    );
+    await saveCustomCapes(updated);
   };
+
+  const moveCustomCapeDown = async (id: string) => {
+    const cape = customCapes.find(c => c.id === id);
+    if (!cape) return;
+    const maxPosition = preferences.order.length + customCapes.length - 1;
+    if (cape.position >= maxPosition) return;
+    const updated = customCapes.map(c =>
+      c.id === id ? { ...c, position: c.position + 1 } : c
+    );
+    await saveCustomCapes(updated);
+  };
+
+  const canAddCustomCape = () => customCapes.length < MAX_CUSTOM_CAPES;
 
   const togglePalette = (key: ColorPaletteKey) => {
     const newPrefs = {
@@ -220,7 +241,7 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
     <PalettePreferencesContext.Provider
       value={{
         preferences,
-        customCape,
+        customCapes,
         isLoading,
         togglePalette,
         setAllEnabled,
@@ -233,6 +254,7 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
         toggleCustomCape,
         moveCustomCapeUp,
         moveCustomCapeDown,
+        canAddCustomCape,
       }}
     >
       {children}

@@ -53,11 +53,12 @@ export default function SettingsScreen() {
   const [customColors, setCustomColors] = useState<string[]>(['#FF0000', '#00FF00', '#0000FF', '#FFD700']);
   const [editingColorIndex, setEditingColorIndex] = useState<number | null>(null);
   const [hexInput, setHexInput] = useState('');
+  const [editingCapeId, setEditingCapeId] = useState<string | null>(null);
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
-  const { preferences, customCape, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults, saveCustomCape, deleteCustomCape, toggleCustomCape, moveCustomCapeUp, moveCustomCapeDown } = usePalettePreferences();
+  const { preferences, customCapes, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults, saveCustomCape, deleteCustomCape, toggleCustomCape, moveCustomCapeUp, moveCustomCapeDown, canAddCustomCape } = usePalettePreferences();
 
   useEffect(() => {
     AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
@@ -143,13 +144,15 @@ export default function SettingsScreen() {
     Linking.openURL('https://colorcape.app/terms-of-service');
   };
 
-  const openCustomCapeCreator = () => {
+  const openCustomCapeCreator = (capeId?: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // If there's an existing custom cape, load it
-    if (customCape) {
-      setCustomColorCount(customCape.colors.length);
-      setCustomColors(customCape.colors.map(c => c.hex));
+    const existingCape = capeId ? customCapes.find(c => c.id === capeId) : null;
+    if (existingCape) {
+      setEditingCapeId(existingCape.id);
+      setCustomColorCount(existingCape.colors.length);
+      setCustomColors(existingCape.colors.map(c => c.hex));
     } else {
+      setEditingCapeId(null);
       setCustomColorCount(4);
       setCustomColors(['#FF0000', '#00FF00', '#0000FF', '#FFD700']);
     }
@@ -210,32 +213,39 @@ export default function SettingsScreen() {
 
   const handleSaveCustomCape = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const existingCape = editingCapeId ? customCapes.find(c => c.id === editingCapeId) : null;
+    const capeNumber = existingCape
+      ? customCapes.findIndex(c => c.id === editingCapeId) + 1
+      : customCapes.length + 1;
     const cape = {
-      name: 'My Custom Cape',
+      ...(editingCapeId && { id: editingCapeId }),
+      name: `Custom Cape ${capeNumber}`,
       colors: customColors.slice(0, customColorCount).map((hex, i) => ({
         name: `Color ${i + 1}`,
         hex,
       })),
-      enabled: customCape?.enabled ?? true,
-      position: customCape?.position ?? 0,
+      enabled: existingCape?.enabled ?? true,
+      position: existingCape?.position ?? 0,
     };
     saveCustomCape(cape);
     setShowCustomCapeSheet(false);
+    setEditingCapeId(null);
   };
 
-  const handleDeleteCustomCape = () => {
+  const handleDeleteCustomCape = (capeId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Alert.alert(
       'Delete Custom Cape',
-      'Are you sure you want to delete your custom cape?',
+      'Are you sure you want to delete this custom cape?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            deleteCustomCape();
+            deleteCustomCape(capeId);
             setShowCustomCapeSheet(false);
+            setEditingCapeId(null);
           },
         },
       ]
@@ -351,27 +361,32 @@ export default function SettingsScreen() {
             <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
               <View style={styles.paletteList}>
                 {(() => {
-                  // Build combined list with custom cape at its position
-                  type ListItem = { type: 'custom' } | { type: 'palette'; key: ColorPaletteKey };
+                  // Build combined list with custom capes at their positions
+                  type ListItem = { type: 'custom'; cape: typeof customCapes[0] } | { type: 'palette'; key: ColorPaletteKey };
                   const items: ListItem[] = preferences.order.map(key => ({ type: 'palette' as const, key }));
-                  if (customCape) {
-                    const pos = Math.min(customCape.position, items.length);
-                    items.splice(pos, 0, { type: 'custom' });
-                  }
+
+                  // Insert custom capes at their positions (sorted by position descending to avoid index shifts)
+                  const sortedCustomCapes = [...customCapes].sort((a, b) => b.position - a.position);
+                  sortedCustomCapes.forEach(cape => {
+                    const pos = Math.min(cape.position, items.length);
+                    items.splice(pos, 0, { type: 'custom', cape });
+                  });
+
                   const totalItems = items.length;
 
                   return items.map((item, index) => {
                     const isFirst = index === 0;
                     const isLast = index === totalItems - 1;
 
-                    if (item.type === 'custom' && customCape) {
+                    if (item.type === 'custom') {
+                      const customCape = item.cape;
                       return (
-                        <View key="custom-cape" style={styles.paletteItem}>
+                        <View key={customCape.id} style={styles.paletteItem}>
                           <View style={styles.paletteReorder}>
                             <Pressable
                               onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                moveCustomCapeUp();
+                                moveCustomCapeUp(customCape.id);
                               }}
                               disabled={isFirst}
                               style={[styles.reorderButton, isFirst && styles.reorderButtonDisabled]}
@@ -381,7 +396,7 @@ export default function SettingsScreen() {
                             <Pressable
                               onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                moveCustomCapeDown();
+                                moveCustomCapeDown(customCape.id);
                               }}
                               disabled={isLast}
                               style={[styles.reorderButton, isLast && styles.reorderButtonDisabled]}
@@ -409,7 +424,7 @@ export default function SettingsScreen() {
                             value={customCape.enabled}
                             onValueChange={() => {
                               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                              toggleCustomCape();
+                              toggleCustomCape(customCape.id);
                             }}
                             trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(52, 199, 89, 0.5)' }}
                             thumbColor={customCape.enabled ? '#34C759' : '#f4f3f4'}
@@ -515,8 +530,8 @@ export default function SettingsScreen() {
           <Pressable style={styles.sheetBackdrop} onPress={() => setShowCustomCapeSheet(false)} />
           <View style={[styles.sheetContent, { paddingBottom: insets.bottom + 20, maxHeight: '90%' }]}>
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>{customCape ? 'Edit Custom Cape' : 'Create Custom Cape'}</Text>
-              <Pressable onPress={() => setShowCustomCapeSheet(false)} style={styles.sheetClose}>
+              <Text style={styles.sheetTitle}>{editingCapeId ? 'Edit Custom Cape' : 'Create Custom Cape'}</Text>
+              <Pressable onPress={() => { setShowCustomCapeSheet(false); setEditingCapeId(null); }} style={styles.sheetClose}>
                 <X size={24} color="#FFFFFF" />
               </Pressable>
             </View>
@@ -598,10 +613,10 @@ export default function SettingsScreen() {
 
               {/* Action Buttons */}
               <View style={styles.customCapeActions}>
-                {customCape && (
+                {editingCapeId && (
                   <Pressable
                     style={[styles.customCapeButton, styles.customCapeButtonDelete]}
-                    onPress={handleDeleteCustomCape}
+                    onPress={() => handleDeleteCustomCape(editingCapeId)}
                   >
                     <Trash2 size={18} color="#FF3B30" strokeWidth={2} />
                     <Text style={styles.customCapeButtonDeleteText}>Delete</Text>
@@ -641,29 +656,55 @@ export default function SettingsScreen() {
             <View style={styles.settingTextContainer}>
               <Text style={styles.settingLabel}>Cape Palettes</Text>
               <Text style={styles.settingDescription}>
-                {preferences.order.filter(k => preferences.enabled[k]).length + (customCape?.enabled ? 1 : 0)} of {preferences.order.length + (customCape ? 1 : 0)} enabled
+                {preferences.order.filter(k => preferences.enabled[k]).length + customCapes.filter(c => c.enabled).length} of {preferences.order.length + customCapes.length} enabled
               </Text>
             </View>
           </Pressable>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.settingButton,
-              styles.settingButtonMarginTop,
-              pressed && styles.settingButtonPressed,
-            ]}
-            onPress={openCustomCapeCreator}
-          >
-            <View style={[styles.settingIcon, styles.settingIconCyan]}>
-              <Plus size={22} color="#5AC8FA" strokeWidth={2} />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>{customCape ? 'Edit Custom Cape' : 'Create Custom Cape'}</Text>
-              <Text style={styles.settingDescription}>
-                {customCape ? `${customCape.colors.length} colors` : 'Design your own color palette'}
-              </Text>
-            </View>
-          </Pressable>
+          {/* List existing custom capes */}
+          {customCapes.map((cape, index) => (
+            <Pressable
+              key={cape.id}
+              style={({ pressed }) => [
+                styles.settingButton,
+                styles.settingButtonMarginTop,
+                pressed && styles.settingButtonPressed,
+              ]}
+              onPress={() => openCustomCapeCreator(cape.id)}
+            >
+              <View style={[styles.settingIcon, styles.settingIconCyan]}>
+                <Palette size={22} color="#5AC8FA" strokeWidth={2} />
+              </View>
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingLabel}>{cape.name}</Text>
+                <Text style={styles.settingDescription}>
+                  {cape.colors.length} colors • Tap to edit
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+
+          {/* Create new custom cape button - only show if under limit */}
+          {canAddCustomCape() && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.settingButton,
+                styles.settingButtonMarginTop,
+                pressed && styles.settingButtonPressed,
+              ]}
+              onPress={() => openCustomCapeCreator()}
+            >
+              <View style={[styles.settingIcon, styles.settingIconCyan]}>
+                <Plus size={22} color="#5AC8FA" strokeWidth={2} />
+              </View>
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingLabel}>Create Custom Cape</Text>
+                <Text style={styles.settingDescription}>
+                  Design your own color palette ({customCapes.length}/3)
+                </Text>
+              </View>
+            </Pressable>
+          )}
         </View>
 
         {/* Camera Section */}

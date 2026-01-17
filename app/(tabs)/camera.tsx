@@ -120,12 +120,12 @@ export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
   const [paletteKey, setPaletteKey] = useState<ColorPaletteKey | null>(null);
-  const [useCustomCape, setUseCustomCape] = useState(false);
+  const [selectedCustomCapeId, setSelectedCustomCapeId] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
   const viewShotRef = useRef<View>(null);
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { getEnabledPalettes, customCape, preferences } = usePalettePreferences();
+  const { getEnabledPalettes, customCapes, preferences } = usePalettePreferences();
 
   useEffect(() => {
     AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
@@ -207,8 +207,11 @@ export default function CameraScreen() {
 
   // Get current colors based on whether we're using custom cape or regular palette
   const getCurrentColors = () => {
-    if (useCustomCape && customCape) {
-      return customCape.colors;
+    if (selectedCustomCapeId) {
+      const customCape = customCapes.find(c => c.id === selectedCustomCapeId);
+      if (customCape) {
+        return customCape.colors;
+      }
     }
     return currentPalette?.colors || [];
   };
@@ -221,12 +224,12 @@ export default function CameraScreen() {
   function changePalette(newKey: ColorPaletteKey) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setPaletteKey(newKey);
-    setUseCustomCape(false);
+    setSelectedCustomCapeId(null);
   }
 
-  function selectCustomCape() {
+  function selectCustomCape(capeId: string) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setUseCustomCape(true);
+    setSelectedCustomCapeId(capeId);
   }
 
   async function takePicture() {
@@ -269,8 +272,9 @@ export default function CameraScreen() {
     );
   }
 
-  const customCapeEnabled = customCape && customCape.enabled;
-  if ((!currentPalette && !customCapeEnabled) || (enabledPalettes.length === 0 && !customCapeEnabled)) {
+  const enabledCustomCapes = customCapes.filter(c => c.enabled);
+  const hasEnabledCapes = enabledPalettes.length > 0 || enabledCustomCapes.length > 0;
+  if (!hasEnabledCapes) {
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
@@ -284,8 +288,11 @@ export default function CameraScreen() {
 
   // Get current label based on selection
   const getCurrentLabel = () => {
-    if (useCustomCape && customCape) {
-      return { name: customCape.name, description: `${customCape.colors.length} custom colors` };
+    if (selectedCustomCapeId) {
+      const customCape = customCapes.find(c => c.id === selectedCustomCapeId);
+      if (customCape) {
+        return { name: customCape.name, description: `${customCape.colors.length} custom colors` };
+      }
     }
     return currentPalette ? { name: currentPalette.name, description: currentPalette.description } : { name: '', description: '' };
   };
@@ -321,36 +328,41 @@ export default function CameraScreen() {
             contentContainerStyle={styles.paletteSelectorContent}
           >
             {(() => {
-              // Build combined list with custom cape at its position
-              type ListItem = { type: 'custom' } | { type: 'palette'; key: ColorPaletteKey };
+              // Build combined list with custom capes at their positions
+              type ListItem = { type: 'custom'; cape: typeof enabledCustomCapes[0] } | { type: 'palette'; key: ColorPaletteKey };
               const items: ListItem[] = enabledPalettes.map(key => ({ type: 'palette' as const, key }));
-              if (customCape && customCape.enabled) {
-                // Calculate effective position - count enabled palettes before customCape.position
+
+              // Insert enabled custom capes at their effective positions
+              // Sort by position descending to avoid index shifts during insertion
+              const sortedEnabledCustomCapes = [...enabledCustomCapes].sort((a, b) => b.position - a.position);
+              sortedEnabledCustomCapes.forEach(cape => {
+                // Calculate effective position - count enabled palettes before cape.position
                 let effectivePos = 0;
-                for (let i = 0; i < customCape.position && i < preferences.order.length; i++) {
+                for (let i = 0; i < cape.position && i < preferences.order.length; i++) {
                   if (preferences.enabled[preferences.order[i]]) {
                     effectivePos++;
                   }
                 }
                 const pos = Math.min(effectivePos, items.length);
-                items.splice(pos, 0, { type: 'custom' });
-              }
+                items.splice(pos, 0, { type: 'custom', cape });
+              });
 
               return items.map((item) => {
-                if (item.type === 'custom' && customCape) {
+                if (item.type === 'custom') {
+                  const customCape = item.cape;
                   return (
                     <Pressable
-                      key="custom-cape"
+                      key={customCape.id}
                       style={[
                         styles.paletteButton,
-                        useCustomCape && styles.paletteButtonActive,
+                        selectedCustomCapeId === customCape.id && styles.paletteButtonActive,
                       ]}
-                      onPress={selectCustomCape}
+                      onPress={() => selectCustomCape(customCape.id)}
                     >
                       <Text
                         style={[
                           styles.paletteButtonText,
-                          useCustomCape && styles.paletteButtonTextActive,
+                          selectedCustomCapeId === customCape.id && styles.paletteButtonTextActive,
                         ]}
                       >
                         {customCape.name}
@@ -365,14 +377,14 @@ export default function CameraScreen() {
                       key={key}
                       style={[
                         styles.paletteButton,
-                        currentPaletteKey === key && !useCustomCape && styles.paletteButtonActive,
+                        currentPaletteKey === key && !selectedCustomCapeId && styles.paletteButtonActive,
                       ]}
                       onPress={() => changePalette(key)}
                     >
                       <Text
                         style={[
                           styles.paletteButtonText,
-                          currentPaletteKey === key && !useCustomCape && styles.paletteButtonTextActive,
+                          currentPaletteKey === key && !selectedCustomCapeId && styles.paletteButtonTextActive,
                         ]}
                       >
                         {colorPalettes[key].name}
