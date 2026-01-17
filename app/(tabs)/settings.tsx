@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown } from 'lucide-react-native';
+import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
@@ -13,6 +13,7 @@ import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 
 export default function SettingsScreen() {
   const [showCustomerCenter, setShowCustomerCenter] = useState(false);
+  const [showPaletteSheet, setShowPaletteSheet] = useState(false);
   const [highlightedKey, setHighlightedKey] = useState<ColorPaletteKey | null>(null);
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
@@ -106,94 +107,137 @@ export default function SettingsScreen() {
         <Text style={styles.title}>Settings</Text>
       </View>
 
+      {/* Palette Bottom Sheet */}
+      <Modal
+        visible={showPaletteSheet}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowPaletteSheet(false)}
+      >
+        <View style={styles.sheetOverlay}>
+          <Pressable style={styles.sheetBackdrop} onPress={() => setShowPaletteSheet(false)} />
+          <View style={[styles.sheetContent, { paddingBottom: insets.bottom + 20 }]}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>Cape Palettes</Text>
+              <Pressable onPress={() => setShowPaletteSheet(false)} style={styles.sheetClose}>
+                <X size={24} color="#FFFFFF" />
+              </Pressable>
+            </View>
+            <Text style={styles.sheetDescription}>
+              Toggle and reorder palettes for the camera
+            </Text>
+
+            <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
+              <View style={styles.paletteList}>
+                {preferences.order.map((key, index) => {
+                  const palette = colorPalettes[key];
+                  const isEnabled = preferences.enabled[key];
+                  const isFirst = index === 0;
+                  const isLast = index === preferences.order.length - 1;
+
+                  const isHighlighted = highlightedKey === key;
+                  const animatedStyle = isHighlighted ? {
+                    backgroundColor: highlightAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.15)'],
+                    }),
+                  } : {};
+
+                  return (
+                    <Animated.View key={key} style={[styles.paletteItem, animatedStyle]}>
+                      <View style={styles.paletteReorder}>
+                        <Pressable
+                          onPress={() => handleMoveUp(key)}
+                          disabled={isFirst}
+                          style={[styles.reorderButton, isFirst && styles.reorderButtonDisabled]}
+                        >
+                          <ChevronUp size={18} color={isFirst ? 'rgba(255,255,255,0.2)' : '#FFFFFF'} />
+                        </Pressable>
+                        <Pressable
+                          onPress={() => handleMoveDown(key)}
+                          disabled={isLast}
+                          style={[styles.reorderButton, isLast && styles.reorderButtonDisabled]}
+                        >
+                          <ChevronDown size={18} color={isLast ? 'rgba(255,255,255,0.2)' : '#FFFFFF'} />
+                        </Pressable>
+                      </View>
+
+                      <View style={styles.paletteColors}>
+                        {palette.colors.slice(0, 4).map((color, colorIndex) => (
+                          <View
+                            key={colorIndex}
+                            style={[styles.colorDot, { backgroundColor: color.hex }]}
+                          />
+                        ))}
+                      </View>
+
+                      <View style={styles.paletteInfo}>
+                        <Text style={[styles.paletteName, !isEnabled && styles.paletteNameDisabled]}>
+                          {palette.name}
+                        </Text>
+                      </View>
+
+                      <Switch
+                        value={isEnabled}
+                        onValueChange={() => handleTogglePalette(key)}
+                        trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(52, 199, 89, 0.5)' }}
+                        thumbColor={isEnabled ? '#34C759' : '#f4f3f4'}
+                      />
+                    </Animated.View>
+                  );
+                })}
+              </View>
+
+              <View style={styles.paletteActions}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.actionButton,
+                    pressed && styles.actionButtonPressed,
+                  ]}
+                  onPress={handleToggleAll}
+                >
+                  <Text style={styles.actionButtonText}>{allEnabled ? 'Disable All' : 'Enable All'}</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.actionButton,
+                    pressed && styles.actionButtonPressed,
+                  ]}
+                  onPress={handleResetPalettes}
+                >
+                  <Text style={styles.actionButtonText}>Reset to Defaults</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Cape Palettes Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Cape Palettes</Text>
-          <Text style={styles.sectionDescription}>
-            Choose which palettes appear in the camera
-          </Text>
+          <Text style={styles.sectionTitle}>Available Capes</Text>
 
-          <View style={styles.paletteList}>
-            {preferences.order.map((key, index) => {
-              const palette = colorPalettes[key];
-              const isEnabled = preferences.enabled[key];
-              const isFirst = index === 0;
-              const isLast = index === preferences.order.length - 1;
-
-              const isHighlighted = highlightedKey === key;
-              const animatedStyle = isHighlighted ? {
-                backgroundColor: highlightAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.15)'],
-                }),
-              } : {};
-
-              return (
-                <Animated.View key={key} style={[styles.paletteItem, animatedStyle]}>
-                  <View style={styles.paletteReorder}>
-                    <Pressable
-                      onPress={() => handleMoveUp(key)}
-                      disabled={isFirst}
-                      style={[styles.reorderButton, isFirst && styles.reorderButtonDisabled]}
-                    >
-                      <ChevronUp size={18} color={isFirst ? 'rgba(255,255,255,0.2)' : '#FFFFFF'} />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleMoveDown(key)}
-                      disabled={isLast}
-                      style={[styles.reorderButton, isLast && styles.reorderButtonDisabled]}
-                    >
-                      <ChevronDown size={18} color={isLast ? 'rgba(255,255,255,0.2)' : '#FFFFFF'} />
-                    </Pressable>
-                  </View>
-
-                  <View style={styles.paletteColors}>
-                    {palette.colors.slice(0, 4).map((color, colorIndex) => (
-                      <View
-                        key={colorIndex}
-                        style={[styles.colorDot, { backgroundColor: color.hex }]}
-                      />
-                    ))}
-                  </View>
-
-                  <View style={styles.paletteInfo}>
-                    <Text style={[styles.paletteName, !isEnabled && styles.paletteNameDisabled]}>
-                      {palette.name}
-                    </Text>
-                  </View>
-
-                  <Switch
-                    value={isEnabled}
-                    onValueChange={() => handleTogglePalette(key)}
-                    trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(52, 199, 89, 0.5)' }}
-                    thumbColor={isEnabled ? '#34C759' : '#f4f3f4'}
-                  />
-                </Animated.View>
-              );
-            })}
-          </View>
-
-          <View style={styles.paletteActions}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.resetPalettesButton,
-                pressed && styles.resetPalettesButtonPressed,
-              ]}
-              onPress={handleToggleAll}
-            >
-              <Text style={styles.resetPalettesText}>{allEnabled ? 'Disable All' : 'Enable All'}</Text>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [
-                styles.resetPalettesButton,
-                pressed && styles.resetPalettesButtonPressed,
-              ]}
-              onPress={handleResetPalettes}
-            >
-              <Text style={styles.resetPalettesText}>Reset to Defaults</Text>
-            </Pressable>
-          </View>
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingButton,
+              pressed && styles.settingButtonPressed,
+            ]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setShowPaletteSheet(true);
+            }}
+          >
+            <View style={[styles.settingIcon, styles.settingIconPurple]}>
+              <Palette size={22} color="#AF52DE" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Cape Palettes</Text>
+              <Text style={styles.settingDescription}>
+                {preferences.order.filter(k => preferences.enabled[k]).length} of {preferences.order.length} enabled
+              </Text>
+            </View>
+          </Pressable>
         </View>
 
         {/* Subscription Section */}
@@ -308,6 +352,9 @@ const styles = StyleSheet.create({
   settingIconGold: {
     backgroundColor: 'rgba(255, 215, 0, 0.15)',
   },
+  settingIconPurple: {
+    backgroundColor: 'rgba(175, 82, 222, 0.15)',
+  },
   settingTextContainer: {
     flex: 1,
   },
@@ -370,18 +417,59 @@ const styles = StyleSheet.create({
   paletteActions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 12,
+    marginTop: 16,
+    marginBottom: 8,
   },
-  resetPalettesButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+  actionButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
   },
-  resetPalettesButtonPressed: {
-    opacity: 0.6,
+  actionButtonPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
-  resetPalettesText: {
+  actionButtonText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  sheetOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  sheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  sheetContent: {
+    backgroundColor: '#1C1C1E',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    maxHeight: '80%',
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  sheetTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  sheetClose: {
+    padding: 4,
+  },
+  sheetDescription: {
+    fontSize: 14,
     color: 'rgba(255, 255, 255, 0.5)',
+    marginBottom: 16,
+  },
+  sheetScroll: {
+    flexGrow: 0,
   },
 });
