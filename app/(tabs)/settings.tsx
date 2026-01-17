@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles } from 'lucide-react-native';
+import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
@@ -69,6 +69,33 @@ export default function SettingsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setCapeOpacity(value);
     await AsyncStorage.setItem(OPACITY_SETTING_KEY, value.toString());
+  };
+
+  const resetSettings = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      'Reset Settings',
+      'This will reset camera and cape settings to defaults. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.multiRemove([
+              CAMERA_SETTING_KEY,
+              MIRROR_SETTING_KEY,
+              OPACITY_SETTING_KEY,
+            ]);
+            setDefaultFrontCamera(true);
+            setMirrorFrontCamera(true);
+            setCapeOpacity(0.85);
+            resetToDefaults(); // Reset palette preferences too
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          },
+        },
+      ]
+    );
   };
 
   const handleShareApp = async () => {
@@ -435,6 +462,25 @@ export default function SettingsScreen() {
               styles.settingButton,
               pressed && styles.settingButtonPressed,
             ]}
+            onPress={resetSettings}
+          >
+            <View style={[styles.settingIcon, styles.settingIconGray]}>
+              <RefreshCw size={22} color="#8E8E93" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Reset Settings</Text>
+              <Text style={styles.settingDescription}>
+                Restore camera and cape settings to defaults
+              </Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingButton,
+              styles.settingButtonMarginTop,
+              pressed && styles.settingButtonPressed,
+            ]}
             onPress={resetApp}
           >
             <View style={styles.settingIcon}>
@@ -534,6 +580,9 @@ const styles = StyleSheet.create({
   },
   settingIconOrange: {
     backgroundColor: 'rgba(255, 149, 0, 0.15)',
+  },
+  settingIconGray: {
+    backgroundColor: 'rgba(142, 142, 147, 0.15)',
   },
   opacitySelector: {
     flexDirection: 'row',
