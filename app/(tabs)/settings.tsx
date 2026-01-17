@@ -265,19 +265,19 @@ export default function SettingsScreen() {
     });
   };
 
-  const resetApp = () => {
+  const handleLogOut = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     Alert.alert(
-      'Reset App',
-      'This will clear all your data and show the onboarding again. Are you sure?',
+      'Log Out',
+      'This will clear all your data and return to the start. Are you sure?',
       [
         {
           text: 'Cancel',
           style: 'cancel',
         },
         {
-          text: 'Reset',
+          text: 'Log Out',
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.clear();
@@ -844,8 +844,8 @@ export default function SettingsScreen() {
             ]}
             onPress={resetSettings}
           >
-            <View style={[styles.settingIcon, styles.settingIconGray]}>
-              <RefreshCw size={22} color="#8E8E93" strokeWidth={2} />
+            <View style={styles.settingIcon}>
+              <RefreshCw size={22} color="#FF3B30" strokeWidth={2} />
             </View>
             <View style={styles.settingTextContainer}>
               <Text style={styles.settingLabel}>Reset Settings</Text>
@@ -854,26 +854,18 @@ export default function SettingsScreen() {
               </Text>
             </View>
           </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.settingButton,
-              styles.settingButtonMarginTop,
-              pressed && styles.settingButtonPressed,
-            ]}
-            onPress={resetApp}
-          >
-            <View style={styles.settingIcon}>
-              <RotateCcw size={22} color="#FF3B30" strokeWidth={2} />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Reset App</Text>
-              <Text style={styles.settingDescription}>
-                Clear all data and restart onboarding
-              </Text>
-            </View>
-          </Pressable>
         </View>
+
+        {/* Log Out */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.logOutButton,
+            pressed && styles.logOutButtonPressed,
+          ]}
+          onPress={handleLogOut}
+        >
+          <Text style={styles.logOutText}>Log Out</Text>
+        </Pressable>
 
         {/* Legal Section */}
         <View style={styles.section}>
@@ -1151,6 +1143,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.3)',
+  },
+  logOutButton: {
+    alignItems: 'center',
+    paddingVertical: 16,
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  logOutButtonPressed: {
+    opacity: 0.6,
+  },
+  logOutText: {
+    fontSize: 17,
+    fontWeight: '500',
+    color: '#FFFFFF',
   },
   settingIconCyan: {
     backgroundColor: 'rgba(90, 200, 250, 0.15)',
