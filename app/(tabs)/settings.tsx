@@ -199,16 +199,6 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Subscription Status */}
-        <View style={styles.statusCard}>
-          <View style={styles.statusIconContainer}>
-            <Crown size={28} color="#FFD700" strokeWidth={2} />
-          </View>
-          <View style={styles.statusTextContainer}>
-            <Text style={styles.statusTitle}>Subscribed</Text>
-          </View>
-        </View>
-
         {/* Subscription Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Subscription</Text>
@@ -278,32 +268,6 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-  },
-  statusCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    marginBottom: 24,
-  },
-  statusIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-  },
-  statusTextContainer: {
-    flex: 1,
-  },
-  statusTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
   },
   section: {
     marginBottom: 32,
