@@ -18,7 +18,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
-  const { preferences, togglePalette, movePaletteUp, movePaletteDown } = usePalettePreferences();
+  const { preferences, togglePalette, movePaletteUp, movePaletteDown, resetToDefaults } = usePalettePreferences();
 
   const triggerHighlight = (key: ColorPaletteKey) => {
     setHighlightedKey(key);
@@ -77,6 +77,11 @@ export default function SettingsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     movePaletteDown(key);
     triggerHighlight(key);
+  };
+
+  const handleResetPalettes = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    resetToDefaults();
   };
 
   return (
@@ -161,6 +166,16 @@ export default function SettingsScreen() {
               );
             })}
           </View>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.resetPalettesButton,
+              pressed && styles.resetPalettesButtonPressed,
+            ]}
+            onPress={handleResetPalettes}
+          >
+            <Text style={styles.resetPalettesText}>Reset to Defaults</Text>
+          </Pressable>
         </View>
 
         {/* Subscription Status */}
@@ -369,5 +384,18 @@ const styles = StyleSheet.create({
   },
   paletteNameDisabled: {
     color: 'rgba(255, 255, 255, 0.4)',
+  },
+  resetPalettesButton: {
+    marginTop: 12,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  resetPalettesButtonPressed: {
+    opacity: 0.6,
+  },
+  resetPalettesText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.5)',
   },
 });
