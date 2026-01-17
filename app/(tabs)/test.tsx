@@ -499,6 +499,11 @@ export default function TestScreen() {
         </View>
 
         <View style={[styles.introContent, { paddingTop: insets.top + 80 }]}>
+          <Image
+            source={require('@/assets/images/unicorn-cape.png')}
+            style={styles.introImage}
+            contentFit="contain"
+          />
           <Text style={styles.introTitle}>Find Your Colors</Text>
           <Text style={styles.introSubtitle}>
             Discover your seasonal color palette in 2 simple steps
@@ -773,6 +778,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     justifyContent: 'center',
+  },
+  introImage: {
+    width: 150,
+    height: 150,
+    alignSelf: 'center',
+    marginBottom: 24,
   },
   introTitle: {
     fontSize: 32,
