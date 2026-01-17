@@ -264,7 +264,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* App Data Section */}
-        <View style={[styles.section, { paddingBottom: insets.bottom + 20 }]}>
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>App Data</Text>
 
           <Pressable
@@ -284,6 +284,11 @@ export default function SettingsScreen() {
               </Text>
             </View>
           </Pressable>
+        </View>
+
+        {/* App Version */}
+        <View style={[styles.versionContainer, { paddingBottom: insets.bottom + 20 }]}>
+          <Text style={styles.versionText}>Version 1.0.0-beta</Text>
         </View>
       </ScrollView>
     </View>
@@ -471,5 +476,14 @@ const styles = StyleSheet.create({
   },
   sheetScroll: {
     flexGrow: 0,
+  },
+  versionContainer: {
+    alignItems: 'center',
+    paddingTop: 8,
+  },
+  versionText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.3)',
   },
 });
