@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, RefreshCw, Sparkles } from 'lucide-react-native';
+import { RotateCcw, Crown, RefreshCw } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
 import { useRevenueCat } from '@/context/revenuecat-context';
@@ -16,7 +16,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
-  const { isProUser, restorePurchases, setHasSeenPaywall } = useRevenueCat();
+  const { restorePurchases } = useRevenueCat();
 
   const resetApp = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -35,7 +35,6 @@ export default function SettingsScreen() {
           onPress: async () => {
             await AsyncStorage.clear();
             setHasOnboarded(false);
-            setHasSeenPaywall(false);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             router.replace('/onboarding');
           },
@@ -62,12 +61,6 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleUpgrade = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setHasSeenPaywall(false);
-    router.push('/paywall');
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -87,58 +80,43 @@ export default function SettingsScreen() {
         {/* Subscription Status */}
         <View style={styles.statusCard}>
           <View style={styles.statusIconContainer}>
-            {isProUser ? (
-              <Crown size={28} color="#FFD700" strokeWidth={2} />
-            ) : (
-              <Sparkles size={28} color="#9B59B6" strokeWidth={2} />
-            )}
+            <Crown size={28} color="#FFD700" strokeWidth={2} />
           </View>
           <View style={styles.statusTextContainer}>
-            <Text style={styles.statusTitle}>
-              {isProUser ? 'Color Cape Pro' : 'Free Plan'}
-            </Text>
+            <Text style={styles.statusTitle}>Color Cape Pro</Text>
             <Text style={styles.statusDescription}>
-              {isProUser
-                ? 'You have access to all features'
-                : 'Upgrade for unlimited palettes'}
+              You have access to all features
             </Text>
           </View>
-          {!isProUser && (
-            <Pressable style={styles.upgradeButton} onPress={handleUpgrade}>
-              <Text style={styles.upgradeButtonText}>Upgrade</Text>
-            </Pressable>
-          )}
         </View>
 
         {/* Subscription Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Subscription</Text>
 
-          {isProUser && (
-            <Pressable
-              style={({ pressed }) => [
-                styles.settingButton,
-                pressed && styles.settingButtonPressed,
-              ]}
-              onPress={handleManageSubscription}
-            >
-              <View style={[styles.settingIcon, styles.settingIconGold]}>
-                <Crown size={22} color="#FFD700" strokeWidth={2} />
-              </View>
-              <View style={styles.settingTextContainer}>
-                <Text style={styles.settingLabel}>Manage Subscription</Text>
-                <Text style={styles.settingDescription}>
-                  View or cancel your subscription
-                </Text>
-              </View>
-            </Pressable>
-          )}
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingButton,
+              pressed && styles.settingButtonPressed,
+            ]}
+            onPress={handleManageSubscription}
+          >
+            <View style={[styles.settingIcon, styles.settingIconGold]}>
+              <Crown size={22} color="#FFD700" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Manage Subscription</Text>
+              <Text style={styles.settingDescription}>
+                View or cancel your subscription
+              </Text>
+            </View>
+          </Pressable>
 
           <Pressable
             style={({ pressed }) => [
               styles.settingButton,
               pressed && styles.settingButtonPressed,
-              isProUser && styles.settingButtonMarginTop,
+              styles.settingButtonMarginTop,
             ]}
             onPress={handleRestorePurchases}
             disabled={isRestoring}

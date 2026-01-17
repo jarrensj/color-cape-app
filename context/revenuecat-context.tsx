@@ -1,7 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Purchases, { CustomerInfo, PurchasesOffering } from 'react-native-purchases';
-import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 const API_KEY = Constants.expoConfig?.extra?.revenueCatApiKey ?? '';
@@ -12,8 +10,6 @@ type RevenueCatContextType = {
   customerInfo: CustomerInfo | null;
   currentOffering: PurchasesOffering | null;
   isLoading: boolean;
-  hasSeenPaywall: boolean;
-  setHasSeenPaywall: (value: boolean) => void;
   restorePurchases: () => Promise<boolean>;
   checkSubscriptionStatus: () => Promise<void>;
 };
@@ -25,7 +21,6 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [currentOffering, setCurrentOffering] = useState<PurchasesOffering | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasSeenPaywall, setHasSeenPaywallState] = useState(false);
 
   useEffect(() => {
     initializeRevenueCat();
@@ -33,10 +28,6 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
 
   const initializeRevenueCat = async () => {
     try {
-      // Check if user has seen paywall before
-      const seenPaywall = await AsyncStorage.getItem('has_seen_paywall');
-      setHasSeenPaywallState(seenPaywall === 'true');
-
       // Configure RevenueCat
       Purchases.configure({ apiKey: API_KEY });
 
@@ -88,11 +79,6 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const setHasSeenPaywall = async (value: boolean) => {
-    setHasSeenPaywallState(value);
-    await AsyncStorage.setItem('has_seen_paywall', value.toString());
-  };
-
   return (
     <RevenueCatContext.Provider
       value={{
@@ -100,8 +86,6 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
         customerInfo,
         currentOffering,
         isLoading,
-        hasSeenPaywall,
-        setHasSeenPaywall,
         restorePurchases,
         checkSubscriptionStatus,
       }}

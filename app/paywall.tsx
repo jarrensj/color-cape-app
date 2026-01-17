@@ -6,17 +6,19 @@ import { useRevenueCat } from '@/context/revenuecat-context';
 
 export default function PaywallScreen() {
   const router = useRouter();
-  const { setHasSeenPaywall, checkSubscriptionStatus, currentOffering } = useRevenueCat();
+  const { checkSubscriptionStatus, currentOffering } = useRevenueCat();
+
+  const handleDismiss = () => {
+    // Do nothing - paywall is mandatory
+  };
 
   const handlePurchaseCompleted = async () => {
     await checkSubscriptionStatus();
-    await setHasSeenPaywall(true);
     router.replace('/(tabs)');
   };
 
   const handleRestoreCompleted = async () => {
     await checkSubscriptionStatus();
-    await setHasSeenPaywall(true);
     router.replace('/(tabs)');
   };
 
@@ -28,6 +30,7 @@ export default function PaywallScreen() {
           offering: currentOffering ?? undefined,
           displayCloseButton: false,
         }}
+        onDismiss={handleDismiss}
         onPurchaseCompleted={handlePurchaseCompleted}
         onRestoreCompleted={handleRestoreCompleted}
       />

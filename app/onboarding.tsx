@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useOnboarding } from '@/context/onboarding-context';
+import { useRevenueCat } from '@/context/revenuecat-context';
 import Animated, {
   useAnimatedStyle,
   withTiming,
@@ -166,11 +167,9 @@ export default function OnboardingScreen() {
     setAnswers(newAnswers);
 
     if (isLastQuestion) {
-      // Save answers and mark onboarding complete
       await AsyncStorage.setItem('onboarding_complete', 'true');
       await AsyncStorage.setItem('onboarding_answers', JSON.stringify(newAnswers));
       setHasOnboarded(true);
-      // Navigate to paywall after onboarding
       router.replace('/paywall');
     } else {
       setCurrentQuestion(currentQuestion + 1);
