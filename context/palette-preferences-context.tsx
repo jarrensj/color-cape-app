@@ -27,6 +27,7 @@ type PalettePreferencesContextType = {
   movePaletteDown: (key: ColorPaletteKey) => void;
   getEnabledPalettes: () => ColorPaletteKey[];
   resetToDefaults: () => void;
+  resetCustomCapes: () => void;
   saveCustomCape: (cape: Omit<CustomCape, 'id'> & { id?: string }) => void;
   deleteCustomCape: (id: string) => void;
   toggleCustomCape: (id: string) => void;
@@ -237,6 +238,11 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
     savePreferences(defaultPrefs);
   };
 
+  const resetCustomCapes = async () => {
+    await AsyncStorage.removeItem(CUSTOM_CAPE_KEY);
+    setCustomCapes([]);
+  };
+
   return (
     <PalettePreferencesContext.Provider
       value={{
@@ -249,6 +255,7 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
         movePaletteDown,
         getEnabledPalettes,
         resetToDefaults,
+        resetCustomCapes,
         saveCustomCape,
         deleteCustomCape,
         toggleCustomCape,

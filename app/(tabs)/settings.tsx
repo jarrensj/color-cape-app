@@ -58,7 +58,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
-  const { preferences, customCapes, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults, saveCustomCape, deleteCustomCape, toggleCustomCape, moveCustomCapeUp, moveCustomCapeDown, canAddCustomCape } = usePalettePreferences();
+  const { preferences, customCapes, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults, resetCustomCapes, saveCustomCape, deleteCustomCape, toggleCustomCape, moveCustomCapeUp, moveCustomCapeDown, canAddCustomCape } = usePalettePreferences();
 
   useEffect(() => {
     AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
@@ -100,7 +100,7 @@ export default function SettingsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Alert.alert(
       'Reset Settings',
-      'This will reset camera and cape settings to defaults. Are you sure?',
+      'This will reset camera, cape settings, and delete custom capes. Are you sure?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -115,7 +115,8 @@ export default function SettingsScreen() {
             setDefaultFrontCamera(true);
             setMirrorFrontCamera(true);
             setCapeOpacity(0.85);
-            resetToDefaults(); // Reset palette preferences too
+            resetToDefaults(); // Reset palette preferences
+            resetCustomCapes(); // Delete custom capes
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           },
         },
