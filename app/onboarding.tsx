@@ -19,7 +19,7 @@ import Animated, {
 const slideImages = [
   require('@/assets/images/unicorn.png'),
   require('@/assets/images/dressing-room-unicorn.png'),
-  require('@/assets/images/unicorn-test-taking.jpg'),
+  require('@/assets/images/unicorn-test-taking.png'),
   require('@/assets/images/selfie-unicorn.png'),
   require('@/assets/images/unicorn-suit.png'),
   require('@/assets/images/unicorn-cape.png'),
