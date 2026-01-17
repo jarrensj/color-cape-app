@@ -79,6 +79,16 @@ export default function SettingsScreen() {
     triggerHighlight(key);
   };
 
+  const handleEnableAll = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Enable any disabled palettes
+    preferences.order.forEach((key) => {
+      if (!preferences.enabled[key]) {
+        togglePalette(key);
+      }
+    });
+  };
+
   const handleResetPalettes = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     resetToDefaults();
@@ -167,15 +177,26 @@ export default function SettingsScreen() {
             })}
           </View>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.resetPalettesButton,
-              pressed && styles.resetPalettesButtonPressed,
-            ]}
-            onPress={handleResetPalettes}
-          >
-            <Text style={styles.resetPalettesText}>Reset to Defaults</Text>
-          </Pressable>
+          <View style={styles.paletteActions}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.resetPalettesButton,
+                pressed && styles.resetPalettesButtonPressed,
+              ]}
+              onPress={handleEnableAll}
+            >
+              <Text style={styles.resetPalettesText}>Enable All</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.resetPalettesButton,
+                pressed && styles.resetPalettesButtonPressed,
+              ]}
+              onPress={handleResetPalettes}
+            >
+              <Text style={styles.resetPalettesText}>Reset to Defaults</Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* Subscription Status */}
@@ -385,10 +406,14 @@ const styles = StyleSheet.create({
   paletteNameDisabled: {
     color: 'rgba(255, 255, 255, 0.4)',
   },
-  resetPalettesButton: {
+  paletteActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     marginTop: 12,
+  },
+  resetPalettesButton: {
     paddingVertical: 10,
-    alignItems: 'center',
+    paddingHorizontal: 16,
   },
   resetPalettesButtonPressed: {
     opacity: 0.6,
