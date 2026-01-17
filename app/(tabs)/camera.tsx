@@ -17,7 +17,7 @@ import { usePalettePreferences } from '@/context/palette-preferences-context';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 // Component to create the draping cape with vertical color strips
-function ColorCape({ colors }: { colors: { name: string; hex: string }[] }) {
+function ColorCape({ colors, opacity = 0.85 }: { colors: { name: string; hex: string }[]; opacity?: number }) {
   const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string } | null>(null);
   const centerX = screenWidth / 2;
   const centerY = screenHeight * 0.50;
@@ -58,7 +58,7 @@ function ColorCape({ colors }: { colors: { name: string; hex: string }[] }) {
               Z
             `}
             fill={colors[0].hex}
-            opacity={0.85}
+            opacity={opacity}
             onLongPress={() => handleLongPress(colors[0])}
             onPressOut={handlePressOut}
             delayLongPress={300}
@@ -85,7 +85,7 @@ function ColorCape({ colors }: { colors: { name: string; hex: string }[] }) {
                 key={index}
                 points={points}
                 fill={color.hex}
-                opacity={0.85}
+                opacity={opacity}
                 stroke="#FFFFFF"
                 strokeWidth={2}
                 onLongPress={() => handleLongPress(color)}
@@ -111,10 +111,12 @@ function ColorCape({ colors }: { colors: { name: string; hex: string }[] }) {
 
 const CAMERA_SETTING_KEY = 'default_camera_facing';
 const MIRROR_SETTING_KEY = 'mirror_front_camera';
+const OPACITY_SETTING_KEY = 'cape_opacity';
 
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('front');
   const [mirrorEnabled, setMirrorEnabled] = useState(true);
+  const [capeOpacity, setCapeOpacity] = useState(0.85);
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
   const [paletteKey, setPaletteKey] = useState<ColorPaletteKey | null>(null);
@@ -133,6 +135,11 @@ export default function CameraScreen() {
     AsyncStorage.getItem(MIRROR_SETTING_KEY).then((value) => {
       if (value !== null) {
         setMirrorEnabled(value === 'true');
+      }
+    });
+    AsyncStorage.getItem(OPACITY_SETTING_KEY).then((value) => {
+      if (value !== null) {
+        setCapeOpacity(parseFloat(value));
       }
     });
   }, []);
@@ -228,7 +235,7 @@ export default function CameraScreen() {
         {/* Capturable view with photo and overlay */}
         <View ref={viewShotRef} style={styles.captureView} collapsable={false}>
           <Image source={{ uri: photo }} style={styles.preview} contentFit="cover" />
-          <ColorCape colors={currentPalette.colors} />
+          <ColorCape colors={currentPalette.colors} opacity={capeOpacity} />
         </View>
         {/* Bottom controls */}
         <View style={[styles.photoButtonContainer, { paddingBottom: insets.bottom + 20 }]}>
@@ -264,7 +271,7 @@ export default function CameraScreen() {
       <StatusBar style="light" />
       <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front' && mirrorEnabled}>
         {/* Color cape overlay */}
-        <ColorCape colors={currentPalette.colors} />
+        <ColorCape colors={currentPalette.colors} opacity={capeOpacity} />
 
         {/* Top controls */}
         <View style={[styles.topControls, { paddingTop: insets.top + 12 }]}>

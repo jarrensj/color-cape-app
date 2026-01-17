@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2 } from 'lucide-react-native';
+import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
@@ -13,6 +13,14 @@ import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 
 const CAMERA_SETTING_KEY = 'default_camera_facing';
 const MIRROR_SETTING_KEY = 'mirror_front_camera';
+const OPACITY_SETTING_KEY = 'cape_opacity';
+
+const OPACITY_OPTIONS = [
+  { label: 'Light', value: 0.5 },
+  { label: 'Medium', value: 0.7 },
+  { label: 'Strong', value: 0.85 },
+  { label: 'Full', value: 1.0 },
+];
 
 export default function SettingsScreen() {
   const [showCustomerCenter, setShowCustomerCenter] = useState(false);
@@ -20,6 +28,7 @@ export default function SettingsScreen() {
   const [highlightedKey, setHighlightedKey] = useState<ColorPaletteKey | null>(null);
   const [defaultFrontCamera, setDefaultFrontCamera] = useState(true);
   const [mirrorFrontCamera, setMirrorFrontCamera] = useState(true);
+  const [capeOpacity, setCapeOpacity] = useState(0.85);
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -37,6 +46,11 @@ export default function SettingsScreen() {
         setMirrorFrontCamera(value === 'true');
       }
     });
+    AsyncStorage.getItem(OPACITY_SETTING_KEY).then((value) => {
+      if (value !== null) {
+        setCapeOpacity(parseFloat(value));
+      }
+    });
   }, []);
 
   const handleToggleDefaultCamera = async (value: boolean) => {
@@ -49,6 +63,12 @@ export default function SettingsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setMirrorFrontCamera(value);
     await AsyncStorage.setItem(MIRROR_SETTING_KEY, value ? 'true' : 'false');
+  };
+
+  const handleOpacityChange = async (value: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCapeOpacity(value);
+    await AsyncStorage.setItem(OPACITY_SETTING_KEY, value.toString());
   };
 
   const handleShareApp = async () => {
@@ -322,6 +342,44 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Cape Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Cape</Text>
+
+          <View style={styles.settingButton}>
+            <View style={[styles.settingIcon, styles.settingIconOrange]}>
+              <Sparkles size={22} color="#FF9500" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Cape Opacity</Text>
+              <Text style={styles.settingDescription}>
+                How visible the color overlay appears
+              </Text>
+            </View>
+          </View>
+          <View style={styles.opacitySelector}>
+            {OPACITY_OPTIONS.map((option) => (
+              <Pressable
+                key={option.value}
+                style={[
+                  styles.opacityButton,
+                  capeOpacity === option.value && styles.opacityButtonActive,
+                ]}
+                onPress={() => handleOpacityChange(option.value)}
+              >
+                <Text
+                  style={[
+                    styles.opacityButtonText,
+                    capeOpacity === option.value && styles.opacityButtonTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
         {/* Share Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Share</Text>
@@ -473,6 +531,32 @@ const styles = StyleSheet.create({
   },
   settingIconGreen: {
     backgroundColor: 'rgba(52, 199, 89, 0.15)',
+  },
+  settingIconOrange: {
+    backgroundColor: 'rgba(255, 149, 0, 0.15)',
+  },
+  opacitySelector: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 8,
+  },
+  opacityButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center',
+  },
+  opacityButtonActive: {
+    backgroundColor: 'rgba(255, 149, 0, 0.3)',
+  },
+  opacityButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  opacityButtonTextActive: {
+    color: '#FF9500',
   },
   settingButtonMarginTop: {
     marginTop: 12,
