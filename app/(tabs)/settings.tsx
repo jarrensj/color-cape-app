@@ -83,10 +83,7 @@ export default function SettingsScreen() {
             <Crown size={28} color="#FFD700" strokeWidth={2} />
           </View>
           <View style={styles.statusTextContainer}>
-            <Text style={styles.statusTitle}>Color Cape Pro</Text>
-            <Text style={styles.statusDescription}>
-              You have access to all features
-            </Text>
+            <Text style={styles.statusTitle}>Subscribed</Text>
           </View>
         </View>
 
