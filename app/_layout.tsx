@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { OnboardingProvider, useOnboarding } from '@/context/onboarding-context';
 import { RevenueCatProvider, useRevenueCat } from '@/context/revenuecat-context';
+import { PalettePreferencesProvider } from '@/context/palette-preferences-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -72,7 +73,9 @@ export default function RootLayout() {
   return (
     <RevenueCatProvider>
       <OnboardingProvider>
-        <RootLayoutNav />
+        <PalettePreferencesProvider>
+          <RootLayoutNav />
+        </PalettePreferencesProvider>
       </OnboardingProvider>
     </RevenueCatProvider>
   );
