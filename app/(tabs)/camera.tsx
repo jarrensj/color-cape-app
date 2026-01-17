@@ -110,9 +110,11 @@ function ColorCape({ colors }: { colors: { name: string; hex: string }[] }) {
 }
 
 const CAMERA_SETTING_KEY = 'default_camera_facing';
+const MIRROR_SETTING_KEY = 'mirror_front_camera';
 
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('front');
+  const [mirrorEnabled, setMirrorEnabled] = useState(true);
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
   const [paletteKey, setPaletteKey] = useState<ColorPaletteKey | null>(null);
@@ -126,6 +128,11 @@ export default function CameraScreen() {
     AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
       if (value !== null) {
         setFacing(value === 'front' ? 'front' : 'back');
+      }
+    });
+    AsyncStorage.getItem(MIRROR_SETTING_KEY).then((value) => {
+      if (value !== null) {
+        setMirrorEnabled(value === 'true');
       }
     });
   }, []);
@@ -255,7 +262,7 @@ export default function CameraScreen() {
   return (
     <View style={styles.fullScreen}>
       <StatusBar style="light" />
-      <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front'}>
+      <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front' && mirrorEnabled}>
         {/* Color cape overlay */}
         <ColorCape colors={currentPalette.colors} />
 

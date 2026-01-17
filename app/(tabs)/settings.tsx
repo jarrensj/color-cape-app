@@ -5,19 +5,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera } from 'lucide-react-native';
+import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 
 const CAMERA_SETTING_KEY = 'default_camera_facing';
+const MIRROR_SETTING_KEY = 'mirror_front_camera';
 
 export default function SettingsScreen() {
   const [showCustomerCenter, setShowCustomerCenter] = useState(false);
   const [showPaletteSheet, setShowPaletteSheet] = useState(false);
   const [highlightedKey, setHighlightedKey] = useState<ColorPaletteKey | null>(null);
   const [defaultFrontCamera, setDefaultFrontCamera] = useState(true);
+  const [mirrorFrontCamera, setMirrorFrontCamera] = useState(true);
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -30,12 +32,23 @@ export default function SettingsScreen() {
         setDefaultFrontCamera(value === 'front');
       }
     });
+    AsyncStorage.getItem(MIRROR_SETTING_KEY).then((value) => {
+      if (value !== null) {
+        setMirrorFrontCamera(value === 'true');
+      }
+    });
   }, []);
 
   const handleToggleDefaultCamera = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setDefaultFrontCamera(value);
     await AsyncStorage.setItem(CAMERA_SETTING_KEY, value ? 'front' : 'back');
+  };
+
+  const handleToggleMirror = async (value: boolean) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setMirrorFrontCamera(value);
+    await AsyncStorage.setItem(MIRROR_SETTING_KEY, value ? 'true' : 'false');
   };
 
   const triggerHighlight = (key: ColorPaletteKey) => {
@@ -273,6 +286,24 @@ export default function SettingsScreen() {
               thumbColor={defaultFrontCamera ? '#34C759' : '#f4f3f4'}
             />
           </View>
+
+          <View style={[styles.settingButton, styles.settingButtonWithSwitch]}>
+            <View style={[styles.settingIcon, styles.settingIconTeal]}>
+              <FlipHorizontal size={22} color="#5AC8FA" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Mirror Front Camera</Text>
+              <Text style={styles.settingDescription}>
+                Flip image like a mirror
+              </Text>
+            </View>
+            <Switch
+              value={mirrorFrontCamera}
+              onValueChange={handleToggleMirror}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(52, 199, 89, 0.5)' }}
+              thumbColor={mirrorFrontCamera ? '#34C759' : '#f4f3f4'}
+            />
+          </View>
         </View>
 
         {/* Subscription Section */}
@@ -397,6 +428,9 @@ const styles = StyleSheet.create({
   },
   settingIconBlue: {
     backgroundColor: 'rgba(0, 122, 255, 0.15)',
+  },
+  settingIconTeal: {
+    backgroundColor: 'rgba(90, 200, 250, 0.15)',
   },
   settingButtonWithSwitch: {
     marginTop: 12,
