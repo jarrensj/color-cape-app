@@ -11,12 +11,13 @@ import Svg, { Polygon } from 'react-native-svg';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-// Diagnostic test comparisons - 6 steps total
+// Diagnostic test comparisons - 6 steps total with weights
 const diagnosticTests = [
-  // UNDERTONE TEST 1: Silver vs Gold
+  // UNDERTONE TEST 1: Silver vs Gold (weight 1.5 - most diagnostic)
   {
     id: 'undertone1',
     category: 'undertone',
+    weight: 1.5,
     question: 'Which metallic looks better against your skin?',
     optionA: {
       name: 'Silver',
@@ -39,10 +40,11 @@ const diagnosticTests = [
       ],
     },
   },
-  // UNDERTONE TEST 2: Cool White vs Warm Cream
+  // UNDERTONE TEST 2: Cool White vs Warm Cream (weight 1.0)
   {
     id: 'undertone2',
     category: 'undertone',
+    weight: 1.0,
     question: 'Which neutral white flatters you more?',
     optionA: {
       name: 'Pure White',
@@ -65,10 +67,11 @@ const diagnosticTests = [
       ],
     },
   },
-  // VALUE TEST 1: Light vs Deep
+  // VALUE TEST 1: Light vs Deep (weight 1.2)
   {
     id: 'value1',
     category: 'value',
+    weight: 1.2,
     question: 'Which color depth suits you better?',
     optionA: {
       name: 'Light',
@@ -91,10 +94,11 @@ const diagnosticTests = [
       ],
     },
   },
-  // VALUE TEST 2: Delicate vs Bold
+  // VALUE TEST 2: Delicate vs Bold (weight 1.0)
   {
     id: 'value2',
     category: 'value',
+    weight: 1.0,
     question: 'Which intensity range looks better on you?',
     optionA: {
       name: 'Delicate',
@@ -117,10 +121,11 @@ const diagnosticTests = [
       ],
     },
   },
-  // CHROMA TEST 1: Bright/Clear vs Soft/Muted
+  // CHROMA TEST 1: Bright/Clear vs Soft/Muted (weight 1.2)
   {
     id: 'chroma1',
     category: 'chroma',
+    weight: 1.2,
     question: 'Which color clarity suits you?',
     optionA: {
       name: 'Bright',
@@ -143,10 +148,11 @@ const diagnosticTests = [
       ],
     },
   },
-  // CHROMA TEST 2: Saturated vs Toned
+  // CHROMA TEST 2: Saturated vs Toned (weight 1.0)
   {
     id: 'chroma2',
     category: 'chroma',
+    weight: 1.0,
     question: 'Which saturation level flatters you?',
     optionA: {
       name: 'Saturated',
@@ -178,6 +184,7 @@ const subSeasonResults: Record<string, {
   description: string;
   characteristics: string[];
   colors: { name: string; hex: string }[];
+  tips: string[];
   celebrities?: string[];
 }> = {
   // SPRING SUB-SEASONS (Warm base)
@@ -196,6 +203,12 @@ const subSeasonResults: Record<string, {
       { name: 'Warm Pink', hex: '#FFB6C1' },
       { name: 'Ivory', hex: '#FFFFF0' },
     ],
+    tips: [
+      'Stick to light, warm colors that have a golden undertone',
+      'Avoid dark, heavy colors that can overwhelm your delicate coloring',
+      'Gold jewelry will complement your warm undertone beautifully',
+      'Your best neutrals are ivory, camel, and warm beige',
+    ],
   },
   warmSpring: {
     name: 'Warm Spring',
@@ -212,6 +225,12 @@ const subSeasonResults: Record<string, {
       { name: 'Apricot', hex: '#FBCEB1' },
       { name: 'Warm White', hex: '#FFF8F0' },
     ],
+    tips: [
+      'Embrace golden, sunny colors that match your warm glow',
+      'Avoid cool colors like icy pink, blue-based red, or silver',
+      'Gold and brass jewelry will enhance your natural warmth',
+      'Your best neutrals are cream, camel, and warm brown',
+    ],
   },
   brightSpring: {
     name: 'Bright Spring',
@@ -227,6 +246,12 @@ const subSeasonResults: Record<string, {
       { name: 'Hot Pink', hex: '#FF69B4' },
       { name: 'Bright Aqua', hex: '#20B2AA' },
       { name: 'Pure White', hex: '#FFFFFF' },
+    ],
+    tips: [
+      'Go for clear, vivid colors that make a statement',
+      'Avoid muted, dusty, or muddy colors that dull your sparkle',
+      'Both gold and warm-toned silver work well for you',
+      'Your best neutrals are bright white, warm navy, and camel',
     ],
   },
   // SUMMER SUB-SEASONS (Cool base)
@@ -245,6 +270,12 @@ const subSeasonResults: Record<string, {
       { name: 'Mauve', hex: '#E0B0FF' },
       { name: 'Soft White', hex: '#F5F5F5' },
     ],
+    tips: [
+      'Choose soft, cool, muted colors with a gentle quality',
+      'Avoid harsh, bright, or overly warm colors',
+      'Silver and rose gold jewelry suit your cool, soft coloring',
+      'Your best neutrals are soft white, dove gray, and cocoa',
+    ],
   },
   coolSummer: {
     name: 'Cool Summer',
@@ -261,6 +292,12 @@ const subSeasonResults: Record<string, {
       { name: 'Slate Blue', hex: '#6A5ACD' },
       { name: 'Cocoa', hex: '#875F5F' },
     ],
+    tips: [
+      'Choose cool, slightly muted colors with blue undertones',
+      'Avoid warm, golden colors and anything too bright or harsh',
+      'Silver and white gold jewelry complement your cool tones',
+      'Your best neutrals are charcoal, navy, and cool brown',
+    ],
   },
   softSummer: {
     name: 'Soft Summer',
@@ -276,6 +313,12 @@ const subSeasonResults: Record<string, {
       { name: 'Taupe', hex: '#8B8589' },
       { name: 'Plum', hex: '#8E4585' },
       { name: 'Cool White', hex: '#F0F0F0' },
+    ],
+    tips: [
+      'Embrace dusty, muted, soft colors that blend harmoniously',
+      'Avoid high contrast, neon brights, or pure black and white',
+      'Silver and rose gold with a matte finish work beautifully',
+      'Your best neutrals are taupe, soft gray, and muted cocoa',
     ],
   },
   // AUTUMN SUB-SEASONS (Warm base)
@@ -294,6 +337,12 @@ const subSeasonResults: Record<string, {
       { name: 'Mushroom', hex: '#9F8170' },
       { name: 'Cream', hex: '#F5E6D3' },
     ],
+    tips: [
+      'Choose soft, muted, earthy colors with a warm base',
+      'Avoid bright, clear colors and cool-toned shades',
+      'Matte gold and bronze jewelry enhance your natural warmth',
+      'Your best neutrals are cream, camel, and warm taupe',
+    ],
   },
   warmAutumn: {
     name: 'Warm Autumn',
@@ -310,6 +359,12 @@ const subSeasonResults: Record<string, {
       { name: 'Burnt Orange', hex: '#CC5500' },
       { name: 'Buff', hex: '#F0DC82' },
     ],
+    tips: [
+      'Go for rich, warm, earthy colors with golden undertones',
+      'Avoid cool pastels, icy colors, and blue-based shades',
+      'Gold, brass, and copper jewelry will make you glow',
+      'Your best neutrals are chocolate, olive, and warm cream',
+    ],
   },
   deepAutumn: {
     name: 'Deep Autumn',
@@ -325,6 +380,12 @@ const subSeasonResults: Record<string, {
       { name: 'Chocolate', hex: '#7B3F00' },
       { name: 'Deep Plum', hex: '#662D4E' },
       { name: 'Mahogany', hex: '#C04000' },
+    ],
+    tips: [
+      'Embrace deep, rich, warm colors with intensity',
+      'Avoid light pastels and cool, icy shades',
+      'Antique gold and bronze jewelry suits your depth',
+      'Your best neutrals are chocolate, forest green, and burgundy',
     ],
   },
   // WINTER SUB-SEASONS (Cool base)
@@ -343,6 +404,12 @@ const subSeasonResults: Record<string, {
       { name: 'Pine', hex: '#01796F' },
       { name: 'Charcoal', hex: '#36454F' },
     ],
+    tips: [
+      'Choose deep, cool colors with clear undertones',
+      'Avoid warm, muted, or earthy tones',
+      'Silver, platinum, and white gold jewelry enhance your drama',
+      'Your best neutrals are black, charcoal, and navy',
+    ],
   },
   coolWinter: {
     name: 'Cool Winter',
@@ -359,6 +426,12 @@ const subSeasonResults: Record<string, {
       { name: 'Pure Black', hex: '#000000' },
       { name: 'Pure White', hex: '#FFFFFF' },
     ],
+    tips: [
+      'Choose icy, cool colors with blue undertones',
+      'Avoid warm, earthy, or muted tones',
+      'Silver and platinum jewelry will complement your cool coloring',
+      'Your best neutrals are pure black, pure white, and navy',
+    ],
   },
   brightWinter: {
     name: 'Bright Winter',
@@ -374,6 +447,12 @@ const subSeasonResults: Record<string, {
       { name: 'Lemon Yellow', hex: '#FFF44F' },
       { name: 'Cyan', hex: '#00FFFF' },
       { name: 'Pure White', hex: '#FFFFFF' },
+    ],
+    tips: [
+      'Go for vivid, clear, cool colors that pop',
+      'Avoid muted, dusty, or warm earth tones',
+      'Silver and cool-toned jewelry matches your brightness',
+      'Your best neutrals are pure white, black, and bright navy',
     ],
   },
 };
@@ -443,6 +522,83 @@ type TestScores = {
   value: number;     // negative = light, positive = deep
   chroma: number;    // negative = bright, positive = soft
 };
+
+type SubSeasonMatch = {
+  key: string;
+  name: string;
+  score: number;
+  percentage: number;
+};
+
+// Calculate how well scores match each sub-season
+// Returns sorted array of matches with percentages
+function calculateTopMatches(scores: TestScores): SubSeasonMatch[] {
+  const { undertone, value, chroma } = scores;
+
+  // Define ideal score profiles for each sub-season
+  // [undertone, value, chroma] where negative = cool/light/bright, positive = warm/deep/soft
+  const profiles: Record<string, [number, number, number]> = {
+    // Springs (warm)
+    lightSpring: [2.5, -2.2, -1.2],    // warm, light, bright-ish
+    warmSpring: [2.5, 0, -1.2],         // warm, medium, clear
+    brightSpring: [1.5, -1.2, -2.2],    // warm, light-ish, very bright
+    // Summers (cool)
+    lightSummer: [-2.5, -2.2, 1.2],     // cool, light, soft
+    coolSummer: [-2.5, 0, 1.2],         // cool, medium, soft
+    softSummer: [-1.5, 0, 2.2],         // neutral-cool, medium, very soft
+    // Autumns (warm)
+    softAutumn: [1.5, 0, 2.2],          // neutral-warm, medium, very soft
+    warmAutumn: [2.5, 1.2, 1.2],        // warm, medium-deep, warm
+    deepAutumn: [1.5, 2.2, 1.2],        // warm, deep, muted
+    // Winters (cool)
+    deepWinter: [-1.5, 2.2, -1.2],      // cool, deep, bright-ish
+    coolWinter: [-2.5, 1.2, -1.2],      // very cool, medium-deep, clear
+    brightWinter: [-1.5, -1.2, -2.2],   // cool, light-ish, very bright
+  };
+
+  // Calculate distance from each profile (lower = better match)
+  const matches: SubSeasonMatch[] = Object.entries(profiles).map(([key, [u, v, c]]) => {
+    // Euclidean distance weighted
+    const distance = Math.sqrt(
+      Math.pow(undertone - u, 2) * 1.5 +  // undertone is most important
+      Math.pow(value - v, 2) +
+      Math.pow(chroma - c, 2)
+    );
+
+    // Convert distance to a score (0-100, higher is better match)
+    // Max possible distance is about 10, so we scale accordingly
+    const maxDistance = 10;
+    const score = Math.max(0, 100 - (distance / maxDistance) * 100);
+
+    return {
+      key,
+      name: subSeasonResults[key].name,
+      score: distance,
+      percentage: Math.round(score),
+    };
+  });
+
+  // Sort by percentage (highest first)
+  matches.sort((a, b) => b.percentage - a.percentage);
+
+  return matches;
+}
+
+// Check if scores are neutral (close to 0)
+function getScoreLabel(score: number, category: 'undertone' | 'value' | 'chroma'): string {
+  const threshold = 0.8; // Close to 0 means neutral
+
+  if (category === 'undertone') {
+    if (Math.abs(score) < threshold) return 'Neutral';
+    return score < 0 ? 'Cool' : 'Warm';
+  } else if (category === 'value') {
+    if (Math.abs(score) < threshold) return 'Medium';
+    return score < 0 ? 'Light' : 'Deep';
+  } else {
+    if (Math.abs(score) < threshold) return 'Moderate';
+    return score < 0 ? 'Bright' : 'Soft';
+  }
+}
 
 const TOTAL_TESTS = diagnosticTests.length;
 
@@ -630,6 +786,7 @@ export default function TestScreen() {
   const [photo1, setPhoto1] = useState<string | null>(null);
   const [photo2, setPhoto2] = useState<string | null>(null);
   const [resultSubSeason, setResultSubSeason] = useState<string | null>(null);
+  const [topMatches, setTopMatches] = useState<SubSeasonMatch[]>([]);
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const router = useRouter();
@@ -677,6 +834,7 @@ export default function TestScreen() {
     setPhoto1(null);
     setPhoto2(null);
     setResultSubSeason(null);
+    setTopMatches([]);
   };
 
   const goBack = () => {
@@ -734,7 +892,8 @@ export default function TestScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     const selectedOption = option === 'A' ? currentTest.optionA : currentTest.optionB;
-    const scoreChange = option === 'A' ? -1 : 1; // A = cool/light/bright (-), B = warm/deep/soft (+)
+    // Apply weighted scoring: A = cool/light/bright (-), B = warm/deep/soft (+)
+    const scoreChange = (option === 'A' ? -1 : 1) * currentTest.weight;
 
     Alert.alert(
       'Confirm Selection',
@@ -765,9 +924,11 @@ export default function TestScreen() {
               setPhoto1(null);
               setPhoto2(null);
             } else {
-              // Calculate result
+              // Calculate result and top matches
               const subSeason = determineSubSeason(newScores.undertone, newScores.value, newScores.chroma);
+              const matches = calculateTopMatches(newScores);
               setResultSubSeason(subSeason);
+              setTopMatches(matches);
               setStep('result');
             }
           },
@@ -841,6 +1002,8 @@ export default function TestScreen() {
   // Result screen
   if (step === 'result' && resultSubSeason) {
     const result = subSeasonResults[resultSubSeason];
+    const top3Matches = topMatches.slice(0, 3);
+    const alternativeMatches = top3Matches.filter(m => m.key !== resultSubSeason);
 
     return (
       <View style={styles.container}>
@@ -861,32 +1024,86 @@ export default function TestScreen() {
             </Pressable>
           </View>
 
-          <View style={[styles.resultFooter, { paddingBottom: insets.bottom + 20 }]}>
-            <View style={styles.subSeasonsContainer}>
-              <Text style={styles.subSeasonsLabel}>Your characteristics:</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {result.characteristics.map((char, index) => (
-                  <View key={index} style={styles.subSeasonBadge}>
-                    <Text style={styles.subSeasonText}>{char}</Text>
-                  </View>
-                ))}
-              </ScrollView>
+          <ScrollView
+            style={[styles.resultScrollView, { paddingBottom: insets.bottom + 20 }]}
+            contentContainerStyle={styles.resultScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Score Breakdown */}
+            <View style={styles.scoreBreakdownContainer}>
+              <Text style={styles.sectionTitle}>Your Color Profile</Text>
+              <View style={styles.scoreRow}>
+                <Text style={styles.scoreLabel}>Undertone:</Text>
+                <View style={[styles.scoreBadge, scores.undertone < 0 ? styles.scoreBadgeCool : styles.scoreBadgeWarm]}>
+                  <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.undertone, 'undertone')}</Text>
+                </View>
+              </View>
+              <View style={styles.scoreRow}>
+                <Text style={styles.scoreLabel}>Value:</Text>
+                <View style={[styles.scoreBadge, scores.value < 0 ? styles.scoreBadgeLight : styles.scoreBadgeDeep]}>
+                  <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.value, 'value')}</Text>
+                </View>
+              </View>
+              <View style={styles.scoreRow}>
+                <Text style={styles.scoreLabel}>Chroma:</Text>
+                <View style={[styles.scoreBadge, scores.chroma < 0 ? styles.scoreBadgeBright : styles.scoreBadgeSoft]}>
+                  <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.chroma, 'chroma')}</Text>
+                </View>
+              </View>
             </View>
 
-            <View style={styles.seasonBadge}>
-              <Text style={styles.seasonBadgeText}>{result.season} Season</Text>
+            {/* Top Match */}
+            <View style={styles.topMatchContainer}>
+              <View style={styles.matchHeader}>
+                <Text style={styles.sectionTitle}>Best Match</Text>
+                <View style={styles.matchPercentage}>
+                  <Text style={styles.matchPercentageText}>{topMatches[0]?.percentage}%</Text>
+                </View>
+              </View>
+              <View style={styles.seasonBadge}>
+                <Text style={styles.seasonBadgeText}>{result.name}</Text>
+              </View>
             </View>
 
-            <Pressable style={styles.retakeButton} onPress={resetTest}>
-              <RefreshCw size={20} color="#000000" strokeWidth={2} />
-              <Text style={styles.retakeButtonText}>Retake Test</Text>
-            </Pressable>
+            {/* Alternative Matches */}
+            {alternativeMatches.length > 0 && (
+              <View style={styles.alternativeMatchesContainer}>
+                <Text style={styles.sectionTitle}>Also Consider</Text>
+                <View style={styles.alternativeMatchesRow}>
+                  {alternativeMatches.map((match, index) => (
+                    <View key={match.key} style={styles.alternativeMatch}>
+                      <Text style={styles.alternativeMatchName}>{match.name}</Text>
+                      <Text style={styles.alternativeMatchPercent}>{match.percentage}%</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
 
-            <Pressable style={styles.homeButtonResult} onPress={goHome}>
-              <Home size={20} color="#FFFFFF" strokeWidth={2} />
-              <Text style={styles.homeButtonResultText}>Go Home</Text>
-            </Pressable>
-          </View>
+            {/* Styling Tips */}
+            <View style={styles.tipsContainer}>
+              <Text style={styles.sectionTitle}>Styling Tips</Text>
+              {result.tips.map((tip, index) => (
+                <View key={index} style={styles.tipItem}>
+                  <Text style={styles.tipBullet}>•</Text>
+                  <Text style={styles.tipText}>{tip}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.resultButtons}>
+              <Pressable style={styles.retakeButton} onPress={resetTest}>
+                <RefreshCw size={20} color="#000000" strokeWidth={2} />
+                <Text style={styles.retakeButtonText}>Retake Test</Text>
+              </Pressable>
+
+              <Pressable style={styles.homeButtonResult} onPress={goHome}>
+                <Home size={20} color="#FFFFFF" strokeWidth={2} />
+                <Text style={styles.homeButtonResultText}>Go Home</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
         </CameraView>
       </View>
     );
@@ -1494,12 +1711,151 @@ const styles = StyleSheet.create({
     textShadowRadius: 6,
     marginTop: 4,
   },
-  resultFooter: {
+  resultScrollView: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    maxHeight: '55%',
+  },
+  resultScrollContent: {
     paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 40,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 12,
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  scoreBreakdownContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  scoreRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  scoreLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  scoreBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  scoreBadgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  scoreBadgeCool: {
+    backgroundColor: '#4A90D9',
+  },
+  scoreBadgeWarm: {
+    backgroundColor: '#D97B4A',
+  },
+  scoreBadgeLight: {
+    backgroundColor: '#E8E4DF',
+  },
+  scoreBadgeDeep: {
+    backgroundColor: '#4A4A4A',
+  },
+  scoreBadgeBright: {
+    backgroundColor: '#9C4AD9',
+  },
+  scoreBadgeSoft: {
+    backgroundColor: '#8B8589',
+  },
+  topMatchContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  matchHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 8,
+  },
+  matchPercentage: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  matchPercentageText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  alternativeMatchesContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  alternativeMatchesRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  alternativeMatch: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+  },
+  alternativeMatchName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  alternativeMatchPercent: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  tipsContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  tipBullet: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginRight: 8,
+    lineHeight: 20,
+  },
+  tipText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    flex: 1,
+    lineHeight: 20,
+  },
+  resultButtons: {
+    marginTop: 8,
   },
   subSeasonsContainer: {
     marginBottom: 16,
@@ -1533,7 +1889,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     alignSelf: 'center',
-    marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.5)',
   },
