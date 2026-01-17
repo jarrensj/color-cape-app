@@ -12,12 +12,14 @@ type RevenueCatContextType = {
   isLoading: boolean;
   restorePurchases: () => Promise<boolean>;
   checkSubscriptionStatus: () => Promise<void>;
+  setDevBypass: (bypass: boolean) => void;
 };
 
 const RevenueCatContext = createContext<RevenueCatContextType | undefined>(undefined);
 
 export function RevenueCatProvider({ children }: { children: ReactNode }) {
   const [isProUser, setIsProUser] = useState(false);
+  const [devBypass, setDevBypass] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [currentOffering, setCurrentOffering] = useState<PurchasesOffering | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,12 +84,13 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
   return (
     <RevenueCatContext.Provider
       value={{
-        isProUser,
+        isProUser: isProUser || (__DEV__ && devBypass),
         customerInfo,
         currentOffering,
         isLoading,
         restorePurchases,
         checkSubscriptionStatus,
+        setDevBypass,
       }}
     >
       {children}

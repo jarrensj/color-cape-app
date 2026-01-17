@@ -1,4 +1,4 @@
-import { StyleSheet, View, Pressable } from 'react-native';
+import { StyleSheet, View, Pressable, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,7 +11,7 @@ import { useOnboarding } from '@/context/onboarding-context';
 export default function PaywallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { checkSubscriptionStatus, currentOffering } = useRevenueCat();
+  const { checkSubscriptionStatus, currentOffering, setDevBypass } = useRevenueCat();
   const { setHasOnboarded } = useOnboarding();
 
   const handleBack = () => {
@@ -22,6 +22,12 @@ export default function PaywallScreen() {
 
   const handleDismiss = () => {
     // Do nothing - paywall is mandatory
+  };
+
+  const handleDevSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setDevBypass(true);
+    router.replace('/(tabs)');
   };
 
   const handlePurchaseCompleted = async () => {
@@ -43,6 +49,14 @@ export default function PaywallScreen() {
       >
         <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
       </Pressable>
+      {__DEV__ && (
+        <Pressable
+          style={[styles.skipButton, { top: insets.top + 12 }]}
+          onPress={handleDevSkip}
+        >
+          <Text style={styles.skipText}>Skip</Text>
+        </Pressable>
+      )}
       <RevenueCatUI.Paywall
         options={{
           offering: currentOffering ?? undefined,
@@ -71,5 +85,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  skipButton: {
+    position: 'absolute',
+    right: 16,
+    zIndex: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  skipText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
