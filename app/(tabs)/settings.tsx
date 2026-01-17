@@ -1,22 +1,19 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, RefreshCw } from 'lucide-react-native';
+import { RotateCcw, Crown } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
-import { useRevenueCat } from '@/context/revenuecat-context';
 
 export default function SettingsScreen() {
   const [showCustomerCenter, setShowCustomerCenter] = useState(false);
-  const [isRestoring, setIsRestoring] = useState(false);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
-  const { restorePurchases } = useRevenueCat();
 
   const resetApp = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -46,19 +43,6 @@ export default function SettingsScreen() {
   const handleManageSubscription = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowCustomerCenter(true);
-  };
-
-  const handleRestorePurchases = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setIsRestoring(true);
-    const restored = await restorePurchases();
-    setIsRestoring(false);
-    if (restored) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Restored!', 'Your purchases have been restored.');
-    } else {
-      Alert.alert('No Purchases Found', 'We could not find any previous purchases to restore.');
-    }
   };
 
   return (
@@ -105,30 +89,6 @@ export default function SettingsScreen() {
               <Text style={styles.settingLabel}>Manage Subscription</Text>
               <Text style={styles.settingDescription}>
                 View or cancel your subscription
-              </Text>
-            </View>
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.settingButton,
-              pressed && styles.settingButtonPressed,
-              styles.settingButtonMarginTop,
-            ]}
-            onPress={handleRestorePurchases}
-            disabled={isRestoring}
-          >
-            <View style={[styles.settingIcon, styles.settingIconBlue]}>
-              {isRestoring ? (
-                <ActivityIndicator color="#007AFF" />
-              ) : (
-                <RefreshCw size={22} color="#007AFF" strokeWidth={2} />
-              )}
-            </View>
-            <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Restore Purchases</Text>
-              <Text style={styles.settingDescription}>
-                Restore previous purchases
               </Text>
             </View>
           </Pressable>
@@ -204,23 +164,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 2,
-  },
-  statusDescription: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: 'rgba(255, 255, 255, 0.6)',
-  },
-  upgradeButton: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 20,
-  },
-  upgradeButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#000000',
   },
   section: {
     marginBottom: 32,
@@ -245,9 +188,6 @@ const styles = StyleSheet.create({
   settingButtonPressed: {
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
-  settingButtonMarginTop: {
-    marginTop: 8,
-  },
   settingIcon: {
     width: 40,
     height: 40,
@@ -259,9 +199,6 @@ const styles = StyleSheet.create({
   },
   settingIconGold: {
     backgroundColor: 'rgba(255, 215, 0, 0.15)',
-  },
-  settingIconBlue: {
-    backgroundColor: 'rgba(0, 122, 255, 0.15)',
   },
   settingTextContainer: {
     flex: 1,
