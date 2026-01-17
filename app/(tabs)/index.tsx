@@ -1,50 +1,131 @@
-import { StyleSheet } from 'react-native';
-import { Link } from 'expo-router';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Camera, Sparkles } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  const openCamera = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push('/(tabs)/camera');
+  };
+
+  const openTest = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push('/(tabs)/test');
+  };
+
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>
-        Color Cape
-      </ThemedText>
-      <ThemedText style={styles.subtitle}>
-        Take a selfie to get started
-      </ThemedText>
-      <Link href="/(tabs)/camera" asChild>
-        <ThemedView style={styles.button}>
-          <ThemedText style={styles.buttonText}>Open Camera</ThemedText>
-        </ThemedView>
-      </Link>
-    </ThemedView>
+    <View style={styles.container}>
+      <StatusBar style="light" />
+
+      <View style={[styles.content, { paddingTop: insets.top + 60 }]}>
+        <Text style={styles.title}>Color Cape</Text>
+        <Text style={styles.subtitle}>
+          Discover your perfect color palette
+        </Text>
+
+        <View style={styles.cardsContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.card,
+              pressed && styles.cardPressed,
+            ]}
+            onPress={openCamera}
+          >
+            <View style={styles.cardIconContainer}>
+              <Camera size={32} color="#FFFFFF" strokeWidth={2} />
+            </View>
+            <Text style={styles.cardTitle}>Try Palettes</Text>
+            <Text style={styles.cardDescription}>
+              Use camera to see how different color palettes look on you
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.card,
+              pressed && styles.cardPressed,
+            ]}
+            onPress={openTest}
+          >
+            <View style={[styles.cardIconContainer, styles.cardIconPurple]}>
+              <Sparkles size={32} color="#FFFFFF" strokeWidth={2} />
+            </View>
+            <Text style={styles.cardTitle}>Take the Test</Text>
+            <Text style={styles.cardDescription}>
+              Find your seasonal color palette in a quick test
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: '#000',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
   },
   title: {
-    marginBottom: 10,
+    fontSize: 42,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 8,
   },
   subtitle: {
-    marginBottom: 40,
-    opacity: 0.7,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: 10,
-  },
-  buttonText: {
-    color: 'white',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.6)',
+    textAlign: 'center',
+    marginBottom: 48,
+  },
+  cardsContainer: {
+    gap: 16,
+  },
+  card: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  cardPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  cardIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  cardIconPurple: {
+    backgroundColor: '#9B59B6',
+  },
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  cardDescription: {
+    fontSize: 15,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.6)',
+    lineHeight: 22,
   },
 });
