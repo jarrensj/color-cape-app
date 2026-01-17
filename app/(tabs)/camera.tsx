@@ -125,7 +125,7 @@ export default function CameraScreen() {
   const viewShotRef = useRef<View>(null);
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { getEnabledPalettes, customCape } = usePalettePreferences();
+  const { getEnabledPalettes, customCape, preferences } = usePalettePreferences();
 
   useEffect(() => {
     AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
@@ -325,7 +325,14 @@ export default function CameraScreen() {
               type ListItem = { type: 'custom' } | { type: 'palette'; key: ColorPaletteKey };
               const items: ListItem[] = enabledPalettes.map(key => ({ type: 'palette' as const, key }));
               if (customCape && customCape.enabled) {
-                const pos = Math.min(customCape.position, items.length);
+                // Calculate effective position - count enabled palettes before customCape.position
+                let effectivePos = 0;
+                for (let i = 0; i < customCape.position && i < preferences.order.length; i++) {
+                  if (preferences.enabled[preferences.order[i]]) {
+                    effectivePos++;
+                  }
+                }
+                const pos = Math.min(effectivePos, items.length);
                 items.splice(pos, 0, { type: 'custom' });
               }
 
