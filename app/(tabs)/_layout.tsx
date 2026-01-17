@@ -26,7 +26,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="camera"
         options={{
-          title: 'Drape',
+          title: 'Cape',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="camera.fill" color={color} />,
           tabBarStyle: { display: 'none' },
         }}
