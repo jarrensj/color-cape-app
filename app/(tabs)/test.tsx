@@ -567,6 +567,11 @@ export default function TestScreen() {
               <RefreshCw size={20} color="#000000" strokeWidth={2} />
               <Text style={styles.retakeButtonText}>Retake Test</Text>
             </Pressable>
+
+            <Pressable style={styles.homeButtonResult} onPress={goHome}>
+              <Home size={20} color="#FFFFFF" strokeWidth={2} />
+              <Text style={styles.homeButtonResultText}>Go Home</Text>
+            </Pressable>
           </View>
         </CameraView>
       </View>
@@ -1187,6 +1192,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#000000',
+  },
+  homeButtonResult: {
+    paddingVertical: 14,
+    borderRadius: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  homeButtonResultText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   fullCapeContainer: {
     position: 'absolute',
