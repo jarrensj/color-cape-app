@@ -11,94 +11,233 @@ import Svg, { Polygon } from 'react-native-svg';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-// Test overlays for each step
-const testOverlays = {
-  cool: {
-    name: 'Cool',
-    description: 'Silver undertones',
-    colors: [
-      { name: 'Silver', hex: '#C0C0C0' },
-      { name: 'Icy Blue', hex: '#B0E0E6' },
-      { name: 'Cool Pink', hex: '#D4869C' },
-      { name: 'Blue Gray', hex: '#6699CC' },
-    ],
+// Diagnostic test comparisons - 6 steps total
+const diagnosticTests = [
+  // UNDERTONE TEST 1: Silver vs Gold
+  {
+    id: 'undertone1',
+    category: 'undertone',
+    question: 'Which metallic looks better against your skin?',
+    optionA: {
+      name: 'Silver',
+      description: 'Cool metallic',
+      colors: [
+        { name: 'Silver', hex: '#C0C0C0' },
+        { name: 'Platinum', hex: '#E5E4E2' },
+        { name: 'Pewter', hex: '#8F8F8F' },
+        { name: 'White Gold', hex: '#EBEBEB' },
+      ],
+    },
+    optionB: {
+      name: 'Gold',
+      description: 'Warm metallic',
+      colors: [
+        { name: 'Gold', hex: '#FFD700' },
+        { name: 'Brass', hex: '#B5A642' },
+        { name: 'Bronze', hex: '#CD7F32' },
+        { name: 'Champagne', hex: '#F7E7CE' },
+      ],
+    },
   },
-  warm: {
-    name: 'Warm',
-    description: 'Gold undertones',
+  // UNDERTONE TEST 2: Cool White vs Warm Cream
+  {
+    id: 'undertone2',
+    category: 'undertone',
+    question: 'Which neutral white flatters you more?',
+    optionA: {
+      name: 'Pure White',
+      description: 'Crisp and cool',
+      colors: [
+        { name: 'Pure White', hex: '#FFFFFF' },
+        { name: 'Cool Gray', hex: '#E8E8E8' },
+        { name: 'Icy Blue', hex: '#F0F8FF' },
+        { name: 'Snow', hex: '#FFFAFA' },
+      ],
+    },
+    optionB: {
+      name: 'Ivory/Cream',
+      description: 'Soft and warm',
+      colors: [
+        { name: 'Ivory', hex: '#FFFFF0' },
+        { name: 'Cream', hex: '#FFFDD0' },
+        { name: 'Warm White', hex: '#FFF8F0' },
+        { name: 'Eggshell', hex: '#F0EAD6' },
+      ],
+    },
+  },
+  // VALUE TEST 1: Light vs Deep
+  {
+    id: 'value1',
+    category: 'value',
+    question: 'Which color depth suits you better?',
+    optionA: {
+      name: 'Light',
+      description: 'Soft pastels',
+      colors: [
+        { name: 'Powder Pink', hex: '#FFB6C1' },
+        { name: 'Sky Blue', hex: '#87CEEB' },
+        { name: 'Mint', hex: '#98FB98' },
+        { name: 'Lavender', hex: '#E6E6FA' },
+      ],
+    },
+    optionB: {
+      name: 'Deep',
+      description: 'Rich and dark',
+      colors: [
+        { name: 'Burgundy', hex: '#800020' },
+        { name: 'Navy', hex: '#001F3F' },
+        { name: 'Forest', hex: '#228B22' },
+        { name: 'Plum', hex: '#8E4585' },
+      ],
+    },
+  },
+  // VALUE TEST 2: Delicate vs Bold
+  {
+    id: 'value2',
+    category: 'value',
+    question: 'Which intensity range looks better on you?',
+    optionA: {
+      name: 'Delicate',
+      description: 'Airy and light',
+      colors: [
+        { name: 'Blush', hex: '#FFC0CB' },
+        { name: 'Periwinkle', hex: '#CCCCFF' },
+        { name: 'Seafoam', hex: '#98D7C2' },
+        { name: 'Buttercup', hex: '#FFF9C4' },
+      ],
+    },
+    optionB: {
+      name: 'Bold',
+      description: 'Strong and deep',
+      colors: [
+        { name: 'Black', hex: '#000000' },
+        { name: 'Charcoal', hex: '#36454F' },
+        { name: 'Espresso', hex: '#3C2415' },
+        { name: 'Midnight', hex: '#191970' },
+      ],
+    },
+  },
+  // CHROMA TEST 1: Bright/Clear vs Soft/Muted
+  {
+    id: 'chroma1',
+    category: 'chroma',
+    question: 'Which color clarity suits you?',
+    optionA: {
+      name: 'Bright',
+      description: 'Clear and vivid',
+      colors: [
+        { name: 'True Red', hex: '#FF0000' },
+        { name: 'Cobalt', hex: '#0047AB' },
+        { name: 'Emerald', hex: '#50C878' },
+        { name: 'Fuchsia', hex: '#FF00FF' },
+      ],
+    },
+    optionB: {
+      name: 'Soft',
+      description: 'Muted and gentle',
+      colors: [
+        { name: 'Dusty Rose', hex: '#D4A5A5' },
+        { name: 'Slate Blue', hex: '#6A8EAE' },
+        { name: 'Sage', hex: '#A2B5AC' },
+        { name: 'Mauve', hex: '#E0B0FF' },
+      ],
+    },
+  },
+  // CHROMA TEST 2: Saturated vs Toned
+  {
+    id: 'chroma2',
+    category: 'chroma',
+    question: 'Which saturation level flatters you?',
+    optionA: {
+      name: 'Saturated',
+      description: 'Punchy and electric',
+      colors: [
+        { name: 'Hot Pink', hex: '#FF69B4' },
+        { name: 'Electric Blue', hex: '#7DF9FF' },
+        { name: 'Lime', hex: '#32CD32' },
+        { name: 'Orange', hex: '#FF8C00' },
+      ],
+    },
+    optionB: {
+      name: 'Toned',
+      description: 'Greyed and subtle',
+      colors: [
+        { name: 'Taupe', hex: '#8B8589' },
+        { name: 'Steel Blue', hex: '#4682B4' },
+        { name: 'Olive', hex: '#808000' },
+        { name: 'Mushroom', hex: '#9F8170' },
+      ],
+    },
+  },
+];
+
+// 12 Sub-season results with their palettes
+const subSeasonResults: Record<string, {
+  name: string;
+  season: string;
+  description: string;
+  characteristics: string[];
+  colors: { name: string; hex: string }[];
+  celebrities?: string[];
+}> = {
+  // SPRING SUB-SEASONS (Warm base)
+  lightSpring: {
+    name: 'Light Spring',
+    season: 'Spring',
+    description: 'Light, warm, and fresh like early spring sunshine',
+    characteristics: ['Warm undertone', 'Light coloring', 'Clear but gentle'],
     colors: [
-      { name: 'Gold', hex: '#FFD700' },
       { name: 'Peach', hex: '#FFCC99' },
+      { name: 'Light Coral', hex: '#F08080' },
+      { name: 'Buttercup', hex: '#F9E547' },
+      { name: 'Mint', hex: '#98FB98' },
+      { name: 'Warm Aqua', hex: '#7FDBDA' },
+      { name: 'Warm Lilac', hex: '#DCD0FF' },
+      { name: 'Warm Pink', hex: '#FFB6C1' },
+      { name: 'Ivory', hex: '#FFFFF0' },
+    ],
+  },
+  warmSpring: {
+    name: 'Warm Spring',
+    season: 'Spring',
+    description: 'Golden, vibrant, and sunny like peak spring',
+    characteristics: ['Very warm undertone', 'Medium coloring', 'Clear and warm'],
+    colors: [
       { name: 'Coral', hex: '#FF7F50' },
-      { name: 'Warm Beige', hex: '#F5DEB3' },
+      { name: 'Tangerine', hex: '#FF9966' },
+      { name: 'Golden Yellow', hex: '#FFD700' },
+      { name: 'Yellow Green', hex: '#9ACD32' },
+      { name: 'Turquoise', hex: '#40E0D0' },
+      { name: 'Salmon', hex: '#FA8072' },
+      { name: 'Apricot', hex: '#FBCEB1' },
+      { name: 'Warm White', hex: '#FFF8F0' },
     ],
   },
-  bright: {
-    name: 'Bright',
-    description: 'Clear and vivid',
-    colors: [
-      { name: 'Bright Pink', hex: '#FF1493' },
-      { name: 'Royal Blue', hex: '#4169E1' },
-      { name: 'Emerald', hex: '#00C957' },
-      { name: 'Pure White', hex: '#FFFFFF' },
-    ],
-  },
-  muted: {
-    name: 'Muted',
-    description: 'Soft and dusty',
-    colors: [
-      { name: 'Dusty Rose', hex: '#D4A5A5' },
-      { name: 'Slate Blue', hex: '#6A5ACD' },
-      { name: 'Blue Sage', hex: '#A2B5AC' },
-      { name: 'Taupe', hex: '#8B8589' },
-    ],
-  },
-  brightWarm: {
-    name: 'Bright',
-    description: 'Clear and warm',
+  brightSpring: {
+    name: 'Bright Spring',
+    season: 'Spring',
+    description: 'Clear, warm, and vivid like a tropical paradise',
+    characteristics: ['Warm undertone', 'High contrast', 'Very clear and bright'],
     colors: [
       { name: 'Bright Coral', hex: '#FF6B6B' },
-      { name: 'Golden Yellow', hex: '#FFD700' },
+      { name: 'Orange Red', hex: '#FF4500' },
+      { name: 'Bright Yellow', hex: '#FFEF00' },
+      { name: 'Kelly Green', hex: '#4CBB17' },
       { name: 'Warm Turquoise', hex: '#48D1CC' },
       { name: 'Hot Pink', hex: '#FF69B4' },
-    ],
-  },
-  mutedWarm: {
-    name: 'Muted',
-    description: 'Earthy and soft',
-    colors: [
-      { name: 'Camel', hex: '#C19A6B' },
-      { name: 'Terracotta', hex: '#E2725B' },
-      { name: 'Soft Olive', hex: '#808000' },
-      { name: 'Mustard', hex: '#FFDB58' },
-    ],
-  },
-};
-
-// Season results with their palettes
-const seasonResults = {
-  winter: {
-    name: 'Winter',
-    description: 'Cool, bright, and dramatic',
-    subSeasons: ['Deep Winter', 'Cool Winter', 'Bright Winter'],
-    colors: [
-      { name: 'Icy Pink', hex: '#FF1493' },
-      { name: 'Ruby', hex: '#E0115F' },
-      { name: 'Royal Blue', hex: '#4169E1' },
-      { name: 'Emerald', hex: '#00A86B' },
-      { name: 'Purple', hex: '#800080' },
-      { name: 'Navy', hex: '#001F3F' },
-      { name: 'Pure Black', hex: '#000000' },
+      { name: 'Bright Aqua', hex: '#20B2AA' },
       { name: 'Pure White', hex: '#FFFFFF' },
     ],
   },
-  summer: {
-    name: 'Summer',
-    description: 'Cool, soft, and elegant',
-    subSeasons: ['Light Summer', 'Cool Summer', 'Soft Summer'],
+  // SUMMER SUB-SEASONS (Cool base)
+  lightSummer: {
+    name: 'Light Summer',
+    season: 'Summer',
+    description: 'Soft, cool, and delicate like a misty morning',
+    characteristics: ['Cool undertone', 'Light coloring', 'Soft and gentle'],
     colors: [
-      { name: 'Dusty Rose', hex: '#D8B0B0' },
-      { name: 'Soft Raspberry', hex: '#B56576' },
+      { name: 'Powder Pink', hex: '#E8C4C4' },
+      { name: 'Rose', hex: '#E8ADAA' },
       { name: 'Lavender', hex: '#B4A7D6' },
       { name: 'Periwinkle', hex: '#CCCCFF' },
       { name: 'Powder Blue', hex: '#B0E0E6' },
@@ -107,25 +246,60 @@ const seasonResults = {
       { name: 'Soft White', hex: '#F5F5F5' },
     ],
   },
-  spring: {
-    name: 'Spring',
-    description: 'Warm, bright, and fresh',
-    subSeasons: ['Light Spring', 'Warm Spring', 'Bright Spring'],
+  coolSummer: {
+    name: 'Cool Summer',
+    season: 'Summer',
+    description: 'Cool, soft, and elegant like twilight',
+    characteristics: ['Very cool undertone', 'Medium coloring', 'Soft but noticeable'],
     colors: [
-      { name: 'Coral', hex: '#FF7F50' },
-      { name: 'Peach', hex: '#FFCC99' },
-      { name: 'Golden Yellow', hex: '#FFD700' },
-      { name: 'Yellow Green', hex: '#9ACD32' },
-      { name: 'Warm Turquoise', hex: '#48D1CC' },
-      { name: 'Salmon', hex: '#FA8072' },
-      { name: 'Warm Aqua', hex: '#7FDBDA' },
-      { name: 'Warm White', hex: '#FFF8F0' },
+      { name: 'Dusty Rose', hex: '#D8B0B0' },
+      { name: 'Soft Raspberry', hex: '#B56576' },
+      { name: 'Soft Plum', hex: '#8E4585' },
+      { name: 'Blue Gray', hex: '#6699CC' },
+      { name: 'Teal', hex: '#367588' },
+      { name: 'Cool Pink', hex: '#D4869C' },
+      { name: 'Slate Blue', hex: '#6A5ACD' },
+      { name: 'Cocoa', hex: '#875F5F' },
     ],
   },
-  autumn: {
-    name: 'Autumn',
-    description: 'Warm, muted, and earthy',
-    subSeasons: ['Soft Autumn', 'Warm Autumn', 'Deep Autumn'],
+  softSummer: {
+    name: 'Soft Summer',
+    season: 'Summer',
+    description: 'Muted, cool, and gentle like an overcast day',
+    characteristics: ['Cool-neutral undertone', 'Medium coloring', 'Very soft and muted'],
+    colors: [
+      { name: 'Dusty Pink', hex: '#D4A5A5' },
+      { name: 'Soft Red', hex: '#CD5C5C' },
+      { name: 'Mauve', hex: '#AF8EDA' },
+      { name: 'Soft Blue', hex: '#6B8CAE' },
+      { name: 'Gray Green', hex: '#7BA99F' },
+      { name: 'Taupe', hex: '#8B8589' },
+      { name: 'Plum', hex: '#8E4585' },
+      { name: 'Cool White', hex: '#F0F0F0' },
+    ],
+  },
+  // AUTUMN SUB-SEASONS (Warm base)
+  softAutumn: {
+    name: 'Soft Autumn',
+    season: 'Autumn',
+    description: 'Muted, warm, and earthy like early fall',
+    characteristics: ['Warm-neutral undertone', 'Medium coloring', 'Very soft and muted'],
+    colors: [
+      { name: 'Camel', hex: '#C19A6B' },
+      { name: 'Terracotta', hex: '#E2725B' },
+      { name: 'Soft Olive', hex: '#808000' },
+      { name: 'Dusty Teal', hex: '#5F9EA0' },
+      { name: 'Warm Gray', hex: '#A89F91' },
+      { name: 'Soft Coral', hex: '#F88379' },
+      { name: 'Mushroom', hex: '#9F8170' },
+      { name: 'Cream', hex: '#F5E6D3' },
+    ],
+  },
+  warmAutumn: {
+    name: 'Warm Autumn',
+    season: 'Autumn',
+    description: 'Rich, warm, and spicy like peak fall foliage',
+    characteristics: ['Very warm undertone', 'Medium-deep coloring', 'Warm and earthy'],
     colors: [
       { name: 'Rust', hex: '#B7410E' },
       { name: 'Pumpkin', hex: '#FF7518' },
@@ -133,17 +307,144 @@ const seasonResults = {
       { name: 'Olive', hex: '#556B2F' },
       { name: 'Warm Teal', hex: '#2E8B7B' },
       { name: 'Warm Brown', hex: '#704214' },
+      { name: 'Burnt Orange', hex: '#CC5500' },
+      { name: 'Buff', hex: '#F0DC82' },
+    ],
+  },
+  deepAutumn: {
+    name: 'Deep Autumn',
+    season: 'Autumn',
+    description: 'Deep, warm, and intense like late autumn',
+    characteristics: ['Warm undertone', 'Deep coloring', 'Rich and intense'],
+    colors: [
       { name: 'Burgundy', hex: '#800020' },
-      { name: 'Cream', hex: '#F5E6D3' },
+      { name: 'Deep Orange', hex: '#CC5500' },
+      { name: 'Bronze', hex: '#CD7F32' },
+      { name: 'Forest Green', hex: '#228B22' },
+      { name: 'Deep Teal', hex: '#004953' },
+      { name: 'Chocolate', hex: '#7B3F00' },
+      { name: 'Deep Plum', hex: '#662D4E' },
+      { name: 'Mahogany', hex: '#C04000' },
+    ],
+  },
+  // WINTER SUB-SEASONS (Cool base)
+  deepWinter: {
+    name: 'Deep Winter',
+    season: 'Winter',
+    description: 'Deep, cool, and striking like midnight',
+    characteristics: ['Cool undertone', 'Deep coloring', 'High contrast'],
+    colors: [
+      { name: 'Burgundy', hex: '#722F37' },
+      { name: 'Ruby', hex: '#E0115F' },
+      { name: 'Emerald', hex: '#50C878' },
+      { name: 'Sapphire', hex: '#0F52BA' },
+      { name: 'Deep Purple', hex: '#301934' },
+      { name: 'Black', hex: '#0A0A0A' },
+      { name: 'Pine', hex: '#01796F' },
+      { name: 'Charcoal', hex: '#36454F' },
+    ],
+  },
+  coolWinter: {
+    name: 'Cool Winter',
+    season: 'Winter',
+    description: 'Cool, icy, and dramatic like a winter wonderland',
+    characteristics: ['Very cool undertone', 'Medium-deep coloring', 'Clear and icy'],
+    colors: [
+      { name: 'Icy Pink', hex: '#FF1493' },
+      { name: 'Fuchsia', hex: '#FF00FF' },
+      { name: 'Royal Blue', hex: '#4169E1' },
+      { name: 'Emerald', hex: '#00A86B' },
+      { name: 'Purple', hex: '#800080' },
+      { name: 'Navy', hex: '#001F3F' },
+      { name: 'Pure Black', hex: '#000000' },
+      { name: 'Pure White', hex: '#FFFFFF' },
+    ],
+  },
+  brightWinter: {
+    name: 'Bright Winter',
+    season: 'Winter',
+    description: 'Vivid, cool, and bold like fresh snow in sunlight',
+    characteristics: ['Cool undertone', 'High contrast', 'Very clear and bright'],
+    colors: [
+      { name: 'Hot Pink', hex: '#FF69B4' },
+      { name: 'True Red', hex: '#FF0000' },
+      { name: 'Electric Blue', hex: '#0000FF' },
+      { name: 'Bright Green', hex: '#00C957' },
+      { name: 'Violet', hex: '#8B00FF' },
+      { name: 'Lemon Yellow', hex: '#FFF44F' },
+      { name: 'Cyan', hex: '#00FFFF' },
+      { name: 'Pure White', hex: '#FFFFFF' },
     ],
   },
 };
 
+// Function to determine sub-season based on scores
+function determineSubSeason(
+  undertoneScore: number, // negative = cool, positive = warm
+  valueScore: number,     // negative = light, positive = deep
+  chromaScore: number     // negative = bright, positive = soft/muted
+): string {
+  const isCool = undertoneScore < 0;
+  const isWarm = undertoneScore > 0;
+  const isLight = valueScore < 0;
+  const isDeep = valueScore > 0;
+  const isBright = chromaScore < 0;
+  const isSoft = chromaScore > 0;
+
+  // Determine base season and sub-season
+  if (isWarm) {
+    // SPRING or AUTUMN
+    if (isBright || isLight) {
+      // SPRING
+      if (Math.abs(valueScore) > Math.abs(chromaScore) && isLight) {
+        return 'lightSpring';
+      } else if (Math.abs(chromaScore) > Math.abs(valueScore) && isBright) {
+        return 'brightSpring';
+      } else {
+        return 'warmSpring';
+      }
+    } else {
+      // AUTUMN
+      if (Math.abs(valueScore) > Math.abs(chromaScore) && isDeep) {
+        return 'deepAutumn';
+      } else if (Math.abs(chromaScore) > Math.abs(valueScore) && isSoft) {
+        return 'softAutumn';
+      } else {
+        return 'warmAutumn';
+      }
+    }
+  } else {
+    // WINTER or SUMMER (cool)
+    if (isBright || isDeep) {
+      // WINTER
+      if (Math.abs(valueScore) > Math.abs(chromaScore) && isDeep) {
+        return 'deepWinter';
+      } else if (Math.abs(chromaScore) > Math.abs(valueScore) && isBright) {
+        return 'brightWinter';
+      } else {
+        return 'coolWinter';
+      }
+    } else {
+      // SUMMER
+      if (Math.abs(valueScore) > Math.abs(chromaScore) && isLight) {
+        return 'lightSummer';
+      } else if (Math.abs(chromaScore) > Math.abs(valueScore) && isSoft) {
+        return 'softSummer';
+      } else {
+        return 'coolSummer';
+      }
+    }
+  }
+}
+
 type TestStep = 'intro' | 'capture1' | 'capture2' | 'compare' | 'result';
-type TestPhase = 'undertone' | 'intensity';
-type Undertone = 'cool' | 'warm' | null;
-type Intensity = 'bright' | 'muted' | null;
-type Season = 'winter' | 'summer' | 'spring' | 'autumn';
+type TestScores = {
+  undertone: number; // negative = cool, positive = warm
+  value: number;     // negative = light, positive = deep
+  chroma: number;    // negative = bright, positive = soft
+};
+
+const TOTAL_TESTS = diagnosticTests.length;
 
 // Left half cape - draws full cape centered on screen, clips to left half
 function LeftHalfCape({ colors }: { colors: { name: string; hex: string }[] }) {
@@ -324,14 +625,16 @@ export default function TestScreen() {
   const [facing, setFacing] = useState<CameraType>('front');
   const [permission, requestPermission] = useCameraPermissions();
   const [step, setStep] = useState<TestStep>('intro');
-  const [phase, setPhase] = useState<TestPhase>('undertone');
-  const [undertone, setUndertone] = useState<Undertone>(null);
-  const [intensity, setIntensity] = useState<Intensity>(null);
+  const [currentTestIndex, setCurrentTestIndex] = useState(0);
+  const [scores, setScores] = useState<TestScores>({ undertone: 0, value: 0, chroma: 0 });
   const [photo1, setPhoto1] = useState<string | null>(null);
   const [photo2, setPhoto2] = useState<string | null>(null);
+  const [resultSubSeason, setResultSubSeason] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const router = useRouter();
+
+  const currentTest = diagnosticTests[currentTestIndex];
 
   const goHome = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -369,23 +672,25 @@ export default function TestScreen() {
   const resetTest = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setStep('intro');
-    setPhase('undertone');
-    setUndertone(null);
-    setIntensity(null);
+    setCurrentTestIndex(0);
+    setScores({ undertone: 0, value: 0, chroma: 0 });
     setPhoto1(null);
     setPhoto2(null);
+    setResultSubSeason(null);
   };
 
   const goBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (step === 'capture1') {
-      if (phase === 'undertone') {
+      if (currentTestIndex === 0) {
         setStep('intro');
       } else {
-        // Can't go back to undertone compare (photos cleared), restart test
-        setStep('intro');
-        setPhase('undertone');
-        setUndertone(null);
+        // Go back to previous test's compare
+        setCurrentTestIndex(currentTestIndex - 1);
+        setStep('compare');
+        // Note: We can't restore photos, so user needs to retake
+        setPhoto1(null);
+        setPhoto2(null);
       }
     } else if (step === 'capture2') {
       setStep('capture1');
@@ -394,9 +699,8 @@ export default function TestScreen() {
       setStep('capture2');
       setPhoto2(null);
     } else if (step === 'result') {
-      // Go back to intensity capture1, not compare (photos cleared)
+      // Go back to last test
       setStep('capture1');
-      setIntensity(null);
       setPhoto1(null);
       setPhoto2(null);
     }
@@ -405,7 +709,8 @@ export default function TestScreen() {
   const startTest = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setStep('capture1');
-    setPhase('undertone');
+    setCurrentTestIndex(0);
+    setScores({ undertone: 0, value: 0, chroma: 0 });
   };
 
   const takePhoto = async () => {
@@ -425,15 +730,15 @@ export default function TestScreen() {
     }
   };
 
-  const selectOption = (option: 'left' | 'right') => {
+  const selectOption = (option: 'A' | 'B') => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    const labels = getLabels();
-    const selectedLabel = option === 'left' ? labels.left : labels.right;
+    const selectedOption = option === 'A' ? currentTest.optionA : currentTest.optionB;
+    const scoreChange = option === 'A' ? -1 : 1; // A = cool/light/bright (-), B = warm/deep/soft (+)
 
     Alert.alert(
       'Confirm Selection',
-      `You selected "${selectedLabel}". Continue?`,
+      `You selected "${selectedOption.name}". Continue?`,
       [
         {
           text: 'Cancel',
@@ -442,15 +747,27 @@ export default function TestScreen() {
         {
           text: 'Continue',
           onPress: () => {
-            if (phase === 'undertone') {
-              setUndertone(option === 'left' ? 'cool' : 'warm');
-              // Move to intensity phase
-              setPhase('intensity');
+            // Update score based on category
+            const newScores = { ...scores };
+            if (currentTest.category === 'undertone') {
+              newScores.undertone += scoreChange;
+            } else if (currentTest.category === 'value') {
+              newScores.value += scoreChange;
+            } else if (currentTest.category === 'chroma') {
+              newScores.chroma += scoreChange;
+            }
+            setScores(newScores);
+
+            // Move to next test or show result
+            if (currentTestIndex < TOTAL_TESTS - 1) {
+              setCurrentTestIndex(currentTestIndex + 1);
               setStep('capture1');
               setPhoto1(null);
               setPhoto2(null);
             } else {
-              setIntensity(option === 'left' ? 'bright' : 'muted');
+              // Calculate result
+              const subSeason = determineSubSeason(newScores.undertone, newScores.value, newScores.chroma);
+              setResultSubSeason(subSeason);
               setStep('result');
             }
           },
@@ -459,30 +776,9 @@ export default function TestScreen() {
     );
   };
 
-  const getSeason = (): Season => {
-    if (undertone === 'cool' && intensity === 'bright') return 'winter';
-    if (undertone === 'cool' && intensity === 'muted') return 'summer';
-    if (undertone === 'warm' && intensity === 'bright') return 'spring';
-    return 'autumn';
-  };
-
-  // Get current overlay colors based on phase and which photo we're taking
+  // Get current overlay colors based on which photo we're taking
   const getCurrentOverlay = () => {
-    if (phase === 'undertone') {
-      return step === 'capture1' ? testOverlays.cool : testOverlays.warm;
-    } else {
-      return step === 'capture1'
-        ? (undertone === 'cool' ? testOverlays.bright : testOverlays.brightWarm)
-        : (undertone === 'cool' ? testOverlays.muted : testOverlays.mutedWarm);
-    }
-  };
-
-  const getLabels = () => {
-    if (phase === 'undertone') {
-      return { left: 'Cool', right: 'Warm', leftDesc: 'Silver undertones', rightDesc: 'Gold undertones' };
-    } else {
-      return { left: 'Bright', right: 'Muted', leftDesc: 'Clear and vivid', rightDesc: 'Soft and dusty' };
-    }
+    return step === 'capture1' ? currentTest.optionA : currentTest.optionB;
   };
 
   // Intro screen
@@ -506,7 +802,7 @@ export default function TestScreen() {
           />
           <Text style={styles.introTitle}>Find Your Colors</Text>
           <Text style={styles.introSubtitle}>
-            Discover your seasonal color palette in 2 simple steps
+            Discover your perfect sub-season in 6 quick comparisons
           </Text>
 
           <View style={styles.stepsContainer}>
@@ -514,13 +810,19 @@ export default function TestScreen() {
               <View style={styles.stepNumber}>
                 <Text style={styles.stepNumberText}>1</Text>
               </View>
-              <Text style={styles.stepText}>Choose your undertone (cool or warm)</Text>
+              <Text style={styles.stepText}>Undertone: Cool vs Warm (2 tests)</Text>
             </View>
             <View style={styles.stepItem}>
               <View style={styles.stepNumber}>
                 <Text style={styles.stepNumberText}>2</Text>
               </View>
-              <Text style={styles.stepText}>Choose your intensity (bright or muted)</Text>
+              <Text style={styles.stepText}>Value: Light vs Deep (2 tests)</Text>
+            </View>
+            <View style={styles.stepItem}>
+              <View style={styles.stepNumber}>
+                <Text style={styles.stepNumberText}>3</Text>
+              </View>
+              <Text style={styles.stepText}>Chroma: Bright vs Soft (2 tests)</Text>
             </View>
           </View>
 
@@ -537,9 +839,8 @@ export default function TestScreen() {
   }
 
   // Result screen
-  if (step === 'result') {
-    const season = getSeason();
-    const result = seasonResults[season];
+  if (step === 'result' && resultSubSeason) {
+    const result = subSeasonResults[resultSubSeason];
 
     return (
       <View style={styles.container}>
@@ -562,14 +863,18 @@ export default function TestScreen() {
 
           <View style={[styles.resultFooter, { paddingBottom: insets.bottom + 20 }]}>
             <View style={styles.subSeasonsContainer}>
-              <Text style={styles.subSeasonsLabel}>Your best palettes:</Text>
+              <Text style={styles.subSeasonsLabel}>Your characteristics:</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {result.subSeasons.map((sub, index) => (
+                {result.characteristics.map((char, index) => (
                   <View key={index} style={styles.subSeasonBadge}>
-                    <Text style={styles.subSeasonText}>{sub}</Text>
+                    <Text style={styles.subSeasonText}>{char}</Text>
                   </View>
                 ))}
               </ScrollView>
+            </View>
+
+            <View style={styles.seasonBadge}>
+              <Text style={styles.seasonBadgeText}>{result.season} Season</Text>
             </View>
 
             <Pressable style={styles.retakeButton} onPress={resetTest}>
@@ -589,14 +894,11 @@ export default function TestScreen() {
 
   // Capture screens (capture1 and capture2)
   if (step === 'capture1' || step === 'capture2') {
-    const currentOverlay = getCurrentOverlay();
-    const labels = getLabels();
+    const overlay = getCurrentOverlay();
     const isFirst = step === 'capture1';
-    const captureLabel = isFirst ? labels.left : labels.right;
-    const captureDesc = isFirst ? labels.leftDesc : labels.rightDesc;
     const instruction = isFirst
-      ? `Take a photo with ${captureLabel} colors`
-      : `Now take a photo with ${captureLabel} colors`;
+      ? `Take a photo with ${overlay.name} colors`
+      : `Now take a photo with ${overlay.name} colors`;
 
     return (
       <View style={styles.container}>
@@ -608,7 +910,7 @@ export default function TestScreen() {
           ref={cameraRef}
           mirror={facing === 'front'}
         >
-          <FullCape colors={currentOverlay.colors} />
+          <FullCape colors={overlay.colors} />
         </CameraView>
 
         {/* Header */}
@@ -617,8 +919,8 @@ export default function TestScreen() {
             <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
           </Pressable>
           <View style={styles.captureHeaderText}>
-            <Text style={styles.captureTitle}>{captureLabel}</Text>
-            <Text style={styles.captureSubtitle}>{captureDesc}</Text>
+            <Text style={styles.captureTitle}>{overlay.name}</Text>
+            <Text style={styles.captureSubtitle}>{overlay.description}</Text>
           </View>
           <Pressable style={styles.flipButton} onPress={toggleCameraFacing}>
             <RotateCw size={24} color="#FFFFFF" strokeWidth={2} />
@@ -628,6 +930,13 @@ export default function TestScreen() {
         {/* Instruction */}
         <View style={styles.instructionBanner}>
           <Text style={styles.instructionText}>{instruction}</Text>
+        </View>
+
+        {/* Test progress indicator */}
+        <View style={styles.testProgressBanner}>
+          <Text style={styles.testProgressText}>
+            Test {currentTestIndex + 1} of {TOTAL_TESTS}: {currentTest.category.charAt(0).toUpperCase() + currentTest.category.slice(1)}
+          </Text>
         </View>
 
         {/* Capture button */}
@@ -647,16 +956,6 @@ export default function TestScreen() {
 
   // Compare screen
   if (step === 'compare' && photo1 && photo2) {
-    const labels = getLabels();
-    const questionText = phase === 'undertone'
-      ? 'Which colors make your skin glow?'
-      : 'Which colors suit you better?';
-
-    const leftOverlay = phase === 'undertone' ? testOverlays.cool :
-      (undertone === 'cool' ? testOverlays.bright : testOverlays.brightWarm);
-    const rightOverlay = phase === 'undertone' ? testOverlays.warm :
-      (undertone === 'cool' ? testOverlays.muted : testOverlays.mutedWarm);
-
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
@@ -666,32 +965,32 @@ export default function TestScreen() {
           <Pressable style={styles.backButton} onPress={goBack}>
             <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
           </Pressable>
-          <Text style={styles.compareQuestion}>{questionText}</Text>
+          <Text style={styles.compareQuestion}>{currentTest.question}</Text>
           <View style={{ width: 44 }} />
         </View>
 
         {/* Side by side photos */}
         <View style={styles.compareContainer}>
-          {/* Left photo */}
-          <Pressable style={styles.compareOption} onPress={() => selectOption('left')}>
+          {/* Option A photo */}
+          <Pressable style={styles.compareOption} onPress={() => selectOption('A')}>
             <Image source={{ uri: photo1 }} style={styles.compareImage} contentFit="cover" />
-            <CompareCape colors={leftOverlay.colors} />
+            <CompareCape colors={currentTest.optionA.colors} />
             <View style={styles.compareLabel}>
-              <Text style={styles.compareLabelText}>{labels.left}</Text>
-              <Text style={styles.compareLabelSubtext}>{labels.leftDesc}</Text>
+              <Text style={styles.compareLabelText}>{currentTest.optionA.name}</Text>
+              <Text style={styles.compareLabelSubtext}>{currentTest.optionA.description}</Text>
             </View>
           </Pressable>
 
           {/* Divider */}
           <View style={styles.compareDivider} />
 
-          {/* Right photo */}
-          <Pressable style={styles.compareOption} onPress={() => selectOption('right')}>
+          {/* Option B photo */}
+          <Pressable style={styles.compareOption} onPress={() => selectOption('B')}>
             <Image source={{ uri: photo2 }} style={styles.compareImage} contentFit="cover" />
-            <CompareCape colors={rightOverlay.colors} />
+            <CompareCape colors={currentTest.optionB.colors} />
             <View style={styles.compareLabel}>
-              <Text style={styles.compareLabelText}>{labels.right}</Text>
-              <Text style={styles.compareLabelSubtext}>{labels.rightDesc}</Text>
+              <Text style={styles.compareLabelText}>{currentTest.optionB.name}</Text>
+              <Text style={styles.compareLabelSubtext}>{currentTest.optionB.description}</Text>
             </View>
           </Pressable>
         </View>
@@ -700,8 +999,15 @@ export default function TestScreen() {
         <View style={[styles.compareFooter, { paddingBottom: insets.bottom + 20 }]}>
           <Text style={styles.compareTip}>Tap the photo that looks best on you</Text>
           <View style={styles.progressDots}>
-            <View style={[styles.progressDot, styles.progressDotActive]} />
-            <View style={[styles.progressDot, phase === 'intensity' && styles.progressDotActive]} />
+            {diagnosticTests.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.progressDot,
+                  index <= currentTestIndex && styles.progressDotActive,
+                ]}
+              />
+            ))}
           </View>
         </View>
       </View>
@@ -960,6 +1266,23 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
   },
+  testProgressBanner: {
+    position: 'absolute',
+    top: screenHeight * 0.28,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  testProgressText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+  },
   captureControls: {
     position: 'absolute',
     bottom: 0,
@@ -1202,6 +1525,21 @@ const styles = StyleSheet.create({
   subSeasonText: {
     fontSize: 14,
     fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  seasonBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    alignSelf: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  seasonBadgeText: {
+    fontSize: 16,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   retakeButton: {
