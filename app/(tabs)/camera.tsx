@@ -1,6 +1,7 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, View, Text, Dimensions, ScrollView, Pressable, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -108,6 +109,8 @@ function ColorCape({ colors }: { colors: { name: string; hex: string }[] }) {
   );
 }
 
+const CAMERA_SETTING_KEY = 'default_camera_facing';
+
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('front');
   const [permission, requestPermission] = useCameraPermissions();
@@ -118,6 +121,14 @@ export default function CameraScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { getEnabledPalettes } = usePalettePreferences();
+
+  useEffect(() => {
+    AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
+      if (value !== null) {
+        setFacing(value === 'front' ? 'front' : 'back');
+      }
+    });
+  }, []);
 
   const enabledPalettes = getEnabledPalettes();
   const currentPaletteKey = paletteKey && enabledPalettes.includes(paletteKey) ? paletteKey : enabledPalettes[0];

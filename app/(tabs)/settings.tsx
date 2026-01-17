@@ -5,21 +5,38 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X } from 'lucide-react-native';
+import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 
+const CAMERA_SETTING_KEY = 'default_camera_facing';
+
 export default function SettingsScreen() {
   const [showCustomerCenter, setShowCustomerCenter] = useState(false);
   const [showPaletteSheet, setShowPaletteSheet] = useState(false);
   const [highlightedKey, setHighlightedKey] = useState<ColorPaletteKey | null>(null);
+  const [defaultFrontCamera, setDefaultFrontCamera] = useState(true);
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
   const { preferences, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults } = usePalettePreferences();
+
+  useEffect(() => {
+    AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
+      if (value !== null) {
+        setDefaultFrontCamera(value === 'front');
+      }
+    });
+  }, []);
+
+  const handleToggleDefaultCamera = async (value: boolean) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setDefaultFrontCamera(value);
+    await AsyncStorage.setItem(CAMERA_SETTING_KEY, value ? 'front' : 'back');
+  };
 
   const triggerHighlight = (key: ColorPaletteKey) => {
     setHighlightedKey(key);
@@ -238,6 +255,24 @@ export default function SettingsScreen() {
               </Text>
             </View>
           </Pressable>
+
+          <View style={[styles.settingButton, styles.settingButtonWithSwitch]}>
+            <View style={[styles.settingIcon, styles.settingIconBlue]}>
+              <Camera size={22} color="#007AFF" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Default Front Camera</Text>
+              <Text style={styles.settingDescription}>
+                Use front camera when opening cape
+              </Text>
+            </View>
+            <Switch
+              value={defaultFrontCamera}
+              onValueChange={handleToggleDefaultCamera}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(52, 199, 89, 0.5)' }}
+              thumbColor={defaultFrontCamera ? '#34C759' : '#f4f3f4'}
+            />
+          </View>
         </View>
 
         {/* Subscription Section */}
@@ -359,6 +394,12 @@ const styles = StyleSheet.create({
   },
   settingIconPurple: {
     backgroundColor: 'rgba(175, 82, 222, 0.15)',
+  },
+  settingIconBlue: {
+    backgroundColor: 'rgba(0, 122, 255, 0.15)',
+  },
+  settingButtonWithSwitch: {
+    marginTop: 12,
   },
   settingTextContainer: {
     flex: 1,
