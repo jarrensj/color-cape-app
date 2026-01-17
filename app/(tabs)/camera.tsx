@@ -269,7 +269,8 @@ export default function CameraScreen() {
     );
   }
 
-  if ((!currentPalette && !customCape) || (enabledPalettes.length === 0 && !customCape)) {
+  const customCapeEnabled = customCape && customCape.enabled;
+  if ((!currentPalette && !customCapeEnabled) || (enabledPalettes.length === 0 && !customCapeEnabled)) {
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
@@ -319,44 +320,62 @@ export default function CameraScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.paletteSelectorContent}
           >
-            {customCape && (
-              <Pressable
-                style={[
-                  styles.paletteButton,
-                  styles.customPaletteButton,
-                  useCustomCape && styles.paletteButtonActive,
-                ]}
-                onPress={selectCustomCape}
-              >
-                <Text
-                  style={[
-                    styles.paletteButtonText,
-                    useCustomCape && styles.paletteButtonTextActive,
-                  ]}
-                >
-                  {customCape.name}
-                </Text>
-              </Pressable>
-            )}
-            {enabledPalettes.map((key) => (
-              <Pressable
-                key={key}
-                style={[
-                  styles.paletteButton,
-                  currentPaletteKey === key && !useCustomCape && styles.paletteButtonActive,
-                ]}
-                onPress={() => changePalette(key)}
-              >
-                <Text
-                  style={[
-                    styles.paletteButtonText,
-                    currentPaletteKey === key && !useCustomCape && styles.paletteButtonTextActive,
-                  ]}
-                >
-                  {colorPalettes[key].name}
-                </Text>
-              </Pressable>
-            ))}
+            {(() => {
+              // Build combined list with custom cape at its position
+              type ListItem = { type: 'custom' } | { type: 'palette'; key: ColorPaletteKey };
+              const items: ListItem[] = enabledPalettes.map(key => ({ type: 'palette' as const, key }));
+              if (customCape && customCape.enabled) {
+                const pos = Math.min(customCape.position, items.length);
+                items.splice(pos, 0, { type: 'custom' });
+              }
+
+              return items.map((item) => {
+                if (item.type === 'custom' && customCape) {
+                  return (
+                    <Pressable
+                      key="custom-cape"
+                      style={[
+                        styles.paletteButton,
+                        useCustomCape && styles.paletteButtonActive,
+                      ]}
+                      onPress={selectCustomCape}
+                    >
+                      <Text
+                        style={[
+                          styles.paletteButtonText,
+                          useCustomCape && styles.paletteButtonTextActive,
+                        ]}
+                      >
+                        {customCape.name}
+                      </Text>
+                    </Pressable>
+                  );
+                }
+                if (item.type === 'palette') {
+                  const key = item.key;
+                  return (
+                    <Pressable
+                      key={key}
+                      style={[
+                        styles.paletteButton,
+                        currentPaletteKey === key && !useCustomCape && styles.paletteButtonActive,
+                      ]}
+                      onPress={() => changePalette(key)}
+                    >
+                      <Text
+                        style={[
+                          styles.paletteButtonText,
+                          currentPaletteKey === key && !useCustomCape && styles.paletteButtonTextActive,
+                        ]}
+                      >
+                        {colorPalettes[key].name}
+                      </Text>
+                    </Pressable>
+                  );
+                }
+                return null;
+              });
+            })()}
           </ScrollView>
         </View>
 

@@ -57,7 +57,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
-  const { preferences, customCape, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults, saveCustomCape, deleteCustomCape } = usePalettePreferences();
+  const { preferences, customCape, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults, saveCustomCape, deleteCustomCape, toggleCustomCape, moveCustomCapeUp, moveCustomCapeDown } = usePalettePreferences();
 
   useEffect(() => {
     AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
@@ -216,6 +216,8 @@ export default function SettingsScreen() {
         name: `Color ${i + 1}`,
         hex,
       })),
+      enabled: customCape?.enabled ?? true,
+      position: customCape?.position ?? 0,
     };
     saveCustomCape(cape);
     setShowCustomCapeSheet(false);
@@ -348,63 +350,133 @@ export default function SettingsScreen() {
 
             <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
               <View style={styles.paletteList}>
-                {preferences.order.map((key, index) => {
-                  const palette = colorPalettes[key];
-                  const isEnabled = preferences.enabled[key];
-                  const isFirst = index === 0;
-                  const isLast = index === preferences.order.length - 1;
+                {(() => {
+                  // Build combined list with custom cape at its position
+                  type ListItem = { type: 'custom' } | { type: 'palette'; key: ColorPaletteKey };
+                  const items: ListItem[] = preferences.order.map(key => ({ type: 'palette' as const, key }));
+                  if (customCape) {
+                    const pos = Math.min(customCape.position, items.length);
+                    items.splice(pos, 0, { type: 'custom' });
+                  }
+                  const totalItems = items.length;
 
-                  const isHighlighted = highlightedKey === key;
-                  const animatedStyle = isHighlighted ? {
-                    backgroundColor: highlightAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.15)'],
-                    }),
-                  } : {};
+                  return items.map((item, index) => {
+                    const isFirst = index === 0;
+                    const isLast = index === totalItems - 1;
 
-                  return (
-                    <Animated.View key={key} style={[styles.paletteItem, animatedStyle]}>
-                      <View style={styles.paletteReorder}>
-                        <Pressable
-                          onPress={() => handleMoveUp(key)}
-                          disabled={isFirst}
-                          style={[styles.reorderButton, isFirst && styles.reorderButtonDisabled]}
-                        >
-                          <ChevronUp size={18} color={isFirst ? 'rgba(255,255,255,0.2)' : '#FFFFFF'} />
-                        </Pressable>
-                        <Pressable
-                          onPress={() => handleMoveDown(key)}
-                          disabled={isLast}
-                          style={[styles.reorderButton, isLast && styles.reorderButtonDisabled]}
-                        >
-                          <ChevronDown size={18} color={isLast ? 'rgba(255,255,255,0.2)' : '#FFFFFF'} />
-                        </Pressable>
-                      </View>
+                    if (item.type === 'custom' && customCape) {
+                      return (
+                        <View key="custom-cape" style={styles.paletteItem}>
+                          <View style={styles.paletteReorder}>
+                            <Pressable
+                              onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                moveCustomCapeUp();
+                              }}
+                              disabled={isFirst}
+                              style={[styles.reorderButton, isFirst && styles.reorderButtonDisabled]}
+                            >
+                              <ChevronUp size={18} color={isFirst ? 'rgba(255,255,255,0.2)' : '#FFFFFF'} />
+                            </Pressable>
+                            <Pressable
+                              onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                moveCustomCapeDown();
+                              }}
+                              disabled={isLast}
+                              style={[styles.reorderButton, isLast && styles.reorderButtonDisabled]}
+                            >
+                              <ChevronDown size={18} color={isLast ? 'rgba(255,255,255,0.2)' : '#FFFFFF'} />
+                            </Pressable>
+                          </View>
 
-                      <View style={styles.paletteColors}>
-                        {palette.colors.slice(0, 4).map((color, colorIndex) => (
-                          <View
-                            key={colorIndex}
-                            style={[styles.colorDot, { backgroundColor: color.hex }]}
+                          <View style={styles.paletteColors}>
+                            {customCape.colors.slice(0, 4).map((color, colorIndex) => (
+                              <View
+                                key={colorIndex}
+                                style={[styles.colorDot, { backgroundColor: color.hex }]}
+                              />
+                            ))}
+                          </View>
+
+                          <View style={styles.paletteInfo}>
+                            <Text style={[styles.paletteName, !customCape.enabled && styles.paletteNameDisabled]}>
+                              {customCape.name}
+                            </Text>
+                          </View>
+
+                          <Switch
+                            value={customCape.enabled}
+                            onValueChange={() => {
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                              toggleCustomCape();
+                            }}
+                            trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(52, 199, 89, 0.5)' }}
+                            thumbColor={customCape.enabled ? '#34C759' : '#f4f3f4'}
                           />
-                        ))}
-                      </View>
+                        </View>
+                      );
+                    }
 
-                      <View style={styles.paletteInfo}>
-                        <Text style={[styles.paletteName, !isEnabled && styles.paletteNameDisabled]}>
-                          {palette.name}
-                        </Text>
-                      </View>
+                    if (item.type === 'palette') {
+                      const key = item.key;
+                      const palette = colorPalettes[key];
+                      const isEnabled = preferences.enabled[key];
 
-                      <Switch
-                        value={isEnabled}
-                        onValueChange={() => handleTogglePalette(key)}
-                        trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(52, 199, 89, 0.5)' }}
-                        thumbColor={isEnabled ? '#34C759' : '#f4f3f4'}
-                      />
-                    </Animated.View>
-                  );
-                })}
+                      const isHighlighted = highlightedKey === key;
+                      const animatedStyle = isHighlighted ? {
+                        backgroundColor: highlightAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.15)'],
+                        }),
+                      } : {};
+
+                      return (
+                        <Animated.View key={key} style={[styles.paletteItem, animatedStyle]}>
+                          <View style={styles.paletteReorder}>
+                            <Pressable
+                              onPress={() => handleMoveUp(key)}
+                              disabled={isFirst}
+                              style={[styles.reorderButton, isFirst && styles.reorderButtonDisabled]}
+                            >
+                              <ChevronUp size={18} color={isFirst ? 'rgba(255,255,255,0.2)' : '#FFFFFF'} />
+                            </Pressable>
+                            <Pressable
+                              onPress={() => handleMoveDown(key)}
+                              disabled={isLast}
+                              style={[styles.reorderButton, isLast && styles.reorderButtonDisabled]}
+                            >
+                              <ChevronDown size={18} color={isLast ? 'rgba(255,255,255,0.2)' : '#FFFFFF'} />
+                            </Pressable>
+                          </View>
+
+                          <View style={styles.paletteColors}>
+                            {palette.colors.slice(0, 4).map((color, colorIndex) => (
+                              <View
+                                key={colorIndex}
+                                style={[styles.colorDot, { backgroundColor: color.hex }]}
+                              />
+                            ))}
+                          </View>
+
+                          <View style={styles.paletteInfo}>
+                            <Text style={[styles.paletteName, !isEnabled && styles.paletteNameDisabled]}>
+                              {palette.name}
+                            </Text>
+                          </View>
+
+                          <Switch
+                            value={isEnabled}
+                            onValueChange={() => handleTogglePalette(key)}
+                            trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(52, 199, 89, 0.5)' }}
+                            thumbColor={isEnabled ? '#34C759' : '#f4f3f4'}
+                          />
+                        </Animated.View>
+                      );
+                    }
+                    return null;
+                  });
+                })()}
               </View>
 
               <View style={styles.paletteActions}>
@@ -569,7 +641,7 @@ export default function SettingsScreen() {
             <View style={styles.settingTextContainer}>
               <Text style={styles.settingLabel}>Cape Palettes</Text>
               <Text style={styles.settingDescription}>
-                {preferences.order.filter(k => preferences.enabled[k]).length} of {preferences.order.length} enabled
+                {preferences.order.filter(k => preferences.enabled[k]).length + (customCape?.enabled ? 1 : 0)} of {preferences.order.length + (customCape ? 1 : 0)} enabled
               </Text>
             </View>
           </Pressable>
