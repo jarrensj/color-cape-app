@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, Share } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal } from 'lucide-react-native';
+import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2 } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
@@ -49,6 +49,17 @@ export default function SettingsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setMirrorFrontCamera(value);
     await AsyncStorage.setItem(MIRROR_SETTING_KEY, value ? 'true' : 'false');
+  };
+
+  const handleShareApp = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      await Share.share({
+        message: 'Check out Color Cape - find your perfect color palette! Download it here: https://apps.apple.com/app/color-cape',
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
   };
 
   const triggerHighlight = (key: ColorPaletteKey) => {
@@ -306,6 +317,29 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Share Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Share</Text>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingButton,
+              pressed && styles.settingButtonPressed,
+            ]}
+            onPress={handleShareApp}
+          >
+            <View style={[styles.settingIcon, styles.settingIconGreen]}>
+              <Share2 size={22} color="#34C759" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Share with Friends</Text>
+              <Text style={styles.settingDescription}>
+                Spread the word about Color Cape
+              </Text>
+            </View>
+          </Pressable>
+        </View>
+
         {/* Subscription Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Subscription</Text>
@@ -431,6 +465,9 @@ const styles = StyleSheet.create({
   },
   settingIconTeal: {
     backgroundColor: 'rgba(90, 200, 250, 0.15)',
+  },
+  settingIconGreen: {
+    backgroundColor: 'rgba(52, 199, 89, 0.15)',
   },
   settingButtonWithSwitch: {
     marginTop: 12,
