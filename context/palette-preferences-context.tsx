@@ -11,6 +11,7 @@ type PalettePreferencesContextType = {
   preferences: PalettePreferences;
   isLoading: boolean;
   togglePalette: (key: ColorPaletteKey) => void;
+  setAllEnabled: (enabled: boolean) => void;
   movePaletteUp: (key: ColorPaletteKey) => void;
   movePaletteDown: (key: ColorPaletteKey) => void;
   getEnabledPalettes: () => ColorPaletteKey[];
@@ -81,6 +82,16 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
     savePreferences(newPrefs);
   };
 
+  const setAllEnabled = (enabled: boolean) => {
+    const newEnabled = preferences.order.reduce((acc, key) => {
+      acc[key] = enabled;
+      return acc;
+    }, {} as Record<ColorPaletteKey, boolean>);
+    const newPrefs = { ...preferences, enabled: newEnabled };
+    setPreferences(newPrefs);
+    savePreferences(newPrefs);
+  };
+
   const movePaletteUp = (key: ColorPaletteKey) => {
     const index = preferences.order.indexOf(key);
     if (index <= 0) return;
@@ -121,6 +132,7 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
         preferences,
         isLoading,
         togglePalette,
+        setAllEnabled,
         movePaletteUp,
         movePaletteDown,
         getEnabledPalettes,

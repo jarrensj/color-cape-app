@@ -18,7 +18,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
-  const { preferences, togglePalette, movePaletteUp, movePaletteDown, resetToDefaults } = usePalettePreferences();
+  const { preferences, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults } = usePalettePreferences();
 
   const triggerHighlight = (key: ColorPaletteKey) => {
     setHighlightedKey(key);
@@ -79,14 +79,11 @@ export default function SettingsScreen() {
     triggerHighlight(key);
   };
 
-  const handleEnableAll = () => {
+  const allEnabled = preferences.order.every((key) => preferences.enabled[key]);
+
+  const handleToggleAll = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // Enable any disabled palettes
-    preferences.order.forEach((key) => {
-      if (!preferences.enabled[key]) {
-        togglePalette(key);
-      }
-    });
+    setAllEnabled(!allEnabled);
   };
 
   const handleResetPalettes = () => {
@@ -183,9 +180,9 @@ export default function SettingsScreen() {
                 styles.resetPalettesButton,
                 pressed && styles.resetPalettesButtonPressed,
               ]}
-              onPress={handleEnableAll}
+              onPress={handleToggleAll}
             >
-              <Text style={styles.resetPalettesText}>Enable All</Text>
+              <Text style={styles.resetPalettesText}>{allEnabled ? 'Disable All' : 'Enable All'}</Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [
