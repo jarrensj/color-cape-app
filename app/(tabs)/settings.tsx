@@ -279,8 +279,13 @@ export default function SettingsScreen() {
               </Text>
             </View>
           </Pressable>
+        </View>
 
-          <View style={[styles.settingButton, styles.settingButtonWithSwitch]}>
+        {/* Camera Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Camera</Text>
+
+          <View style={[styles.settingButton]}>
             <View style={[styles.settingIcon, styles.settingIconBlue]}>
               <Camera size={22} color="#007AFF" strokeWidth={2} />
             </View>
@@ -298,7 +303,7 @@ export default function SettingsScreen() {
             />
           </View>
 
-          <View style={[styles.settingButton, styles.settingButtonWithSwitch]}>
+          <View style={[styles.settingButton, styles.settingButtonMarginTop]}>
             <View style={[styles.settingIcon, styles.settingIconTeal]}>
               <FlipHorizontal size={22} color="#5AC8FA" strokeWidth={2} />
             </View>
@@ -469,7 +474,7 @@ const styles = StyleSheet.create({
   settingIconGreen: {
     backgroundColor: 'rgba(52, 199, 89, 0.15)',
   },
-  settingButtonWithSwitch: {
+  settingButtonMarginTop: {
     marginTop: 12,
   },
   settingTextContainer: {
