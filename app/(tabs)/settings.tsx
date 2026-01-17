@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -13,10 +13,24 @@ import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 
 export default function SettingsScreen() {
   const [showCustomerCenter, setShowCustomerCenter] = useState(false);
+  const [highlightedKey, setHighlightedKey] = useState<ColorPaletteKey | null>(null);
+  const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
   const { preferences, togglePalette, movePaletteUp, movePaletteDown } = usePalettePreferences();
+
+  const triggerHighlight = (key: ColorPaletteKey) => {
+    setHighlightedKey(key);
+    highlightAnim.setValue(1);
+    Animated.timing(highlightAnim, {
+      toValue: 0,
+      duration: 1500,
+      useNativeDriver: false,
+    }).start(() => {
+      setHighlightedKey(null);
+    });
+  };
 
   const resetApp = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -56,11 +70,13 @@ export default function SettingsScreen() {
   const handleMoveUp = (key: ColorPaletteKey) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     movePaletteUp(key);
+    triggerHighlight(key);
   };
 
   const handleMoveDown = (key: ColorPaletteKey) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     movePaletteDown(key);
+    triggerHighlight(key);
   };
 
   return (
@@ -93,8 +109,16 @@ export default function SettingsScreen() {
               const isFirst = index === 0;
               const isLast = index === preferences.order.length - 1;
 
+              const isHighlighted = highlightedKey === key;
+              const animatedStyle = isHighlighted ? {
+                backgroundColor: highlightAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.15)'],
+                }),
+              } : {};
+
               return (
-                <View key={key} style={styles.paletteItem}>
+                <Animated.View key={key} style={[styles.paletteItem, animatedStyle]}>
                   <View style={styles.paletteReorder}>
                     <Pressable
                       onPress={() => handleMoveUp(key)}
@@ -133,7 +157,7 @@ export default function SettingsScreen() {
                     trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(52, 199, 89, 0.5)' }}
                     thumbColor={isEnabled ? '#34C759' : '#f4f3f4'}
                   />
-                </View>
+                </Animated.View>
               );
             })}
           </View>
