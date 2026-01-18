@@ -823,6 +823,28 @@ export default function TestScreen() {
     router.push('/');
   };
 
+  const exitTest = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Alert.alert(
+      'Exit Test?',
+      'Your test progress will be lost.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Exit',
+          style: 'destructive',
+          onPress: () => {
+            resetTest();
+            router.push('/');
+          },
+        },
+      ]
+    );
+  };
+
   if (!permission) {
     return (
       <View style={styles.container}>
@@ -1177,9 +1199,7 @@ export default function TestScreen() {
             <Text style={styles.captureTitle}>{overlay.name}</Text>
             <Text style={styles.captureSubtitle}>{overlay.description}</Text>
           </View>
-          <Pressable style={styles.flipButton} onPress={toggleCameraFacing}>
-            <SwitchCamera size={24} color="#FFFFFF" strokeWidth={2} />
-          </Pressable>
+          <View style={{ width: 44 }} />
         </View>
 
         {/* Instruction */}
@@ -1189,10 +1209,15 @@ export default function TestScreen() {
 
         {/* Capture button */}
         <View style={[styles.captureControls, { paddingBottom: insets.bottom + 20 }]}>
+          <Pressable style={styles.exitTestButton} onPress={exitTest}>
+            <Home size={20} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
           <Pressable style={styles.captureButton} onPress={takePhoto}>
             <Camera size={32} color="#000000" strokeWidth={2} />
           </Pressable>
-          <Text style={styles.captureTip}>Tap to capture</Text>
+          <Pressable style={styles.flipButtonSmall} onPress={toggleCameraFacing}>
+            <SwitchCamera size={20} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
         </View>
       </View>
     );
@@ -1243,7 +1268,9 @@ export default function TestScreen() {
             <Text style={styles.compareOptionTitle}>{currentOption.name}</Text>
             <Text style={styles.compareOptionSubtitle}>{currentOption.description}</Text>
           </View>
-          <View style={{ width: 44 }} />
+          <Pressable style={styles.exitTestButtonHeader} onPress={exitTest}>
+            <Home size={22} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
         </View>
 
         {/* Footer */}
@@ -1543,7 +1570,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: 32,
   },
   captureButton: {
     width: 80,
@@ -1552,7 +1582,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 16,
+  },
+  exitTestButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  exitTestButtonHeader: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  flipButtonSmall: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   captureTip: {
     fontSize: 14,
