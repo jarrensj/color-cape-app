@@ -344,7 +344,7 @@ export default function CameraScreen() {
               {showColorCountToggle && (
                 <Pressable style={styles.colorCountToggle} onPress={handleToggleColorCount}>
                   <Text style={styles.colorCountToggleText}>
-                    {getColorCount(currentPaletteKey!) === 8 ? '→ 4' : '→ 8'}
+                    {getColorCount(currentPaletteKey!)}
                   </Text>
                 </Pressable>
               )}
