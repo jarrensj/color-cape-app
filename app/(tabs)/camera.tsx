@@ -257,11 +257,8 @@ export default function CameraScreen() {
         </View>
         {/* Bottom controls */}
         <View style={[styles.photoButtonContainer, { paddingBottom: insets.bottom + 20 }]}>
-          <Pressable style={styles.backButton} onPress={goHome}>
-            <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
-          </Pressable>
           <TouchableOpacity style={styles.retakeButton} onPress={retake}>
-            <Text style={styles.retakeButtonText}>Retake</Text>
+            <Text style={styles.retakeButtonText}>Back</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.saveButton} onPress={savePhoto}>
             <Download size={20} color="#000000" strokeWidth={2} />
