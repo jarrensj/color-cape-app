@@ -787,6 +787,7 @@ export default function TestScreen() {
   const [photo2, setPhoto2] = useState<string | null>(null);
   const [resultSubSeason, setResultSubSeason] = useState<string | null>(null);
   const [topMatches, setTopMatches] = useState<SubSeasonMatch[]>([]);
+  const [previewSeason, setPreviewSeason] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const router = useRouter();
@@ -835,6 +836,7 @@ export default function TestScreen() {
     setPhoto2(null);
     setResultSubSeason(null);
     setTopMatches([]);
+    setPreviewSeason(null);
   };
 
   const goBack = () => {
@@ -1001,23 +1003,32 @@ export default function TestScreen() {
 
   // Result screen
   if (step === 'result' && resultSubSeason) {
-    const result = subSeasonResults[resultSubSeason];
+    const displayedSeasonKey = previewSeason || resultSubSeason;
+    const displayedSeason = subSeasonResults[displayedSeasonKey];
+    const originalResult = subSeasonResults[resultSubSeason];
     const top3Matches = topMatches.slice(0, 3);
-    const alternativeMatches = top3Matches.filter(m => m.key !== resultSubSeason);
+    const isPreview = previewSeason && previewSeason !== resultSubSeason;
+
+    const selectPreview = (seasonKey: string) => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setPreviewSeason(seasonKey);
+    };
 
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
         <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front'}>
-          <FullCape colors={result.colors} />
+          <FullCape colors={displayedSeason.colors} />
 
           <View style={[styles.resultHeader, { paddingTop: insets.top + 12 }]}>
             <Pressable style={styles.backButton} onPress={goBack}>
               <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
             </Pressable>
             <View style={styles.resultTitleContainer}>
-              <Text style={styles.resultTitle}>You are a {result.name}!</Text>
-              <Text style={styles.resultDescription}>{result.description}</Text>
+              <Text style={styles.resultTitle}>
+                {isPreview ? `Previewing ${displayedSeason.name}` : `You are a ${originalResult.name}!`}
+              </Text>
+              <Text style={styles.resultDescription}>{displayedSeason.description}</Text>
             </View>
             <Pressable style={styles.flipButton} onPress={toggleCameraFacing}>
               <SwitchCamera size={24} color="#FFFFFF" strokeWidth={2} />
@@ -1052,38 +1063,39 @@ export default function TestScreen() {
               </View>
             </View>
 
-            {/* Top Match */}
-            <View style={styles.topMatchContainer}>
-              <View style={styles.matchHeader}>
-                <Text style={styles.sectionTitle}>Best Match</Text>
-                <View style={styles.matchPercentage}>
-                  <Text style={styles.matchPercentageText}>{topMatches[0]?.percentage}%</Text>
-                </View>
-              </View>
-              <View style={styles.seasonBadge}>
-                <Text style={styles.seasonBadgeText}>{result.name}</Text>
+            {/* Top Matches - All Tappable */}
+            <View style={styles.topMatchesContainer}>
+              <Text style={styles.sectionTitle}>Your Matches</Text>
+              <Text style={styles.matchesHint}>Tap to preview colors</Text>
+              <View style={styles.matchesRow}>
+                {top3Matches.map((match, index) => (
+                  <Pressable
+                    key={match.key}
+                    style={[
+                      styles.matchOption,
+                      displayedSeasonKey === match.key && styles.matchOptionSelected,
+                      index === 0 && styles.matchOptionBest,
+                    ]}
+                    onPress={() => selectPreview(match.key)}
+                  >
+                    {index === 0 && <Text style={styles.bestMatchLabel}>Best</Text>}
+                    <Text style={[
+                      styles.matchOptionName,
+                      displayedSeasonKey === match.key && styles.matchOptionNameSelected,
+                    ]}>{match.name}</Text>
+                    <Text style={[
+                      styles.matchOptionPercent,
+                      displayedSeasonKey === match.key && styles.matchOptionPercentSelected,
+                    ]}>{match.percentage}%</Text>
+                  </Pressable>
+                ))}
               </View>
             </View>
 
-            {/* Alternative Matches */}
-            {alternativeMatches.length > 0 && (
-              <View style={styles.alternativeMatchesContainer}>
-                <Text style={styles.sectionTitle}>Also Consider</Text>
-                <View style={styles.alternativeMatchesRow}>
-                  {alternativeMatches.map((match, index) => (
-                    <View key={match.key} style={styles.alternativeMatch}>
-                      <Text style={styles.alternativeMatchName}>{match.name}</Text>
-                      <Text style={styles.alternativeMatchPercent}>{match.percentage}%</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
             {/* Styling Tips */}
             <View style={styles.tipsContainer}>
-              <Text style={styles.sectionTitle}>Styling Tips</Text>
-              {result.tips.map((tip, index) => (
+              <Text style={styles.sectionTitle}>Styling Tips for {displayedSeason.name}</Text>
+              {displayedSeason.tips.map((tip, index) => (
                 <View key={index} style={styles.tipItem}>
                   <Text style={styles.tipBullet}>•</Text>
                   <Text style={styles.tipText}>{tip}</Text>
@@ -1838,6 +1850,64 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
+  },
+  topMatchesContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  matchesHint: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.6)',
+    marginBottom: 12,
+    marginTop: -8,
+  },
+  matchesRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  matchOption: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  matchOptionSelected: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: '#FFFFFF',
+  },
+  matchOptionBest: {
+    position: 'relative',
+  },
+  bestMatchLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFD700',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  matchOptionName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  matchOptionNameSelected: {
+    fontWeight: '700',
+  },
+  matchOptionPercent: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  matchOptionPercentSelected: {
+    color: '#FFFFFF',
   },
   tipItem: {
     flexDirection: 'row',
