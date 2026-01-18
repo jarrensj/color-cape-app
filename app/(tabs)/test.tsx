@@ -1188,10 +1188,6 @@ export default function TestScreen() {
 
         {/* Capture button */}
         <View style={[styles.captureControls, { paddingBottom: insets.bottom + 20 }]}>
-          <View style={styles.progressDots}>
-            <View style={[styles.progressDot, styles.progressDotActive]} />
-            <View style={[styles.progressDot, !isFirst && styles.progressDotActive]} />
-          </View>
           <Pressable style={styles.captureButton} onPress={takePhoto}>
             <Camera size={32} color="#000000" strokeWidth={2} />
           </Pressable>
@@ -1245,17 +1241,6 @@ export default function TestScreen() {
         {/* Footer */}
         <View style={[styles.compareFooter, { paddingBottom: insets.bottom + 20 }]}>
           <Text style={styles.compareTip}>Tap the photo that looks best on you</Text>
-          <View style={styles.progressDots}>
-            {diagnosticTests.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.progressDot,
-                  index <= currentTestIndex && styles.progressDotActive,
-                ]}
-              />
-            ))}
-          </View>
         </View>
       </View>
     );
@@ -1668,20 +1653,6 @@ const styles = StyleSheet.create({
     zIndex: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     paddingTop: 12,
-  },
-  progressDots: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-  },
-  progressDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  progressDotActive: {
-    backgroundColor: '#FFFFFF',
   },
   resetButton: {
     paddingVertical: 10,
