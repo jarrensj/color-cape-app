@@ -330,3 +330,11 @@ export const colorPalettes = {
 export type ColorPaletteKey = keyof typeof colorPalettes;
 
 export const defaultPaletteOrder: ColorPaletteKey[] = Object.keys(colorPalettes) as ColorPaletteKey[];
+
+// Seasonal palettes that have 8 colors and can toggle to show 4
+export const seasonalPalettes: ColorPaletteKey[] = [
+  'lightSpring', 'warmSpring', 'brightSpring',
+  'lightSummer', 'coolSummer', 'softSummer',
+  'softAutumn', 'warmAutumn', 'deepAutumn',
+  'deepWinter', 'coolWinter', 'brightWinter',
+];

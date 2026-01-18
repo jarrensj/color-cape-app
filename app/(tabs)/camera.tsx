@@ -127,7 +127,7 @@ export default function CameraScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const isFocused = useIsFocused();
-  const { getEnabledPalettes, customCapes, preferences } = usePalettePreferences();
+  const { getEnabledPalettes, customCapes, preferences, getColorCount, toggleColorCount, isSeasonalPalette } = usePalettePreferences();
 
   // Reload settings when screen comes into focus (e.g., after changing in Settings)
   useFocusEffect(
@@ -218,7 +218,11 @@ export default function CameraScreen() {
         return customCape.colors;
       }
     }
-    return currentPalette?.colors || [];
+    if (currentPaletteKey && currentPalette) {
+      const colorCount = getColorCount(currentPaletteKey);
+      return currentPalette.colors.slice(0, colorCount);
+    }
+    return [];
   };
 
   function toggleCameraFacing() {
@@ -296,8 +300,27 @@ export default function CameraScreen() {
         return { name: customCape.name, description: `${customCape.colors.length} custom colors` };
       }
     }
-    return currentPalette ? { name: currentPalette.name, description: currentPalette.description } : { name: '', description: '' };
+    if (currentPaletteKey && currentPalette) {
+      const colorCount = getColorCount(currentPaletteKey);
+      const isSeasonal = isSeasonalPalette(currentPaletteKey);
+      return {
+        name: currentPalette.name,
+        description: isSeasonal ? `${colorCount} colors` : currentPalette.description,
+      };
+    }
+    return { name: '', description: '' };
   };
+
+  // Handle toggling color count for seasonal palettes
+  const handleToggleColorCount = () => {
+    if (currentPaletteKey && isSeasonalPalette(currentPaletteKey)) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      toggleColorCount(currentPaletteKey);
+    }
+  };
+
+  // Check if we should show the color count toggle
+  const showColorCountToggle = !selectedCustomCapeId && currentPaletteKey && isSeasonalPalette(currentPaletteKey);
 
   const currentLabel = getCurrentLabel();
 
@@ -316,7 +339,16 @@ export default function CameraScreen() {
           </Pressable>
           <View style={styles.paletteLabelContainer}>
             <Text style={styles.paletteLabel}>{currentLabel.name}</Text>
-            <Text style={styles.paletteDescription}>{currentLabel.description}</Text>
+            <View style={styles.paletteLabelRow}>
+              <Text style={styles.paletteDescription}>{currentLabel.description}</Text>
+              {showColorCountToggle && (
+                <Pressable style={styles.colorCountToggle} onPress={handleToggleColorCount}>
+                  <Text style={styles.colorCountToggleText}>
+                    {getColorCount(currentPaletteKey!) === 8 ? '→ 4' : '→ 8'}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
           </View>
           <Pressable style={styles.flipButton} onPress={toggleCameraFacing}>
             <RotateCw size={24} color="#FFFFFF" strokeWidth={2} />
@@ -548,6 +580,12 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
+  paletteLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    gap: 8,
+  },
   paletteDescription: {
     fontSize: 13,
     fontWeight: '500',
@@ -555,7 +593,17 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
-    marginTop: 2,
+  },
+  colorCountToggle: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  colorCountToggleText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   flipButton: {
     width: 44,

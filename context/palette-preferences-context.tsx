@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ColorPaletteKey, defaultPaletteOrder } from '@/constants/palettes';
+import { ColorPaletteKey, defaultPaletteOrder, seasonalPalettes } from '@/constants/palettes';
 
 type CustomCape = {
   id: string;
@@ -17,9 +17,13 @@ type PalettePreferences = {
   enabled: Record<ColorPaletteKey, boolean>;
 };
 
+// Color count preferences for seasonal palettes (4 or 8 colors)
+type ColorCountPrefs = Partial<Record<ColorPaletteKey, 4 | 8>>;
+
 type PalettePreferencesContextType = {
   preferences: PalettePreferences;
   customCapes: CustomCape[];
+  colorCountPrefs: ColorCountPrefs;
   isLoading: boolean;
   togglePalette: (key: ColorPaletteKey) => void;
   setAllEnabled: (enabled: boolean) => void;
@@ -34,12 +38,16 @@ type PalettePreferencesContextType = {
   moveCustomCapeUp: (id: string) => void;
   moveCustomCapeDown: (id: string) => void;
   canAddCustomCape: () => boolean;
+  getColorCount: (key: ColorPaletteKey) => 4 | 8;
+  toggleColorCount: (key: ColorPaletteKey) => void;
+  isSeasonalPalette: (key: ColorPaletteKey) => boolean;
 };
 
 const PalettePreferencesContext = createContext<PalettePreferencesContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'palette_preferences';
 const CUSTOM_CAPE_KEY = 'custom_cape';
+const COLOR_COUNT_KEY = 'color_count_prefs';
 
 // Default: all palettes enabled
 const getDefaultPreferences = (): PalettePreferences => ({
@@ -53,11 +61,13 @@ const getDefaultPreferences = (): PalettePreferences => ({
 export function PalettePreferencesProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<PalettePreferences>(getDefaultPreferences());
   const [customCapes, setCustomCapes] = useState<CustomCape[]>([]);
+  const [colorCountPrefs, setColorCountPrefs] = useState<ColorCountPrefs>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadPreferences();
     loadCustomCapes();
+    loadColorCountPrefs();
   }, []);
 
   const loadPreferences = async () => {
@@ -119,6 +129,44 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
     } catch (error) {
       console.error('Error loading custom capes:', error);
     }
+  };
+
+  const loadColorCountPrefs = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(COLOR_COUNT_KEY);
+      if (stored) {
+        setColorCountPrefs(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading color count preferences:', error);
+    }
+  };
+
+  const saveColorCountPrefs = async (prefs: ColorCountPrefs) => {
+    try {
+      await AsyncStorage.setItem(COLOR_COUNT_KEY, JSON.stringify(prefs));
+      setColorCountPrefs(prefs);
+    } catch (error) {
+      console.error('Error saving color count preferences:', error);
+    }
+  };
+
+  const isSeasonalPalette = (key: ColorPaletteKey): boolean => {
+    return seasonalPalettes.includes(key);
+  };
+
+  const getColorCount = (key: ColorPaletteKey): 4 | 8 => {
+    // Only seasonal palettes can have 4/8 toggle, default to 8
+    if (!isSeasonalPalette(key)) return 8;
+    return colorCountPrefs[key] ?? 8;
+  };
+
+  const toggleColorCount = async (key: ColorPaletteKey) => {
+    if (!isSeasonalPalette(key)) return;
+    const current = getColorCount(key);
+    const newCount = current === 8 ? 4 : 8;
+    const newPrefs = { ...colorCountPrefs, [key]: newCount };
+    await saveColorCountPrefs(newPrefs);
   };
 
   const saveCustomCapes = async (capes: CustomCape[]) => {
@@ -248,6 +296,7 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
       value={{
         preferences,
         customCapes,
+        colorCountPrefs,
         isLoading,
         togglePalette,
         setAllEnabled,
@@ -262,6 +311,9 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
         moveCustomCapeUp,
         moveCustomCapeDown,
         canAddCustomCape,
+        getColorCount,
+        toggleColorCount,
+        isSeasonalPalette,
       }}
     >
       {children}
