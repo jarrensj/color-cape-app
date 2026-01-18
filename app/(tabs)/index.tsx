@@ -2,7 +2,7 @@ import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Camera, Sparkles } from 'lucide-react-native';
+import { Camera, Sparkles, Settings } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 
 export default function HomeScreen() {
@@ -19,9 +19,21 @@ export default function HomeScreen() {
     router.push('/(tabs)/test');
   };
 
+  const openSettings = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/(tabs)/settings');
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
+
+      <Pressable
+        style={[styles.settingsButton, { top: insets.top + 12 }]}
+        onPress={openSettings}
+      >
+        <Settings size={24} color="#FFFFFF" strokeWidth={2} />
+      </Pressable>
 
       <View style={[styles.content, { paddingTop: insets.top + 60 }]}>
         <Text style={styles.title}>Color Cape</Text>
@@ -71,6 +83,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  settingsButton: {
+    position: 'absolute',
+    right: 16,
+    zIndex: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,
