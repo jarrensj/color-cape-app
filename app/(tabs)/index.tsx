@@ -95,7 +95,7 @@ export default function HomeScreen() {
             ]}
             onPress={openLastUsed}
           >
-            <Text style={styles.recentLabel}>Continue with</Text>
+            <Text style={styles.recentLabel}>Last viewed</Text>
             <View style={styles.recentContent}>
               <Text style={styles.recentName}>{lastUsedInfo.name}</Text>
               <View style={styles.recentColors}>
