@@ -1186,13 +1186,6 @@ export default function TestScreen() {
           <Text style={styles.instructionText}>{instruction}</Text>
         </View>
 
-        {/* Test progress indicator */}
-        <View style={styles.testProgressBanner}>
-          <Text style={styles.testProgressText}>
-            Test {currentTestIndex + 1} of {TOTAL_TESTS}: {currentTest.category.charAt(0).toUpperCase() + currentTest.category.slice(1)}
-          </Text>
-        </View>
-
         {/* Capture button */}
         <View style={[styles.captureControls, { paddingBottom: insets.bottom + 20 }]}>
           <View style={styles.progressDots}>
@@ -1519,24 +1512,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 12,
-    overflow: 'hidden',
-  },
-  testProgressBanner: {
-    position: 'absolute',
-    top: screenHeight * 0.15,
-    alignSelf: 'center',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  testProgressText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.8)',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 10,
     overflow: 'hidden',
   },
   captureControls: {
