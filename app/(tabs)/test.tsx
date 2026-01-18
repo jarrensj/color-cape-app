@@ -4,7 +4,7 @@ import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Alert } from
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RotateCw, RefreshCw, ChevronLeft, Camera, Home } from 'lucide-react-native';
+import { SwitchCamera, RefreshCw, ChevronLeft, Camera, Home } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Svg, { Polygon } from 'react-native-svg';
@@ -1020,7 +1020,7 @@ export default function TestScreen() {
               <Text style={styles.resultDescription}>{result.description}</Text>
             </View>
             <Pressable style={styles.flipButton} onPress={toggleCameraFacing}>
-              <RotateCw size={24} color="#FFFFFF" strokeWidth={2} />
+              <SwitchCamera size={24} color="#FFFFFF" strokeWidth={2} />
             </Pressable>
           </View>
 
@@ -1140,7 +1140,7 @@ export default function TestScreen() {
             <Text style={styles.captureSubtitle}>{overlay.description}</Text>
           </View>
           <Pressable style={styles.flipButton} onPress={toggleCameraFacing}>
-            <RotateCw size={24} color="#FFFFFF" strokeWidth={2} />
+            <SwitchCamera size={24} color="#FFFFFF" strokeWidth={2} />
           </Pressable>
         </View>
 
