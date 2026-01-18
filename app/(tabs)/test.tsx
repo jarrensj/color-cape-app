@@ -963,7 +963,7 @@ export default function TestScreen() {
           />
           <Text style={styles.introTitle}>Find Your Colors</Text>
           <Text style={styles.introSubtitle}>
-            Discover your perfect sub-season in 6 quick comparisons
+            Discover your perfect color sub-season
           </Text>
 
           <View style={styles.stepsContainer}>
@@ -971,19 +971,19 @@ export default function TestScreen() {
               <View style={styles.stepNumber}>
                 <Text style={styles.stepNumberText}>1</Text>
               </View>
-              <Text style={styles.stepText}>Undertone: Cool vs Warm (2 tests)</Text>
+              <Text style={styles.stepText}>Undertone: Cool vs Warm</Text>
             </View>
             <View style={styles.stepItem}>
               <View style={styles.stepNumber}>
                 <Text style={styles.stepNumberText}>2</Text>
               </View>
-              <Text style={styles.stepText}>Value: Light vs Deep (2 tests)</Text>
+              <Text style={styles.stepText}>Value: Light vs Deep</Text>
             </View>
             <View style={styles.stepItem}>
               <View style={styles.stepNumber}>
                 <Text style={styles.stepNumberText}>3</Text>
               </View>
-              <Text style={styles.stepText}>Chroma: Bright vs Soft (2 tests)</Text>
+              <Text style={styles.stepText}>Chroma: Bright vs Soft</Text>
             </View>
           </View>
 
