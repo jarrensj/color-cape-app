@@ -1,9 +1,9 @@
-import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { Camera, Sparkles, Palette } from 'lucide-react-native';
+import { Camera, Sparkles, Palette, SunDim, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -24,6 +24,14 @@ type SavedTestResult = {
 
 const LAST_USED_PALETTE_KEY = 'last_used_palette';
 const SAVED_TEST_RESULT_KEY = 'saved_test_result';
+const OPACITY_SETTING_KEY = 'cape_opacity';
+
+const OPACITY_OPTIONS = [
+  { label: 'Light', value: 0.5 },
+  { label: 'Medium', value: 0.7 },
+  { label: 'Strong', value: 0.85 },
+  { label: 'Full', value: 1.0 },
+];
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -31,6 +39,8 @@ export default function HomeScreen() {
   const { customCapes, preferences } = usePalettePreferences();
   const [lastUsed, setLastUsed] = useState<LastUsedPalette>(null);
   const [savedTestResult, setSavedTestResult] = useState<SavedTestResult>(null);
+  const [showOpacitySheet, setShowOpacitySheet] = useState(false);
+  const [capeOpacity, setCapeOpacity] = useState(0.85);
 
   useFocusEffect(
     useCallback(() => {
@@ -42,6 +52,11 @@ export default function HomeScreen() {
       AsyncStorage.getItem(SAVED_TEST_RESULT_KEY).then((value) => {
         if (value) {
           setSavedTestResult(JSON.parse(value));
+        }
+      });
+      AsyncStorage.getItem(OPACITY_SETTING_KEY).then((value) => {
+        if (value !== null) {
+          setCapeOpacity(parseFloat(value));
         }
       });
     }, [])
@@ -89,6 +104,22 @@ export default function HomeScreen() {
   const openCustomize = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/customize');
+  };
+
+  const openOpacitySheet = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowOpacitySheet(true);
+  };
+
+  const handleOpacityChange = async (value: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCapeOpacity(value);
+    await AsyncStorage.setItem(OPACITY_SETTING_KEY, value.toString());
+  };
+
+  const getOpacityLabel = () => {
+    const option = OPACITY_OPTIONS.find(o => o.value === capeOpacity);
+    return option?.label || 'Strong';
   };
 
   return (
@@ -192,8 +223,78 @@ export default function HomeScreen() {
               </Text>
             </View>
           </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.card,
+              pressed && styles.cardPressed,
+            ]}
+            onPress={openOpacitySheet}
+          >
+            <View style={[styles.cardIconContainer, styles.cardIconOrange]}>
+              <SunDim size={24} color="#FFFFFF" strokeWidth={2} />
+            </View>
+            <View style={styles.cardContent}>
+              <Text style={styles.cardTitle}>Cape Opacity</Text>
+              <Text style={styles.cardDescription}>
+                Adjust how visible the color overlay appears
+              </Text>
+              <View style={styles.opacityValueInline}>
+                <Text style={styles.opacityValueLabel}>Current:</Text>
+                <Text style={styles.opacityValueText}>{getOpacityLabel()}</Text>
+              </View>
+            </View>
+          </Pressable>
         </View>
       </View>
+
+      {/* Opacity Sheet */}
+      <Modal
+        visible={showOpacitySheet}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowOpacitySheet(false)}
+      >
+        <View style={styles.sheetOverlay}>
+          <Pressable style={styles.sheetBackdrop} onPress={() => setShowOpacitySheet(false)} />
+          <View style={[styles.sheetContent, { paddingBottom: insets.bottom + 20 }]}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>Cape Opacity</Text>
+              <Pressable onPress={() => setShowOpacitySheet(false)} style={styles.sheetClose}>
+                <X size={24} color="#FFFFFF" />
+              </Pressable>
+            </View>
+            <Text style={styles.sheetDescription}>
+              Choose how visible the color overlay appears on camera
+            </Text>
+
+            <View style={styles.opacityOptions}>
+              {OPACITY_OPTIONS.map((option) => (
+                <Pressable
+                  key={option.value}
+                  style={[
+                    styles.opacityOption,
+                    capeOpacity === option.value && styles.opacityOptionActive,
+                  ]}
+                  onPress={() => handleOpacityChange(option.value)}
+                >
+                  <View style={styles.opacityPreview}>
+                    <View style={[styles.opacityPreviewBar, { opacity: option.value }]} />
+                  </View>
+                  <Text
+                    style={[
+                      styles.opacityOptionText,
+                      capeOpacity === option.value && styles.opacityOptionTextActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -291,6 +392,9 @@ const styles = StyleSheet.create({
   cardIconTeal: {
     backgroundColor: '#1ABC9C',
   },
+  cardIconOrange: {
+    backgroundColor: '#FF9500',
+  },
   cardContent: {
     flex: 1,
   },
@@ -332,5 +436,91 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  opacityValueInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
+  opacityValueLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  opacityValueText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FF9500',
+  },
+  sheetOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  sheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sheetContent: {
+    backgroundColor: '#1C1C1E',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 16,
+    paddingHorizontal: 20,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  sheetTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  sheetClose: {
+    padding: 4,
+  },
+  sheetDescription: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.5)',
+    marginBottom: 20,
+  },
+  opacityOptions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  opacityOption: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  opacityOptionActive: {
+    backgroundColor: 'rgba(255, 149, 0, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 149, 0, 0.5)',
+  },
+  opacityPreview: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  opacityPreviewBar: {
+    flex: 1,
+    backgroundColor: '#FF9500',
+  },
+  opacityOptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  opacityOptionTextActive: {
+    color: '#FF9500',
   },
 });
