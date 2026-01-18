@@ -783,8 +783,9 @@ export default function TestScreen() {
   const [step, setStep] = useState<TestStep>('intro');
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
   const [scores, setScores] = useState<TestScores>({ undertone: 0, value: 0, chroma: 0 });
-  const [photo1, setPhoto1] = useState<string | null>(null);
-  const [photo2, setPhoto2] = useState<string | null>(null);
+  const [testPhotos, setTestPhotos] = useState<{ photo1: string | null; photo2: string | null }[]>(
+    diagnosticTests.map(() => ({ photo1: null, photo2: null }))
+  );
   const [resultSubSeason, setResultSubSeason] = useState<string | null>(null);
   const [topMatches, setTopMatches] = useState<SubSeasonMatch[]>([]);
   const [previewSeason, setPreviewSeason] = useState<string | null>(null);
@@ -793,6 +794,24 @@ export default function TestScreen() {
   const router = useRouter();
 
   const currentTest = diagnosticTests[currentTestIndex];
+  const photo1 = testPhotos[currentTestIndex]?.photo1 ?? null;
+  const photo2 = testPhotos[currentTestIndex]?.photo2 ?? null;
+
+  const setPhoto1 = (uri: string | null) => {
+    setTestPhotos(prev => {
+      const updated = [...prev];
+      updated[currentTestIndex] = { ...updated[currentTestIndex], photo1: uri };
+      return updated;
+    });
+  };
+
+  const setPhoto2 = (uri: string | null) => {
+    setTestPhotos(prev => {
+      const updated = [...prev];
+      updated[currentTestIndex] = { ...updated[currentTestIndex], photo2: uri };
+      return updated;
+    });
+  };
 
   const goHome = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -832,8 +851,7 @@ export default function TestScreen() {
     setStep('intro');
     setCurrentTestIndex(0);
     setScores({ undertone: 0, value: 0, chroma: 0 });
-    setPhoto1(null);
-    setPhoto2(null);
+    setTestPhotos(diagnosticTests.map(() => ({ photo1: null, photo2: null })));
     setResultSubSeason(null);
     setTopMatches([]);
     setPreviewSeason(null);
@@ -843,26 +861,20 @@ export default function TestScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (step === 'capture1') {
       if (currentTestIndex === 0) {
+        // First test - go to intro
         setStep('intro');
       } else {
         // Go back to previous test's compare
         setCurrentTestIndex(currentTestIndex - 1);
         setStep('compare');
-        // Note: We can't restore photos, so user needs to retake
-        setPhoto1(null);
-        setPhoto2(null);
       }
     } else if (step === 'capture2') {
       setStep('capture1');
-      setPhoto1(null);
     } else if (step === 'compare') {
       setStep('capture2');
-      setPhoto2(null);
     } else if (step === 'result') {
-      // Go back to last test
-      setStep('capture1');
-      setPhoto1(null);
-      setPhoto2(null);
+      // Go back to last test's compare
+      setStep('compare');
     }
   };
 
@@ -871,6 +883,7 @@ export default function TestScreen() {
     setStep('capture1');
     setCurrentTestIndex(0);
     setScores({ undertone: 0, value: 0, chroma: 0 });
+    setTestPhotos(diagnosticTests.map(() => ({ photo1: null, photo2: null })));
   };
 
   const takePhoto = async () => {
@@ -923,8 +936,6 @@ export default function TestScreen() {
             if (currentTestIndex < TOTAL_TESTS - 1) {
               setCurrentTestIndex(currentTestIndex + 1);
               setStep('capture1');
-              setPhoto1(null);
-              setPhoto2(null);
             } else {
               // Calculate result and top matches
               const subSeason = determineSubSeason(newScores.undertone, newScores.value, newScores.chroma);
