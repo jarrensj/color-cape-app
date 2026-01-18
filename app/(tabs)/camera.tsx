@@ -2,7 +2,7 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useRef, useCallback } from 'react';
 import { StyleSheet, TouchableOpacity, View, Text, Dimensions, ScrollView, Pressable, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -126,6 +126,7 @@ export default function CameraScreen() {
   const viewShotRef = useRef<View>(null);
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const isFocused = useIsFocused();
   const { getEnabledPalettes, customCapes, preferences } = usePalettePreferences();
 
   // Reload settings when screen comes into focus (e.g., after changing in Settings)
@@ -303,9 +304,10 @@ export default function CameraScreen() {
   return (
     <View style={styles.fullScreen}>
       <StatusBar style="light" />
-      <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front' && mirrorEnabled}>
-        {/* Color cape overlay */}
-        <ColorCape colors={getCurrentColors()} opacity={capeOpacity} />
+      {isFocused ? (
+        <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front' && mirrorEnabled}>
+          {/* Color cape overlay */}
+          <ColorCape colors={getCurrentColors()} opacity={capeOpacity} />
 
         {/* Top controls */}
         <View style={[styles.topControls, { paddingTop: insets.top + 12 }]}>
@@ -409,7 +411,10 @@ export default function CameraScreen() {
           </Pressable>
           <View style={styles.placeholder} />
         </View>
-      </CameraView>
+        </CameraView>
+      ) : (
+        <View style={styles.camera} />
+      )}
     </View>
   );
 }

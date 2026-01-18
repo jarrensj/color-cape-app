@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SwitchCamera, RefreshCw, ChevronLeft, Camera, Home } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
 import { useTabBar } from '@/contexts/tab-bar-context';
 import * as Haptics from 'expo-haptics';
 import Svg, { Polygon } from 'react-native-svg';
@@ -753,6 +754,7 @@ export default function TestScreen() {
   const [pendingCapture, setPendingCapture] = useState<{ uri: string; forStep: 'capture1' | 'capture2' } | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
   const router = useRouter();
+  const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
 
   // Hide tab bar during test-taking (all steps except intro)
@@ -1053,10 +1055,11 @@ export default function TestScreen() {
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
-        <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front'}>
-          <FullCape colors={displayedSeason.colors} />
+        {isFocused ? (
+          <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front'}>
+            <FullCape colors={displayedSeason.colors} />
 
-          <View style={[styles.resultHeader, { paddingTop: insets.top + 12 }]}>
+            <View style={[styles.resultHeader, { paddingTop: insets.top + 12 }]}>
             <Pressable style={styles.backButton} onPress={goBack}>
               <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
             </Pressable>
@@ -1152,7 +1155,10 @@ export default function TestScreen() {
               </Pressable>
             </View>
           </ScrollView>
-        </CameraView>
+          </CameraView>
+        ) : (
+          <View style={styles.camera} />
+        )}
       </View>
     );
   }
@@ -1169,14 +1175,18 @@ export default function TestScreen() {
       <View style={styles.container}>
         <StatusBar style="light" />
 
-        <CameraView
-          style={StyleSheet.absoluteFill}
-          facing={facing}
-          ref={cameraRef}
-          mirror={facing === 'front'}
-        >
-          <FullCape colors={overlay.colors} />
-        </CameraView>
+        {isFocused ? (
+          <CameraView
+            style={StyleSheet.absoluteFill}
+            facing={facing}
+            ref={cameraRef}
+            mirror={facing === 'front'}
+          >
+            <FullCape colors={overlay.colors} />
+          </CameraView>
+        ) : (
+          <View style={StyleSheet.absoluteFill} />
+        )}
 
         {/* Hidden composite view for capturing photo + overlay */}
         {pendingCapture && (
