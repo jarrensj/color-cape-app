@@ -231,7 +231,7 @@ export default function HomeScreen() {
             ]}
             onPress={openOpacitySheet}
           >
-            <View style={[styles.cardIconContainer, styles.cardIconOrange]}>
+            <View style={[styles.cardIconContainer, styles.cardIconIndigo]}>
               <SunDim size={24} color="#FFFFFF" strokeWidth={2} />
             </View>
             <View style={styles.cardContent}>
@@ -392,8 +392,8 @@ const styles = StyleSheet.create({
   cardIconTeal: {
     backgroundColor: '#1ABC9C',
   },
-  cardIconOrange: {
-    backgroundColor: '#FF9500',
+  cardIconIndigo: {
+    backgroundColor: '#5856D6',
   },
   cardContent: {
     flex: 1,
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   opacityValueText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#FF9500',
+    color: '#5856D6',
   },
   sheetOverlay: {
     flex: 1,
@@ -499,9 +499,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   opacityOptionActive: {
-    backgroundColor: 'rgba(255, 149, 0, 0.2)',
+    backgroundColor: 'rgba(88, 86, 214, 0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 149, 0, 0.5)',
+    borderColor: 'rgba(88, 86, 214, 0.5)',
   },
   opacityPreview: {
     width: 40,
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   },
   opacityPreviewBar: {
     flex: 1,
-    backgroundColor: '#FF9500',
+    backgroundColor: '#5856D6',
   },
   opacityOptionText: {
     fontSize: 14,
@@ -521,6 +521,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.5)',
   },
   opacityOptionTextActive: {
-    color: '#FF9500',
+    color: '#5856D6',
   },
 });
