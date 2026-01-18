@@ -1,12 +1,13 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SwitchCamera, RefreshCw, ChevronLeft, Camera, Home } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { useTabBar } from '@/contexts/tab-bar-context';
 import * as Haptics from 'expo-haptics';
 import Svg, { Polygon } from 'react-native-svg';
@@ -694,7 +695,7 @@ function RightHalfCape({ colors }: { colors: { name: string; hex: string }[] }) 
 }
 
 // Full cape for result
-function FullCape({ colors }: { colors: { name: string; hex: string }[] }) {
+function FullCape({ colors, opacity = 0.85 }: { colors: { name: string; hex: string }[]; opacity?: number }) {
   const centerX = screenWidth / 2;
   const centerY = screenHeight * 0.50;
   const neckRadius = 120;
@@ -725,7 +726,7 @@ function FullCape({ colors }: { colors: { name: string; hex: string }[] }) {
               key={index}
               points={points}
               fill={color.hex}
-              opacity={0.85}
+              opacity={opacity}
               stroke="#FFFFFF"
               strokeWidth={2}
             />
@@ -753,9 +754,21 @@ export default function TestScreen() {
   const compositeRef = useRef<View>(null);
   const [pendingCapture, setPendingCapture] = useState<{ uri: string; forStep: 'capture1' | 'capture2' } | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
+  const [capeOpacity, setCapeOpacity] = useState(0.85);
   const router = useRouter();
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
+
+  // Load cape opacity setting when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem('cape_opacity').then((value) => {
+        if (value !== null) {
+          setCapeOpacity(parseFloat(value));
+        }
+      });
+    }, [])
+  );
 
   // Hide tab bar during test-taking (all steps except intro)
   useEffect(() => {
@@ -1057,7 +1070,7 @@ export default function TestScreen() {
         <StatusBar style="light" />
         {isFocused ? (
           <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front'}>
-            <FullCape colors={displayedSeason.colors} />
+            <FullCape colors={displayedSeason.colors} opacity={capeOpacity} />
 
             <View style={[styles.resultHeader, { paddingTop: insets.top + 12 }]}>
             <Pressable style={styles.backButton} onPress={goBack}>
@@ -1182,7 +1195,7 @@ export default function TestScreen() {
             ref={cameraRef}
             mirror={facing === 'front'}
           >
-            <FullCape colors={overlay.colors} />
+            <FullCape colors={overlay.colors} opacity={capeOpacity} />
           </CameraView>
         ) : (
           <View style={StyleSheet.absoluteFill} />
@@ -1196,7 +1209,7 @@ export default function TestScreen() {
             collapsable={false}
           >
             <Image source={{ uri: pendingCapture.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-            <FullCape colors={overlay.colors} />
+            <FullCape colors={overlay.colors} opacity={capeOpacity} />
           </View>
         )}
 
