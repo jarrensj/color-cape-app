@@ -20,7 +20,7 @@ const LAST_USED_PALETTE_KEY = 'last_used_palette';
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { customCapes } = usePalettePreferences();
+  const { customCapes, preferences } = usePalettePreferences();
   const [lastUsed, setLastUsed] = useState<LastUsedPalette>(null);
 
   useFocusEffect(
@@ -33,10 +33,12 @@ export default function HomeScreen() {
     }, [])
   );
 
-  // Get display info for last used palette
+  // Get display info for last used palette (only if still enabled)
   const getLastUsedInfo = () => {
     if (!lastUsed) return null;
     if (lastUsed.type === 'palette') {
+      // Check if palette is still enabled
+      if (!preferences.enabled[lastUsed.key]) return null;
       const palette = colorPalettes[lastUsed.key];
       return {
         name: palette.name,
@@ -44,7 +46,8 @@ export default function HomeScreen() {
       };
     } else {
       const customCape = customCapes.find(c => c.id === lastUsed.id);
-      if (!customCape) return null;
+      // Check if custom cape exists and is enabled
+      if (!customCape || !customCape.enabled) return null;
       return {
         name: customCape.name,
         colors: customCape.colors.slice(0, 4),
