@@ -14,6 +14,7 @@ import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 const CAMERA_SETTING_KEY = 'default_camera_facing';
 const MIRROR_SETTING_KEY = 'mirror_front_camera';
 const OPACITY_SETTING_KEY = 'cape_opacity';
+const SAVED_TEST_RESULT_KEY = 'saved_test_result';
 
 const OPACITY_OPTIONS = [
   { label: 'Light', value: 0.5 },
@@ -117,6 +118,25 @@ export default function SettingsScreen() {
             setCapeOpacity(0.85);
             resetToDefaults(); // Reset palette preferences
             resetCustomCapes(); // Delete custom capes
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          },
+        },
+      ]
+    );
+  };
+
+  const clearSavedTestResult = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      'Clear Saved Result',
+      'This will remove your saved test result from the home screen. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.removeItem(SAVED_TEST_RESULT_KEY);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           },
         },
@@ -840,6 +860,25 @@ export default function SettingsScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.settingButton,
+              pressed && styles.settingButtonPressed,
+            ]}
+            onPress={clearSavedTestResult}
+          >
+            <View style={[styles.settingIcon, styles.settingIconPurple]}>
+              <Trash2 size={22} color="#AF52DE" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Clear Saved Test Result</Text>
+              <Text style={styles.settingDescription}>
+                Remove your saved seasonal color result
+              </Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingButton,
+              styles.settingButtonMarginTop,
               pressed && styles.settingButtonPressed,
             ]}
             onPress={resetSettings}
