@@ -300,9 +300,9 @@ export default function CameraScreen() {
 
   // Get display text for color mode
   const getModeDisplay = (mode: 'all8' | 'first4' | 'last4') => {
-    if (mode === 'all8') return '8';
-    if (mode === 'first4') return '4a';
-    return '4b';
+    if (mode === 'all8') return 'All 8';
+    if (mode === 'first4') return 'Core';
+    return 'Accent';
   };
 
   // Get current label based on selection
