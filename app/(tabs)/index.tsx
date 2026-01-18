@@ -76,11 +76,6 @@ export default function HomeScreen() {
     router.push('/(tabs)/camera');
   };
 
-  const openSavedResult = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push('/(tabs)/test');
-  };
-
   const openCamera = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/(tabs)/camera');
@@ -129,29 +124,6 @@ export default function HomeScreen() {
           </Pressable>
         )}
 
-        {savedTestResult && (
-          <Pressable
-            style={({ pressed }) => [
-              styles.recentActivity,
-              pressed && styles.recentActivityPressed,
-            ]}
-            onPress={openSavedResult}
-          >
-            <Text style={styles.recentLabel}>Your season</Text>
-            <View style={styles.recentContent}>
-              <Text style={styles.recentName}>{savedTestResult.name}</Text>
-              <View style={styles.recentColors}>
-                {savedTestResult.colors.map((color, index) => (
-                  <View
-                    key={index}
-                    style={[styles.recentColorDot, { backgroundColor: color.hex }]}
-                  />
-                ))}
-              </View>
-            </View>
-          </Pressable>
-        )}
-
         <View style={styles.cardsContainer}>
           <Pressable
             style={({ pressed }) => [
@@ -186,6 +158,20 @@ export default function HomeScreen() {
               <Text style={styles.cardDescription}>
                 Find your seasonal color palette in a quick test
               </Text>
+              {savedTestResult && (
+                <View style={styles.savedResultInline}>
+                  <Text style={styles.savedResultLabel}>Last saved result:</Text>
+                  <Text style={styles.savedResultName}>{savedTestResult.name}</Text>
+                  <View style={styles.savedResultColors}>
+                    {savedTestResult.colors.map((color, index) => (
+                      <View
+                        key={index}
+                        style={[styles.savedResultColorDot, { backgroundColor: color.hex }]}
+                      />
+                    ))}
+                  </View>
+                </View>
+              )}
             </View>
           </Pressable>
 
@@ -319,5 +305,32 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: 'rgba(255, 255, 255, 0.6)',
     lineHeight: 20,
+  },
+  savedResultInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
+  savedResultLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  savedResultName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#9B59B6',
+  },
+  savedResultColors: {
+    flexDirection: 'row',
+    gap: 3,
+  },
+  savedResultColorDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
 });
