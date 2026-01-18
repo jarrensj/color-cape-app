@@ -43,12 +43,14 @@ export default function HomeScreen() {
             onPress={openCamera}
           >
             <View style={styles.cardIconContainer}>
-              <Camera size={32} color="#FFFFFF" strokeWidth={2} />
+              <Camera size={24} color="#FFFFFF" strokeWidth={2} />
             </View>
-            <Text style={styles.cardTitle}>Try Palettes</Text>
-            <Text style={styles.cardDescription}>
-              Use camera to see how different color palettes look on you
-            </Text>
+            <View style={styles.cardContent}>
+              <Text style={styles.cardTitle}>Try Palettes</Text>
+              <Text style={styles.cardDescription}>
+                Use camera to see how different color palettes look on you
+              </Text>
+            </View>
           </Pressable>
 
           <Pressable
@@ -59,12 +61,14 @@ export default function HomeScreen() {
             onPress={openTest}
           >
             <View style={[styles.cardIconContainer, styles.cardIconPurple]}>
-              <Sparkles size={32} color="#FFFFFF" strokeWidth={2} />
+              <Sparkles size={24} color="#FFFFFF" strokeWidth={2} />
             </View>
-            <Text style={styles.cardTitle}>Take the Test</Text>
-            <Text style={styles.cardDescription}>
-              Find your seasonal color palette in a quick test
-            </Text>
+            <View style={styles.cardContent}>
+              <Text style={styles.cardTitle}>Take the Test</Text>
+              <Text style={styles.cardDescription}>
+                Find your seasonal color palette in a quick test
+              </Text>
+            </View>
           </Pressable>
 
           <Pressable
@@ -75,12 +79,14 @@ export default function HomeScreen() {
             onPress={openCustomize}
           >
             <View style={[styles.cardIconContainer, styles.cardIconTeal]}>
-              <Palette size={32} color="#FFFFFF" strokeWidth={2} />
+              <Palette size={24} color="#FFFFFF" strokeWidth={2} />
             </View>
-            <Text style={styles.cardTitle}>Customize Capes</Text>
-            <Text style={styles.cardDescription}>
-              Toggle palettes, reorder, and create your own custom capes
-            </Text>
+            <View style={styles.cardContent}>
+              <Text style={styles.cardTitle}>Customize Capes</Text>
+              <Text style={styles.cardDescription}>
+                Toggle palettes, reorder, and create your own custom capes
+              </Text>
+            </View>
           </Pressable>
         </View>
       </View>
@@ -115,9 +121,11 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   card: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
@@ -126,13 +134,13 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   cardIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginRight: 14,
   },
   cardIconPurple: {
     backgroundColor: '#9B59B6',
@@ -140,16 +148,19 @@ const styles = StyleSheet.create({
   cardIconTeal: {
     backgroundColor: '#1ABC9C',
   },
+  cardContent: {
+    flex: 1,
+  },
   cardTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   cardDescription: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '400',
     color: 'rgba(255, 255, 255, 0.6)',
-    lineHeight: 22,
+    lineHeight: 20,
   },
 });
