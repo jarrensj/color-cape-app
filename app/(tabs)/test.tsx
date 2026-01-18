@@ -751,6 +751,7 @@ export default function TestScreen() {
   const cameraRef = useRef<CameraView>(null);
   const compositeRef = useRef<View>(null);
   const [pendingCapture, setPendingCapture] = useState<{ uri: string; forStep: 'capture1' | 'capture2' } | null>(null);
+  const [compareIndex, setCompareIndex] = useState(0);
   const router = useRouter();
   const { setTabBarVisible } = useTabBar();
 
@@ -860,6 +861,7 @@ export default function TestScreen() {
     setTopMatches([]);
     setPreviewSeason(null);
     setPendingCapture(null);
+    setCompareIndex(0);
   };
 
   const goBack = () => {
@@ -935,6 +937,7 @@ export default function TestScreen() {
             // Move to next test or show result
             if (currentTestIndex < TOTAL_TESTS - 1) {
               setCurrentTestIndex(currentTestIndex + 1);
+              setCompareIndex(0);
               setStep('capture1');
             } else {
               // Calculate result and top matches
@@ -1197,46 +1200,79 @@ export default function TestScreen() {
 
   // Compare screen
   if (step === 'compare' && photo1 && photo2) {
+    const currentOption = compareIndex === 0 ? currentTest.optionA : currentTest.optionB;
+    const currentPhoto = compareIndex === 0 ? photo1 : photo2;
+
+    const handleScroll = (event: any) => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const newIndex = Math.round(offsetX / screenWidth);
+      if (newIndex !== compareIndex) {
+        setCompareIndex(newIndex);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    };
+
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
+
+        {/* Full-screen swipeable photos */}
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={handleScroll}
+          style={StyleSheet.absoluteFill}
+        >
+          {/* Option A */}
+          <View style={styles.compareFullPage}>
+            <Image source={{ uri: photo1 }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          </View>
+          {/* Option B */}
+          <View style={styles.compareFullPage}>
+            <Image source={{ uri: photo2 }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          </View>
+        </ScrollView>
 
         {/* Header */}
         <View style={[styles.compareHeader, { paddingTop: insets.top + 12 }]}>
           <Pressable style={styles.backButton} onPress={goBack}>
             <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
           </Pressable>
-          <Text style={styles.compareQuestion}>{currentTest.question}</Text>
+          <View style={styles.compareHeaderCenter}>
+            <Text style={styles.compareOptionTitle}>{currentOption.name}</Text>
+            <Text style={styles.compareOptionSubtitle}>{currentOption.description}</Text>
+          </View>
           <View style={{ width: 44 }} />
         </View>
 
-        {/* Side by side photos */}
-        <View style={styles.compareContainer}>
-          {/* Option A photo */}
-          <Pressable style={styles.compareOption} onPress={() => selectOption('A')}>
-            <Image source={{ uri: photo1 }} style={styles.compareImage} contentFit="cover" />
-            <View style={styles.compareLabel}>
-              <Text style={styles.compareLabelText}>{currentTest.optionA.name}</Text>
-              <Text style={styles.compareLabelSubtext}>{currentTest.optionA.description}</Text>
-            </View>
-          </Pressable>
-
-          {/* Divider */}
-          <View style={styles.compareDivider} />
-
-          {/* Option B photo */}
-          <Pressable style={styles.compareOption} onPress={() => selectOption('B')}>
-            <Image source={{ uri: photo2 }} style={styles.compareImage} contentFit="cover" />
-            <View style={styles.compareLabel}>
-              <Text style={styles.compareLabelText}>{currentTest.optionB.name}</Text>
-              <Text style={styles.compareLabelSubtext}>{currentTest.optionB.description}</Text>
-            </View>
-          </Pressable>
-        </View>
-
         {/* Footer */}
-        <View style={[styles.compareFooter, { paddingBottom: insets.bottom + 20 }]}>
-          <Text style={styles.compareTip}>Tap the photo that looks best on you</Text>
+        <View style={[styles.compareFooterNew, { paddingBottom: insets.bottom + 20 }]}>
+          <Text style={styles.compareQuestion}>{currentTest.question}</Text>
+
+          {/* Page indicators */}
+          <View style={styles.pageIndicators}>
+            <View style={[styles.pageIndicator, compareIndex === 0 && styles.pageIndicatorActive]} />
+            <View style={[styles.pageIndicator, compareIndex === 1 && styles.pageIndicatorActive]} />
+          </View>
+
+          <Text style={styles.swipeHint}>Swipe to compare</Text>
+
+          {/* Selection buttons */}
+          <View style={styles.selectionButtons}>
+            <Pressable
+              style={[styles.selectButton, compareIndex === 0 && styles.selectButtonHighlight]}
+              onPress={() => selectOption('A')}
+            >
+              <Text style={styles.selectButtonText}>Choose {currentTest.optionA.name}</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.selectButton, compareIndex === 1 && styles.selectButtonHighlight]}
+              onPress={() => selectOption('B')}
+            >
+              <Text style={styles.selectButtonText}>Choose {currentTest.optionB.name}</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     );
@@ -1585,6 +1621,86 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.7)',
     marginBottom: 16,
+  },
+  compareFullPage: {
+    width: screenWidth,
+    height: screenHeight,
+  },
+  compareHeaderCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  compareOptionTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  compareOptionSubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+    marginTop: 4,
+  },
+  compareFooterNew: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  pageIndicators: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  pageIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  pageIndicatorActive: {
+    backgroundColor: '#FFFFFF',
+    width: 24,
+  },
+  swipeHint: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.6)',
+    marginBottom: 16,
+  },
+  selectionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  selectButton: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 14,
+    borderRadius: 24,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectButtonHighlight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.6)',
+  },
+  selectButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   splitContainer: {
     flex: 1,
