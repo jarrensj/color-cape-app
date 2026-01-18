@@ -1,7 +1,8 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { StyleSheet, TouchableOpacity, View, Text, Dimensions, ScrollView, Pressable, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -127,23 +128,26 @@ export default function CameraScreen() {
   const router = useRouter();
   const { getEnabledPalettes, customCapes, preferences } = usePalettePreferences();
 
-  useEffect(() => {
-    AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
-      if (value !== null) {
-        setFacing(value === 'front' ? 'front' : 'back');
-      }
-    });
-    AsyncStorage.getItem(MIRROR_SETTING_KEY).then((value) => {
-      if (value !== null) {
-        setMirrorEnabled(value === 'true');
-      }
-    });
-    AsyncStorage.getItem(OPACITY_SETTING_KEY).then((value) => {
-      if (value !== null) {
-        setCapeOpacity(parseFloat(value));
-      }
-    });
-  }, []);
+  // Reload settings when screen comes into focus (e.g., after changing in Settings)
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
+        if (value !== null) {
+          setFacing(value === 'front' ? 'front' : 'back');
+        }
+      });
+      AsyncStorage.getItem(MIRROR_SETTING_KEY).then((value) => {
+        if (value !== null) {
+          setMirrorEnabled(value === 'true');
+        }
+      });
+      AsyncStorage.getItem(OPACITY_SETTING_KEY).then((value) => {
+        if (value !== null) {
+          setCapeOpacity(parseFloat(value));
+        }
+      });
+    }, [])
+  );
 
   const enabledPalettes = getEnabledPalettes();
   const currentPaletteKey = paletteKey && enabledPalettes.includes(paletteKey) ? paletteKey : enabledPalettes[0];
