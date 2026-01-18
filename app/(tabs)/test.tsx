@@ -1074,7 +1074,7 @@ export default function TestScreen() {
                     style={[
                       styles.matchOption,
                       displayedSeasonKey === match.key && styles.matchOptionSelected,
-                      index === 0 && styles.matchOptionBest,
+                      index !== 0 && styles.matchOptionAlt,
                     ]}
                     onPress={() => selectPreview(match.key)}
                   >
@@ -1874,6 +1874,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
   },
@@ -1881,14 +1882,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderColor: '#FFFFFF',
   },
-  matchOptionBest: {
-    position: 'relative',
+  matchOptionAlt: {
+    paddingTop: 28,
   },
   bestMatchLabel: {
     fontSize: 10,
     fontWeight: '700',
     color: '#FFD700',
-    marginBottom: 4,
+    marginBottom: 6,
     textTransform: 'uppercase',
   },
   matchOptionName: {
