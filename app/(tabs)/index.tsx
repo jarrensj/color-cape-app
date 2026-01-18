@@ -187,7 +187,7 @@ export default function HomeScreen() {
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>Take the Test</Text>
               <Text style={styles.cardDescription}>
-                Find your seasonal color palette in a quick test
+                Find your seasonal color palette in a test
               </Text>
               {savedTestResult && (
                 <View style={styles.savedResultInline}>
