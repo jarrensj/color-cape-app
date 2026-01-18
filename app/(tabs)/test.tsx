@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SwitchCamera, RefreshCw, ChevronLeft, Camera, Home } from 'lucide-react-native';
+import { SwitchCamera, RefreshCw, ChevronLeft, Camera, Home, Save } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { useTabBar } from '@/contexts/tab-bar-context';
@@ -14,6 +14,7 @@ import Svg, { Polygon } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const SAVED_TEST_RESULT_KEY = 'saved_test_result';
 
 // Diagnostic test comparisons - 6 steps total with weights
 const diagnosticTests = [
@@ -749,6 +750,7 @@ export default function TestScreen() {
   const [resultSubSeason, setResultSubSeason] = useState<string | null>(null);
   const [topMatches, setTopMatches] = useState<SubSeasonMatch[]>([]);
   const [previewSeason, setPreviewSeason] = useState<string | null>(null);
+  const [resultSaved, setResultSaved] = useState(false);
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const compositeRef = useRef<View>(null);
@@ -899,6 +901,27 @@ export default function TestScreen() {
     setPreviewSeason(null);
     setPendingCapture(null);
     setCompareIndex(0);
+    setResultSaved(false);
+  };
+
+  const saveTestResult = async () => {
+    if (!resultSubSeason || resultSaved) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    const seasonData = subSeasonResults[resultSubSeason];
+    const resultData = {
+      subSeason: resultSubSeason,
+      name: seasonData.name,
+      colors: seasonData.colors.slice(0, 4),
+      scores: scores,
+      topMatches: topMatches.slice(0, 3),
+      savedAt: Date.now(),
+    };
+
+    await AsyncStorage.setItem(SAVED_TEST_RESULT_KEY, JSON.stringify(resultData));
+    setResultSaved(true);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   const goBack = () => {
@@ -1157,6 +1180,17 @@ export default function TestScreen() {
 
             {/* Action Buttons */}
             <View style={styles.resultButtons}>
+              <Pressable
+                style={[styles.saveResultButton, resultSaved && styles.saveResultButtonSaved]}
+                onPress={saveTestResult}
+                disabled={resultSaved}
+              >
+                <Save size={20} color={resultSaved ? '#34C759' : '#FFFFFF'} strokeWidth={2} />
+                <Text style={[styles.saveResultButtonText, resultSaved && styles.saveResultButtonTextSaved]}>
+                  {resultSaved ? 'Saved!' : 'Save Result'}
+                </Text>
+              </Pressable>
+
               <Pressable style={styles.retakeButton} onPress={resetTest}>
                 <RefreshCw size={20} color="#000000" strokeWidth={2} />
                 <Text style={styles.retakeButtonText}>Retake Test</Text>
@@ -2132,6 +2166,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  saveResultButton: {
+    paddingVertical: 14,
+    borderRadius: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  saveResultButtonSaved: {
+    borderColor: '#34C759',
+    backgroundColor: 'rgba(52, 199, 89, 0.15)',
+  },
+  saveResultButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  saveResultButtonTextSaved: {
+    color: '#34C759',
   },
   retakeButton: {
     backgroundColor: '#FFFFFF',

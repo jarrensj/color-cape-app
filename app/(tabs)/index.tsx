@@ -15,19 +15,33 @@ type LastUsedPalette =
   | { type: 'custom'; id: string }
   | null;
 
+type SavedTestResult = {
+  subSeason: string;
+  name: string;
+  colors: { name: string; hex: string }[];
+  savedAt: number;
+} | null;
+
 const LAST_USED_PALETTE_KEY = 'last_used_palette';
+const SAVED_TEST_RESULT_KEY = 'saved_test_result';
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { customCapes, preferences } = usePalettePreferences();
   const [lastUsed, setLastUsed] = useState<LastUsedPalette>(null);
+  const [savedTestResult, setSavedTestResult] = useState<SavedTestResult>(null);
 
   useFocusEffect(
     useCallback(() => {
       AsyncStorage.getItem(LAST_USED_PALETTE_KEY).then((value) => {
         if (value) {
           setLastUsed(JSON.parse(value));
+        }
+      });
+      AsyncStorage.getItem(SAVED_TEST_RESULT_KEY).then((value) => {
+        if (value) {
+          setSavedTestResult(JSON.parse(value));
         }
       });
     }, [])
@@ -60,6 +74,11 @@ export default function HomeScreen() {
   const openLastUsed = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('/(tabs)/camera');
+  };
+
+  const openSavedResult = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/(tabs)/test');
   };
 
   const openCamera = () => {
@@ -100,6 +119,29 @@ export default function HomeScreen() {
               <Text style={styles.recentName}>{lastUsedInfo.name}</Text>
               <View style={styles.recentColors}>
                 {lastUsedInfo.colors.map((color, index) => (
+                  <View
+                    key={index}
+                    style={[styles.recentColorDot, { backgroundColor: color.hex }]}
+                  />
+                ))}
+              </View>
+            </View>
+          </Pressable>
+        )}
+
+        {savedTestResult && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.recentActivity,
+              pressed && styles.recentActivityPressed,
+            ]}
+            onPress={openSavedResult}
+          >
+            <Text style={styles.recentLabel}>Your season</Text>
+            <View style={styles.recentContent}>
+              <Text style={styles.recentName}>{savedTestResult.name}</Text>
+              <View style={styles.recentColors}>
+                {savedTestResult.colors.map((color, index) => (
                   <View
                     key={index}
                     style={[styles.recentColorDot, { backgroundColor: color.hex }]}
