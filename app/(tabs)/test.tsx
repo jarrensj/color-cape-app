@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import { useTabBar } from '@/contexts/tab-bar-context';
 import * as Haptics from 'expo-haptics';
 import Svg, { Polygon } from 'react-native-svg';
+import { captureRef } from 'react-native-view-shot';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -691,50 +692,6 @@ function RightHalfCape({ colors }: { colors: { name: string; hex: string }[] }) 
   );
 }
 
-// Cape for compare screen (half-width photos)
-function CompareCape({ colors }: { colors: { name: string; hex: string }[] }) {
-  const halfWidth = screenWidth / 2;
-  const centerX = halfWidth / 2;
-  const centerY = screenHeight * 0.45;
-  const neckRadius = 60;
-  const capeRadius = Math.max(halfWidth, screenHeight) * 2;
-  const segmentCount = colors.length;
-  const anglePerSegment = Math.PI / segmentCount;
-
-  return (
-    <View style={styles.compareCapeContainer} pointerEvents="none">
-      <Svg width={halfWidth} height={screenHeight} style={StyleSheet.absoluteFill}>
-        {colors.map((color, index) => {
-          const startAngle = index * anglePerSegment;
-          const endAngle = (index + 1) * anglePerSegment;
-
-          const x1 = centerX + Math.cos(startAngle) * neckRadius;
-          const y1 = centerY + Math.sin(startAngle) * neckRadius;
-          const x2 = centerX + Math.cos(endAngle) * neckRadius;
-          const y2 = centerY + Math.sin(endAngle) * neckRadius;
-          const x3 = centerX + Math.cos(endAngle) * capeRadius;
-          const y3 = centerY + Math.sin(endAngle) * capeRadius;
-          const x4 = centerX + Math.cos(startAngle) * capeRadius;
-          const y4 = centerY + Math.sin(startAngle) * capeRadius;
-
-          const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
-
-          return (
-            <Polygon
-              key={index}
-              points={points}
-              fill={color.hex}
-              opacity={0.85}
-              stroke="#FFFFFF"
-              strokeWidth={1}
-            />
-          );
-        })}
-      </Svg>
-    </View>
-  );
-}
-
 // Full cape for result
 function FullCape({ colors }: { colors: { name: string; hex: string }[] }) {
   const centerX = screenWidth / 2;
@@ -792,6 +749,8 @@ export default function TestScreen() {
   const [previewSeason, setPreviewSeason] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
+  const compositeRef = useRef<View>(null);
+  const [pendingCapture, setPendingCapture] = useState<{ uri: string; forStep: 'capture1' | 'capture2' } | null>(null);
   const router = useRouter();
   const { setTabBarVisible } = useTabBar();
 
@@ -806,6 +765,37 @@ export default function TestScreen() {
       setTabBarVisible(true);
     };
   }, [setTabBarVisible]);
+
+  // Effect to capture the composite (photo + overlay) when pendingCapture is set
+  useEffect(() => {
+    if (!pendingCapture || !compositeRef.current) return;
+
+    const captureComposite = async () => {
+      try {
+        // Small delay to ensure the Image is rendered
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const compositeUri = await captureRef(compositeRef, {
+          format: 'jpg',
+          quality: 0.9,
+        });
+
+        if (pendingCapture.forStep === 'capture1') {
+          setPhoto1(compositeUri);
+          setStep('capture2');
+        } else if (pendingCapture.forStep === 'capture2') {
+          setPhoto2(compositeUri);
+          setStep('compare');
+        }
+      } catch (error) {
+        console.error('Failed to capture composite:', error);
+      } finally {
+        setPendingCapture(null);
+      }
+    };
+
+    captureComposite();
+  }, [pendingCapture]);
 
   const currentTest = diagnosticTests[currentTestIndex];
   const photo1 = testPhotos[currentTestIndex]?.photo1 ?? null;
@@ -869,6 +859,7 @@ export default function TestScreen() {
     setResultSubSeason(null);
     setTopMatches([]);
     setPreviewSeason(null);
+    setPendingCapture(null);
   };
 
   const goBack = () => {
@@ -906,14 +897,9 @@ export default function TestScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const result = await cameraRef.current.takePictureAsync();
 
-    if (result) {
-      if (step === 'capture1') {
-        setPhoto1(result.uri);
-        setStep('capture2');
-      } else if (step === 'capture2') {
-        setPhoto2(result.uri);
-        setStep('compare');
-      }
+    if (result && (step === 'capture1' || step === 'capture2')) {
+      // Set pending capture - this triggers the composite capture via useEffect
+      setPendingCapture({ uri: result.uri, forStep: step });
     }
   };
 
@@ -1167,6 +1153,18 @@ export default function TestScreen() {
           <FullCape colors={overlay.colors} />
         </CameraView>
 
+        {/* Hidden composite view for capturing photo + overlay */}
+        {pendingCapture && (
+          <View
+            ref={compositeRef}
+            style={styles.compositeView}
+            collapsable={false}
+          >
+            <Image source={{ uri: pendingCapture.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <FullCape colors={overlay.colors} />
+          </View>
+        )}
+
         {/* Header */}
         <View style={[styles.captureHeader, { paddingTop: insets.top + 12 }]}>
           <Pressable style={styles.backButton} onPress={goBack}>
@@ -1217,7 +1215,6 @@ export default function TestScreen() {
           {/* Option A photo */}
           <Pressable style={styles.compareOption} onPress={() => selectOption('A')}>
             <Image source={{ uri: photo1 }} style={styles.compareImage} contentFit="cover" />
-            <CompareCape colors={currentTest.optionA.colors} />
             <View style={styles.compareLabel}>
               <Text style={styles.compareLabelText}>{currentTest.optionA.name}</Text>
               <Text style={styles.compareLabelSubtext}>{currentTest.optionA.description}</Text>
@@ -1230,7 +1227,6 @@ export default function TestScreen() {
           {/* Option B photo */}
           <Pressable style={styles.compareOption} onPress={() => selectOption('B')}>
             <Image source={{ uri: photo2 }} style={styles.compareImage} contentFit="cover" />
-            <CompareCape colors={currentTest.optionB.colors} />
             <View style={styles.compareLabel}>
               <Text style={styles.compareLabelText}>{currentTest.optionB.name}</Text>
               <Text style={styles.compareLabelSubtext}>{currentTest.optionB.description}</Text>
@@ -1254,6 +1250,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  compositeView: {
+    position: 'absolute',
+    top: -screenHeight * 2,
+    left: 0,
+    width: screenWidth,
+    height: screenHeight,
   },
   loadingText: {
     color: '#fff',
@@ -1545,9 +1548,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   compareImage: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  compareCapeContainer: {
     ...StyleSheet.absoluteFillObject,
   },
   compareDivider: {
