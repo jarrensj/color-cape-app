@@ -113,6 +113,7 @@ function ColorCape({ colors, opacity = 0.85 }: { colors: { name: string; hex: st
 const CAMERA_SETTING_KEY = 'default_camera_facing';
 const MIRROR_SETTING_KEY = 'mirror_front_camera';
 const OPACITY_SETTING_KEY = 'cape_opacity';
+const LAST_USED_PALETTE_KEY = 'last_used_palette';
 
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('front');
@@ -240,11 +241,15 @@ export default function CameraScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setPaletteKey(newKey);
     setSelectedCustomCapeId(null);
+    // Save as last used palette
+    AsyncStorage.setItem(LAST_USED_PALETTE_KEY, JSON.stringify({ type: 'palette', key: newKey }));
   }
 
   function selectCustomCape(capeId: string) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedCustomCapeId(capeId);
+    // Save as last used palette
+    AsyncStorage.setItem(LAST_USED_PALETTE_KEY, JSON.stringify({ type: 'custom', id: capeId }));
   }
 
   async function takePicture() {

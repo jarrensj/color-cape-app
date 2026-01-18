@@ -2,12 +2,62 @@ import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Camera, Sparkles, Palette } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useState, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
+import { usePalettePreferences } from '@/context/palette-preferences-context';
+
+type LastUsedPalette =
+  | { type: 'palette'; key: ColorPaletteKey }
+  | { type: 'custom'; id: string }
+  | null;
+
+const LAST_USED_PALETTE_KEY = 'last_used_palette';
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { customCapes } = usePalettePreferences();
+  const [lastUsed, setLastUsed] = useState<LastUsedPalette>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem(LAST_USED_PALETTE_KEY).then((value) => {
+        if (value) {
+          setLastUsed(JSON.parse(value));
+        }
+      });
+    }, [])
+  );
+
+  // Get display info for last used palette
+  const getLastUsedInfo = () => {
+    if (!lastUsed) return null;
+    if (lastUsed.type === 'palette') {
+      const palette = colorPalettes[lastUsed.key];
+      return {
+        name: palette.name,
+        colors: palette.colors.slice(0, 4),
+      };
+    } else {
+      const customCape = customCapes.find(c => c.id === lastUsed.id);
+      if (!customCape) return null;
+      return {
+        name: customCape.name,
+        colors: customCape.colors.slice(0, 4),
+      };
+    }
+  };
+
+  const lastUsedInfo = getLastUsedInfo();
+
+  const openLastUsed = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/(tabs)/camera');
+  };
 
   const openCamera = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -33,6 +83,29 @@ export default function HomeScreen() {
         <Text style={styles.subtitle}>
           Discover your perfect color palette
         </Text>
+
+        {lastUsedInfo && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.recentActivity,
+              pressed && styles.recentActivityPressed,
+            ]}
+            onPress={openLastUsed}
+          >
+            <Text style={styles.recentLabel}>Continue with</Text>
+            <View style={styles.recentContent}>
+              <Text style={styles.recentName}>{lastUsedInfo.name}</Text>
+              <View style={styles.recentColors}>
+                {lastUsedInfo.colors.map((color, index) => (
+                  <View
+                    key={index}
+                    style={[styles.recentColorDot, { backgroundColor: color.hex }]}
+                  />
+                ))}
+              </View>
+            </View>
+          </Pressable>
+        )}
 
         <View style={styles.cardsContainer}>
           <Pressable
@@ -116,6 +189,45 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center',
     marginBottom: 48,
+  },
+  recentActivity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  recentActivityPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  recentLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  recentContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  recentName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  recentColors: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  recentColorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   cardsContainer: {
     gap: 16,
