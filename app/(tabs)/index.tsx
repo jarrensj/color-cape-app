@@ -2,7 +2,7 @@ import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Camera, Sparkles } from 'lucide-react-native';
+import { Camera, Sparkles, Palette } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 
 export default function HomeScreen() {
@@ -17,6 +17,11 @@ export default function HomeScreen() {
   const openTest = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/(tabs)/test');
+  };
+
+  const openCustomize = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push('/customize');
   };
 
   return (
@@ -59,6 +64,22 @@ export default function HomeScreen() {
             <Text style={styles.cardTitle}>Take the Test</Text>
             <Text style={styles.cardDescription}>
               Find your seasonal color palette in a quick test
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.card,
+              pressed && styles.cardPressed,
+            ]}
+            onPress={openCustomize}
+          >
+            <View style={[styles.cardIconContainer, styles.cardIconTeal]}>
+              <Palette size={32} color="#FFFFFF" strokeWidth={2} />
+            </View>
+            <Text style={styles.cardTitle}>Customize Capes</Text>
+            <Text style={styles.cardDescription}>
+              Toggle palettes, reorder, and create your own custom capes
             </Text>
           </Pressable>
         </View>
@@ -115,6 +136,9 @@ const styles = StyleSheet.create({
   },
   cardIconPurple: {
     backgroundColor: '#9B59B6',
+  },
+  cardIconTeal: {
+    backgroundColor: '#1ABC9C',
   },
   cardTitle: {
     fontSize: 22,
