@@ -17,13 +17,14 @@ type PalettePreferences = {
   enabled: Record<ColorPaletteKey, boolean>;
 };
 
-// Color count preferences for seasonal palettes (4 or 8 colors)
-type ColorCountPrefs = Partial<Record<ColorPaletteKey, 4 | 8>>;
+// Color mode for seasonal palettes: 'all8' = all 8, 'first4' = first 4, 'last4' = last 4
+type ColorMode = 'all8' | 'first4' | 'last4';
+type ColorModePrefs = Partial<Record<ColorPaletteKey, ColorMode>>;
 
 type PalettePreferencesContextType = {
   preferences: PalettePreferences;
   customCapes: CustomCape[];
-  colorCountPrefs: ColorCountPrefs;
+  colorModePrefs: ColorModePrefs;
   isLoading: boolean;
   togglePalette: (key: ColorPaletteKey) => void;
   setAllEnabled: (enabled: boolean) => void;
@@ -38,8 +39,8 @@ type PalettePreferencesContextType = {
   moveCustomCapeUp: (id: string) => void;
   moveCustomCapeDown: (id: string) => void;
   canAddCustomCape: () => boolean;
-  getColorCount: (key: ColorPaletteKey) => 4 | 8;
-  toggleColorCount: (key: ColorPaletteKey) => void;
+  getColorMode: (key: ColorPaletteKey) => ColorMode;
+  toggleColorMode: (key: ColorPaletteKey) => void;
   isSeasonalPalette: (key: ColorPaletteKey) => boolean;
 };
 
@@ -61,13 +62,13 @@ const getDefaultPreferences = (): PalettePreferences => ({
 export function PalettePreferencesProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<PalettePreferences>(getDefaultPreferences());
   const [customCapes, setCustomCapes] = useState<CustomCape[]>([]);
-  const [colorCountPrefs, setColorCountPrefs] = useState<ColorCountPrefs>({});
+  const [colorModePrefs, setColorModePrefs] = useState<ColorModePrefs>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadPreferences();
     loadCustomCapes();
-    loadColorCountPrefs();
+    loadColorModePrefs();
   }, []);
 
   const loadPreferences = async () => {
@@ -131,23 +132,35 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
     }
   };
 
-  const loadColorCountPrefs = async () => {
+  const loadColorModePrefs = async () => {
     try {
       const stored = await AsyncStorage.getItem(COLOR_COUNT_KEY);
       if (stored) {
-        setColorCountPrefs(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        // Migrate old format (4 | 8) to new format ('all8' | 'first4' | 'last4')
+        const migrated: ColorModePrefs = {};
+        for (const [key, value] of Object.entries(parsed)) {
+          if (value === 4) {
+            migrated[key as ColorPaletteKey] = 'first4';
+          } else if (value === 8) {
+            migrated[key as ColorPaletteKey] = 'all8';
+          } else {
+            migrated[key as ColorPaletteKey] = value as ColorMode;
+          }
+        }
+        setColorModePrefs(migrated);
       }
     } catch (error) {
-      console.error('Error loading color count preferences:', error);
+      console.error('Error loading color mode preferences:', error);
     }
   };
 
-  const saveColorCountPrefs = async (prefs: ColorCountPrefs) => {
+  const saveColorModePrefs = async (prefs: ColorModePrefs) => {
     try {
       await AsyncStorage.setItem(COLOR_COUNT_KEY, JSON.stringify(prefs));
-      setColorCountPrefs(prefs);
+      setColorModePrefs(prefs);
     } catch (error) {
-      console.error('Error saving color count preferences:', error);
+      console.error('Error saving color mode preferences:', error);
     }
   };
 
@@ -155,18 +168,19 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
     return seasonalPalettes.includes(key);
   };
 
-  const getColorCount = (key: ColorPaletteKey): 4 | 8 => {
-    // Only seasonal palettes can have 4/8 toggle, default to 8
-    if (!isSeasonalPalette(key)) return 8;
-    return colorCountPrefs[key] ?? 8;
+  const getColorMode = (key: ColorPaletteKey): ColorMode => {
+    // Only seasonal palettes can have mode toggle, default to 'all8'
+    if (!isSeasonalPalette(key)) return 'all8';
+    return colorModePrefs[key] ?? 'all8';
   };
 
-  const toggleColorCount = async (key: ColorPaletteKey) => {
+  const toggleColorMode = async (key: ColorPaletteKey) => {
     if (!isSeasonalPalette(key)) return;
-    const current = getColorCount(key);
-    const newCount = current === 8 ? 4 : 8;
-    const newPrefs = { ...colorCountPrefs, [key]: newCount };
-    await saveColorCountPrefs(newPrefs);
+    const current = getColorMode(key);
+    // Cycle: all8 -> first4 -> last4 -> all8
+    const nextMode: ColorMode = current === 'all8' ? 'first4' : current === 'first4' ? 'last4' : 'all8';
+    const newPrefs = { ...colorModePrefs, [key]: nextMode };
+    await saveColorModePrefs(newPrefs);
   };
 
   const saveCustomCapes = async (capes: CustomCape[]) => {
@@ -296,7 +310,7 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
       value={{
         preferences,
         customCapes,
-        colorCountPrefs,
+        colorModePrefs,
         isLoading,
         togglePalette,
         setAllEnabled,
@@ -311,8 +325,8 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
         moveCustomCapeUp,
         moveCustomCapeDown,
         canAddCustomCape,
-        getColorCount,
-        toggleColorCount,
+        getColorMode,
+        toggleColorMode,
         isSeasonalPalette,
       }}
     >

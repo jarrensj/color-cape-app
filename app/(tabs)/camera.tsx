@@ -127,7 +127,7 @@ export default function CameraScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const isFocused = useIsFocused();
-  const { getEnabledPalettes, customCapes, preferences, getColorCount, toggleColorCount, isSeasonalPalette } = usePalettePreferences();
+  const { getEnabledPalettes, customCapes, preferences, getColorMode, toggleColorMode, isSeasonalPalette } = usePalettePreferences();
 
   // Reload settings when screen comes into focus (e.g., after changing in Settings)
   useFocusEffect(
@@ -219,8 +219,14 @@ export default function CameraScreen() {
       }
     }
     if (currentPaletteKey && currentPalette) {
-      const colorCount = getColorCount(currentPaletteKey);
-      return currentPalette.colors.slice(0, colorCount);
+      const mode = getColorMode(currentPaletteKey);
+      if (mode === 'all8') {
+        return currentPalette.colors;
+      } else if (mode === 'first4') {
+        return currentPalette.colors.slice(0, 4);
+      } else {
+        return currentPalette.colors.slice(4, 8);
+      }
     }
     return [];
   };
@@ -292,6 +298,13 @@ export default function CameraScreen() {
     );
   }
 
+  // Get display text for color mode
+  const getModeDisplay = (mode: 'all8' | 'first4' | 'last4') => {
+    if (mode === 'all8') return '8';
+    if (mode === 'first4') return '4a';
+    return '4b';
+  };
+
   // Get current label based on selection
   const getCurrentLabel = () => {
     if (selectedCustomCapeId) {
@@ -301,8 +314,9 @@ export default function CameraScreen() {
       }
     }
     if (currentPaletteKey && currentPalette) {
-      const colorCount = getColorCount(currentPaletteKey);
+      const mode = getColorMode(currentPaletteKey);
       const isSeasonal = isSeasonalPalette(currentPaletteKey);
+      const colorCount = mode === 'all8' ? 8 : 4;
       return {
         name: currentPalette.name,
         description: isSeasonal ? `${colorCount} colors` : currentPalette.description,
@@ -311,16 +325,16 @@ export default function CameraScreen() {
     return { name: '', description: '' };
   };
 
-  // Handle toggling color count for seasonal palettes
-  const handleToggleColorCount = () => {
+  // Handle toggling color mode for seasonal palettes
+  const handleToggleColorMode = () => {
     if (currentPaletteKey && isSeasonalPalette(currentPaletteKey)) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      toggleColorCount(currentPaletteKey);
+      toggleColorMode(currentPaletteKey);
     }
   };
 
-  // Check if we should show the color count toggle
-  const showColorCountToggle = !selectedCustomCapeId && currentPaletteKey && isSeasonalPalette(currentPaletteKey);
+  // Check if we should show the color mode toggle
+  const showColorModeToggle = !selectedCustomCapeId && currentPaletteKey && isSeasonalPalette(currentPaletteKey);
 
   const currentLabel = getCurrentLabel();
 
@@ -341,10 +355,10 @@ export default function CameraScreen() {
             <Text style={styles.paletteLabel}>{currentLabel.name}</Text>
             <View style={styles.paletteLabelRow}>
               <Text style={styles.paletteDescription}>{currentLabel.description}</Text>
-              {showColorCountToggle && (
-                <Pressable style={styles.colorCountToggle} onPress={handleToggleColorCount}>
-                  <Text style={styles.colorCountToggleText}>
-                    {getColorCount(currentPaletteKey!)}
+              {showColorModeToggle && (
+                <Pressable style={styles.colorModeToggle} onPress={handleToggleColorMode}>
+                  <Text style={styles.colorModeToggleText}>
+                    {getModeDisplay(getColorMode(currentPaletteKey!))}
                   </Text>
                 </Pressable>
               )}
@@ -594,13 +608,13 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
-  colorCountToggle: {
+  colorModeToggle: {
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
   },
-  colorCountToggleText: {
+  colorModeToggleText: {
     fontSize: 12,
     fontWeight: '600',
     color: '#FFFFFF',
