@@ -1,11 +1,12 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState, useRef, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SwitchCamera, RefreshCw, ChevronLeft, Camera, Home } from 'lucide-react-native';
-import { useRouter, useNavigation } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useTabBar } from '@/contexts/tab-bar-context';
 import * as Haptics from 'expo-haptics';
 import Svg, { Polygon } from 'react-native-svg';
 
@@ -792,22 +793,19 @@ export default function TestScreen() {
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const router = useRouter();
-  const navigation = useNavigation();
+  const { setTabBarVisible } = useTabBar();
 
   // Hide tab bar during test-taking (all steps except intro)
-  useLayoutEffect(() => {
-    const shouldShowTabBar = step === 'intro';
-    navigation.getParent()?.setOptions({
-      tabBarStyle: shouldShowTabBar ? undefined : { display: 'none' },
-    });
+  useEffect(() => {
+    setTabBarVisible(step === 'intro');
+  }, [step, setTabBarVisible]);
 
-    // Restore tab bar when leaving the screen
+  // Restore tab bar when leaving the screen entirely
+  useEffect(() => {
     return () => {
-      navigation.getParent()?.setOptions({
-        tabBarStyle: undefined,
-      });
+      setTabBarVisible(true);
     };
-  }, [step, navigation]);
+  }, [setTabBarVisible]);
 
   const currentTest = diagnosticTests[currentTestIndex];
   const photo1 = testPhotos[currentTestIndex]?.photo1 ?? null;

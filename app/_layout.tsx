@@ -9,6 +9,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { OnboardingProvider, useOnboarding } from '@/context/onboarding-context';
 import { RevenueCatProvider, useRevenueCat } from '@/context/revenuecat-context';
 import { PalettePreferencesProvider } from '@/context/palette-preferences-context';
+import { TabBarProvider } from '@/contexts/tab-bar-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -74,7 +75,9 @@ export default function RootLayout() {
     <RevenueCatProvider>
       <OnboardingProvider>
         <PalettePreferencesProvider>
-          <RootLayoutNav />
+          <TabBarProvider>
+            <RootLayoutNav />
+          </TabBarProvider>
         </PalettePreferencesProvider>
       </OnboardingProvider>
     </RevenueCatProvider>
