@@ -13,6 +13,9 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'app.colorcape.colorcape',
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
     android: {
       adaptiveIcon: {
