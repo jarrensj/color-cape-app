@@ -66,6 +66,20 @@ A personal color analysis app that helps you discover which colors look best on 
    npx expo run:ios
    ```
 
+## Build & Submit
+
+Build for production:
+
+```bash
+eas build --platform ios --profile production
+```
+
+Submit to App Store:
+
+```bash
+eas submit --platform ios
+```
+
 ## Links
 
 - [Privacy Policy](https://colorcape.app/privacy-policy)
