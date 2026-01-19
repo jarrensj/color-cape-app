@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: 'my-app',
+    name: 'Color Cape',
     slug: 'my-app',
     version: '1.0.0',
     orientation: 'portrait',
