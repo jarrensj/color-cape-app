@@ -12,7 +12,7 @@ export default {
     newArchEnabled: true,
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.jarrensj.colorcape',
+      bundleIdentifier: 'app.colorcape.colorcape',
     },
     android: {
       adaptiveIcon: {
@@ -45,6 +45,9 @@ export default {
     },
     extra: {
       revenueCatApiKey: process.env.REVENUECAT_API_KEY,
+      eas: {
+        projectId: '07afac34-c9d8-40e2-a1cf-2a80b8c4f520',
+      },
     },
   },
 };
