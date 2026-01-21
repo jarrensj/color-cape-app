@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, Pressable, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
@@ -7,12 +7,15 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useOnboarding } from '@/context/onboarding-context';
-import { useRevenueCat } from '@/context/revenuecat-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useAnimatedStyle,
   withTiming,
+  withSpring,
+  withSequence,
   useSharedValue,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
 
 // Onboarding images for each slide
@@ -45,16 +48,115 @@ type Question = {
   options: { label: string; value: string }[];
 };
 
+// Aurora blob positions with varying shapes
+const auroraBlobs = [
+  { x: -50, y: screenHeight * 0.2, width: 300, height: 200, borderRadius: 100, color: '#FF6B6B' },
+  { x: screenWidth - 100, y: screenHeight * 0.1, width: 200, height: 300, borderRadius: 80, color: '#4D96FF' },
+  { x: screenWidth * 0.3, y: screenHeight * 0.6, width: 350, height: 180, borderRadius: 90, color: '#9B59B6' },
+  { x: -80, y: screenHeight * 0.7, width: 280, height: 320, borderRadius: 140, color: '#6BCB77' },
+  { x: screenWidth - 50, y: screenHeight * 0.5, width: 220, height: 280, borderRadius: 70, color: '#FF6BD6' },
+  { x: screenWidth * 0.5, y: screenHeight * 0.85, width: 320, height: 160, borderRadius: 80, color: '#FFD93D' },
+];
+
+// Animated aurora blob component
+function AuroraBlob({
+  x,
+  y,
+  width,
+  height,
+  borderRadius,
+  color,
+  visible,
+  index,
+}: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  borderRadius: number;
+  color: string;
+  visible: boolean;
+  index: number;
+}) {
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const scale = useSharedValue(0);
+  const rotate = useSharedValue(0);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    // Animate visibility
+    if (visible) {
+      opacity.value = withTiming(0.5, { duration: 600, easing: Easing.out(Easing.cubic) });
+      scale.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.back(1.2)) });
+    } else {
+      opacity.value = withTiming(0, { duration: 400, easing: Easing.in(Easing.cubic) });
+      scale.value = withTiming(0, { duration: 400, easing: Easing.in(Easing.cubic) });
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    // Gentle floating animation with rotation
+    const animateBlob = () => {
+      translateX.value = withSequence(
+        withTiming(20 + index * 5, { duration: 3000 + index * 500, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-20 - index * 5, { duration: 3000 + index * 500, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 3000 + index * 500, easing: Easing.inOut(Easing.sin) })
+      );
+      translateY.value = withSequence(
+        withTiming(-15 - index * 3, { duration: 2500 + index * 400, easing: Easing.inOut(Easing.sin) }),
+        withTiming(15 + index * 3, { duration: 2500 + index * 400, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 2500 + index * 400, easing: Easing.inOut(Easing.sin) })
+      );
+      rotate.value = withSequence(
+        withTiming(5 + index * 2, { duration: 4000 + index * 600, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-5 - index * 2, { duration: 4000 + index * 600, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 4000 + index * 600, easing: Easing.inOut(Easing.sin) })
+      );
+    };
+
+    animateBlob();
+    const interval = setInterval(animateBlob, 8000 + index * 1000);
+    return () => clearInterval(interval);
+  }, [index]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+      { rotate: `${rotate.value}deg` },
+    ],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          left: x,
+          top: y,
+          width: width,
+          height: height,
+          borderRadius: borderRadius,
+          backgroundColor: color,
+        },
+        animatedStyle,
+      ]}
+    />
+  );
+}
+
+
 // Small confetti dots scattered around the screen
 const confettiDots = [
-  // Slide 2 dots (first wave)
   { x: 30, y: 120, size: 8 },
   { x: screenWidth - 50, y: 180, size: 10 },
   { x: 60, y: screenHeight - 200, size: 6 },
   { x: screenWidth - 40, y: screenHeight - 280, size: 8 },
   { x: screenWidth / 2 + 60, y: 100, size: 7 },
   { x: 25, y: screenHeight / 2 - 50, size: 9 },
-  // Slide 3 dots (second wave)
   { x: screenWidth - 70, y: 280, size: 6 },
   { x: 80, y: 220, size: 7 },
   { x: screenWidth - 30, y: screenHeight / 2 + 80, size: 8 },
@@ -190,8 +292,28 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
 
+  // Animation values for slide transitions
+  const slideOpacity = useSharedValue(1);
+  const slideTranslateY = useSharedValue(0);
+
   const question = questions[currentQuestion];
   const isLastQuestion = currentQuestion === questions.length - 1;
+
+  const animateSlideTransition = useCallback((direction: 'forward' | 'back', callback: () => void) => {
+    const exitDirection = direction === 'forward' ? -30 : 30;
+    const enterDirection = direction === 'forward' ? 30 : -30;
+
+    // Exit animation
+    slideOpacity.value = withTiming(0, { duration: 150, easing: Easing.in(Easing.cubic) });
+    slideTranslateY.value = withTiming(exitDirection, { duration: 150, easing: Easing.in(Easing.cubic) }, () => {
+      runOnJS(callback)();
+      // Reset position for entry
+      slideTranslateY.value = enterDirection;
+      // Enter animation
+      slideOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) });
+      slideTranslateY.value = withSpring(0, { damping: 20, stiffness: 200 });
+    });
+  }, []);
 
   const selectOption = async (value: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -205,30 +327,85 @@ export default function OnboardingScreen() {
       setHasOnboarded(true);
       router.replace('/paywall');
     } else {
-      setCurrentQuestion(currentQuestion + 1);
+      animateSlideTransition('forward', () => {
+        setCurrentQuestion(currentQuestion + 1);
+      });
     }
   };
 
   const goBack = () => {
     if (currentQuestion > 0) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setCurrentQuestion(currentQuestion - 1);
+      animateSlideTransition('back', () => {
+        setCurrentQuestion(currentQuestion - 1);
+      });
     }
   };
 
   // Determine which dots are visible based on current slide
   const isDotVisible = (dotIndex: number) => {
-    if (currentQuestion === 0) return false; // Slide 1: no dots
-    if (currentQuestion === 1) return dotIndex < 3; // Slide 2
-    if (currentQuestion === 2) return dotIndex < 6; // Slide 3
-    if (currentQuestion === 3) return dotIndex < 9; // Slide 4
-    if (currentQuestion === 4) return dotIndex < 12; // Slide 5
-    return true; // Slide 6: all dots
+    if (currentQuestion === 0) return false;
+    if (currentQuestion === 1) return dotIndex < 3;
+    if (currentQuestion === 2) return dotIndex < 6;
+    if (currentQuestion === 3) return dotIndex < 9;
+    if (currentQuestion === 4) return dotIndex < 12;
+    return true;
+  };
+
+  // Determine which aurora blobs are visible based on current slide
+  const isBlobVisible = (blobIndex: number) => {
+    if (currentQuestion === 0) return false; // Q1: no blobs
+    if (currentQuestion === 1) return blobIndex < 1; // Q2: 1 blob
+    if (currentQuestion === 2) return blobIndex < 2; // Q3: 2 blobs
+    if (currentQuestion === 3) return blobIndex < 3; // Q4: 3 blobs
+    if (currentQuestion === 4) return blobIndex < 5; // Q5: 5 blobs
+    return true; // Q6: all 6 blobs
+  };
+
+  // Animated styles for slide content
+  const slideAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: slideOpacity.value,
+    transform: [{ translateY: slideTranslateY.value }],
+  }));
+
+  // Get gradient colors based on progress - starts dark, ends with colorful tints
+  const getGradientColors = (): [string, string, string] => {
+    if (currentQuestion === 0) return ['#000000', '#000000', '#050505'];
+    if (currentQuestion === 1) return ['#0d0510', '#050510', '#0a0515'];
+    if (currentQuestion === 2) return ['#150a18', '#0a0a18', '#100a20'];
+    if (currentQuestion === 3) return ['#1a0f20', '#0f1025', '#151028'];
+    if (currentQuestion === 4) return ['#201530', '#15152d', '#1a1535'];
+    return ['#281a3a', '#1a1a38', '#201a40']; // Final: rich purple/blue tones
   };
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
+
+      {/* Progressive gradient background */}
+      <LinearGradient
+        colors={getGradientColors()}
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+
+      {/* Aurora blobs with varying shapes */}
+      <View style={styles.auroraContainer}>
+        {auroraBlobs.map((blob, index) => (
+          <AuroraBlob
+            key={index}
+            x={blob.x}
+            y={blob.y}
+            width={blob.width}
+            height={blob.height}
+            borderRadius={blob.borderRadius}
+            color={blob.color}
+            visible={isBlobVisible(index)}
+            index={index}
+          />
+        ))}
+      </View>
 
       {/* Confetti dots */}
       <View style={styles.dotsContainer}>
@@ -264,8 +441,8 @@ export default function OnboardingScreen() {
         )}
       </View>
 
-      {/* Question */}
-      <View style={styles.content}>
+      {/* Question with slide animation */}
+      <Animated.View style={[styles.content, slideAnimatedStyle]}>
         <View style={styles.imageContainer}>
           <Image
             source={slideImages[currentQuestion]}
@@ -289,7 +466,7 @@ export default function OnboardingScreen() {
             </Pressable>
           ))}
         </View>
-      </View>
+      </Animated.View>
 
       {/* Footer */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
@@ -306,12 +483,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
+  auroraContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
   dotsContainer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
   },
   header: {
     paddingHorizontal: 24,
+    zIndex: 10,
   },
   progressContainer: {
     flexDirection: 'row',
@@ -340,6 +522,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
+    zIndex: 10,
   },
   imageContainer: {
     alignSelf: 'center',
@@ -352,8 +535,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: '#FF6BD6',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
+    shadowOpacity: 0.5,
+    shadowRadius: 25,
     elevation: 10,
   },
   slideImage: {
@@ -392,6 +575,7 @@ const styles = StyleSheet.create({
   footer: {
     alignItems: 'center',
     paddingTop: 20,
+    zIndex: 10,
   },
   footerText: {
     fontSize: 14,
