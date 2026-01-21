@@ -266,11 +266,13 @@ export default function OnboardingScreen() {
 
       {/* Question */}
       <View style={styles.content}>
-        <Image
-          source={slideImages[currentQuestion]}
-          style={styles.slideImage}
-          contentFit="contain"
-        />
+        <View style={styles.imageContainer}>
+          <Image
+            source={slideImages[currentQuestion]}
+            style={styles.slideImage}
+            contentFit="contain"
+          />
+        </View>
         <Text style={styles.questionText}>{question.question}</Text>
 
         <View style={styles.optionsContainer}>
@@ -339,11 +341,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
+  imageContainer: {
+    alignSelf: 'center',
+    marginBottom: 24,
+    width: 170,
+    height: 170,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#FF6BD6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 10,
+  },
   slideImage: {
     width: 150,
     height: 150,
-    alignSelf: 'center',
-    marginBottom: 24,
+    borderRadius: 16,
   },
   questionText: {
     fontSize: 28,
