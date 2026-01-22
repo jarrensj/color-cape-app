@@ -169,9 +169,9 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
   };
 
   const getColorMode = (key: ColorPaletteKey): ColorMode => {
-    // Only seasonal palettes can have mode toggle, default to 'all8'
+    // Only seasonal palettes can have mode toggle, default to 'first4' (core colors)
     if (!isSeasonalPalette(key)) return 'all8';
-    return colorModePrefs[key] ?? 'all8';
+    return colorModePrefs[key] ?? 'first4';
   };
 
   const toggleColorMode = async (key: ColorPaletteKey) => {
