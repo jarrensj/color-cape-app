@@ -16,6 +16,8 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   withRepeat,
+  withSpring,
+  withSequence,
   useSharedValue,
   interpolateColor,
   Easing,
@@ -23,6 +25,124 @@ import Animated, {
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const SAVED_TEST_RESULT_KEY = 'saved_test_result';
+
+// Color swatch card configurations - positioned around edges
+const swatchCards = [
+  { colors: ['#FF6B6B', '#FF8E8E'], rotation: -15, x: -30, y: screenHeight * 0.12 },
+  { colors: ['#4D96FF', '#7AB3FF'], rotation: 12, x: screenWidth - 50, y: screenHeight * 0.08 },
+  { colors: ['#9B59B6', '#B57EDC'], rotation: -8, x: -25, y: screenHeight * 0.82 },
+  { colors: ['#6BCB77', '#8ED99A'], rotation: 20, x: screenWidth - 55, y: screenHeight * 0.78 },
+  { colors: ['#FFD93D', '#FFE566'], rotation: -25, x: -20, y: screenHeight * 0.45 },
+  { colors: ['#FF6BD6', '#FF9DE5'], rotation: 18, x: screenWidth - 45, y: screenHeight * 0.42 },
+];
+
+// Animated color swatch card component
+function SwatchCard({
+  colors,
+  rotation,
+  x,
+  y,
+  visible,
+  index,
+}: {
+  colors: string[];
+  rotation: number;
+  x: number;
+  y: number;
+  visible: boolean;
+  index: number;
+}) {
+  const scale = useSharedValue(0);
+  const rotate = useSharedValue(rotation - 30);
+  const translateX = useSharedValue(index % 2 === 0 ? -100 : 100);
+  const translateY = useSharedValue(50);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (visible) {
+      const delay = index * 150;
+      const timeout = setTimeout(() => {
+        scale.value = withSpring(1, { damping: 12, stiffness: 100 });
+        rotate.value = withSpring(rotation, { damping: 15, stiffness: 80 });
+        translateX.value = withSpring(0, { damping: 14, stiffness: 90 });
+        translateY.value = withSpring(0, { damping: 14, stiffness: 90 });
+        opacity.value = withTiming(1, { duration: 400 });
+      }, delay);
+      return () => clearTimeout(timeout);
+    } else {
+      scale.value = withTiming(0, { duration: 300, easing: Easing.in(Easing.cubic) });
+      opacity.value = withTiming(0, { duration: 300 });
+      rotate.value = withTiming(rotation - 30, { duration: 300 });
+      translateX.value = withTiming(index % 2 === 0 ? -100 : 100, { duration: 300 });
+    }
+  }, [visible, index, rotation]);
+
+  // Gentle floating animation
+  useEffect(() => {
+    const animateFloat = () => {
+      translateY.value = withSequence(
+        withTiming(-8, { duration: 2000 + index * 200, easing: Easing.inOut(Easing.sin) }),
+        withTiming(8, { duration: 2000 + index * 200, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 2000 + index * 200, easing: Easing.inOut(Easing.sin) })
+      );
+    };
+
+    if (visible) {
+      const timeout = setTimeout(animateFloat, 1000 + index * 150);
+      const interval = setInterval(animateFloat, 6000 + index * 300);
+      return () => {
+        clearTimeout(timeout);
+        clearInterval(interval);
+      };
+    }
+  }, [visible, index]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { rotate: `${rotate.value}deg` },
+      { scale: scale.value },
+    ],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          left: x,
+          top: y,
+          width: 70,
+          height: 90,
+          borderRadius: 8,
+          backgroundColor: '#fff',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 8,
+          padding: 6,
+        },
+        animatedStyle,
+      ]}
+    >
+      {/* Color portion */}
+      <View
+        style={{
+          flex: 1,
+          borderRadius: 4,
+          backgroundColor: colors[0],
+        }}
+      />
+      {/* White label area at bottom */}
+      <View style={{ height: 18, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: 30, height: 4, backgroundColor: '#ddd', borderRadius: 2 }} />
+      </View>
+    </Animated.View>
+  );
+}
 
 // Diagnostic test comparisons - 6 steps total with weights
 const diagnosticTests = [
@@ -1064,6 +1184,21 @@ export default function TestScreen() {
       <View style={styles.container}>
         <StatusBar style="light" />
 
+        {/* Color swatch cards */}
+        <View style={styles.swatchesContainer}>
+          {swatchCards.map((swatch, index) => (
+            <SwatchCard
+              key={index}
+              colors={swatch.colors}
+              rotation={swatch.rotation}
+              x={swatch.x}
+              y={swatch.y}
+              visible={true}
+              index={index}
+            />
+          ))}
+        </View>
+
         {/* Home button */}
         <View style={[styles.introHeader, { paddingTop: insets.top + 12 }]}>
           <Pressable style={styles.homeButton} onPress={goHome}>
@@ -1412,6 +1547,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  swatchesContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
   },
   compositeView: {
     position: 'absolute',
