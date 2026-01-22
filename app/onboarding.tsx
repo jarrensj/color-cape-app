@@ -48,14 +48,14 @@ type Question = {
   options: { label: string; value: string }[];
 };
 
-// Color swatch card configurations
+// Color swatch card configurations - positioned around edges to avoid content area
 const swatchCards = [
-  { colors: ['#FF6B6B', '#FF8E8E'], rotation: -15, x: -40, y: screenHeight * 0.15 },
-  { colors: ['#4D96FF', '#7AB3FF'], rotation: 12, x: screenWidth - 60, y: screenHeight * 0.25 },
-  { colors: ['#9B59B6', '#B57EDC'], rotation: -8, x: screenWidth * 0.15, y: screenHeight * 0.65 },
-  { colors: ['#6BCB77', '#8ED99A'], rotation: 20, x: screenWidth - 80, y: screenHeight * 0.55 },
-  { colors: ['#FFD93D', '#FFE566'], rotation: -25, x: 20, y: screenHeight * 0.45 },
-  { colors: ['#FF6BD6', '#FF9DE5'], rotation: 10, x: screenWidth * 0.5, y: screenHeight * 0.75 },
+  { colors: ['#FF6B6B', '#FF8E8E'], rotation: -15, x: -30, y: screenHeight * 0.12 },
+  { colors: ['#4D96FF', '#7AB3FF'], rotation: 12, x: screenWidth - 50, y: screenHeight * 0.08 },
+  { colors: ['#9B59B6', '#B57EDC'], rotation: -8, x: -25, y: screenHeight * 0.82 },
+  { colors: ['#6BCB77', '#8ED99A'], rotation: 20, x: screenWidth - 55, y: screenHeight * 0.78 },
+  { colors: ['#FFD93D', '#FFE566'], rotation: -25, x: -20, y: screenHeight * 0.45 },
+  { colors: ['#FF6BD6', '#FF9DE5'], rotation: 18, x: screenWidth - 45, y: screenHeight * 0.42 },
 ];
 
 // Animated color swatch card component
@@ -591,6 +591,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   footer: {
     alignItems: 'center',
