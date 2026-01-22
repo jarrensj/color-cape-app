@@ -466,6 +466,7 @@ export default function OnboardingScreen() {
             contentFit="contain"
           />
         </View>
+
         <Text style={styles.questionText}>{question.question}</Text>
 
         <View style={styles.optionsContainer}>
@@ -566,6 +567,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 40,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   optionsContainer: {
     gap: 12,
