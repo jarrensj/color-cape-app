@@ -48,84 +48,83 @@ type Question = {
   options: { label: string; value: string }[];
 };
 
-// Aurora blob positions with varying shapes
-const auroraBlobs = [
-  { x: -50, y: screenHeight * 0.2, width: 300, height: 200, borderRadius: 100, color: '#FF6B6B' },
-  { x: screenWidth - 100, y: screenHeight * 0.1, width: 200, height: 300, borderRadius: 80, color: '#4D96FF' },
-  { x: screenWidth * 0.3, y: screenHeight * 0.6, width: 350, height: 180, borderRadius: 90, color: '#9B59B6' },
-  { x: -80, y: screenHeight * 0.7, width: 280, height: 320, borderRadius: 140, color: '#6BCB77' },
-  { x: screenWidth - 50, y: screenHeight * 0.5, width: 220, height: 280, borderRadius: 70, color: '#FF6BD6' },
-  { x: screenWidth * 0.5, y: screenHeight * 0.85, width: 320, height: 160, borderRadius: 80, color: '#FFD93D' },
+// Color swatch card configurations
+const swatchCards = [
+  { colors: ['#FF6B6B', '#FF8E8E'], rotation: -15, x: -40, y: screenHeight * 0.15 },
+  { colors: ['#4D96FF', '#7AB3FF'], rotation: 12, x: screenWidth - 60, y: screenHeight * 0.25 },
+  { colors: ['#9B59B6', '#B57EDC'], rotation: -8, x: screenWidth * 0.15, y: screenHeight * 0.65 },
+  { colors: ['#6BCB77', '#8ED99A'], rotation: 20, x: screenWidth - 80, y: screenHeight * 0.55 },
+  { colors: ['#FFD93D', '#FFE566'], rotation: -25, x: 20, y: screenHeight * 0.45 },
+  { colors: ['#FF6BD6', '#FF9DE5'], rotation: 10, x: screenWidth * 0.5, y: screenHeight * 0.75 },
 ];
 
-// Animated aurora blob component
-function AuroraBlob({
+// Animated color swatch card component
+function SwatchCard({
+  colors,
+  rotation,
   x,
   y,
-  width,
-  height,
-  borderRadius,
-  color,
   visible,
   index,
 }: {
+  colors: string[];
+  rotation: number;
   x: number;
   y: number;
-  width: number;
-  height: number;
-  borderRadius: number;
-  color: string;
   visible: boolean;
   index: number;
 }) {
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
   const scale = useSharedValue(0);
-  const rotate = useSharedValue(0);
+  const rotate = useSharedValue(rotation - 30);
+  const translateX = useSharedValue(index % 2 === 0 ? -100 : 100);
+  const translateY = useSharedValue(50);
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    // Animate visibility
     if (visible) {
-      opacity.value = withTiming(0.5, { duration: 600, easing: Easing.out(Easing.cubic) });
-      scale.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.back(1.2)) });
+      const delay = index * 150;
+      const timeout = setTimeout(() => {
+        scale.value = withSpring(1, { damping: 12, stiffness: 100 });
+        rotate.value = withSpring(rotation, { damping: 15, stiffness: 80 });
+        translateX.value = withSpring(0, { damping: 14, stiffness: 90 });
+        translateY.value = withSpring(0, { damping: 14, stiffness: 90 });
+        opacity.value = withTiming(1, { duration: 400 });
+      }, delay);
+      return () => clearTimeout(timeout);
     } else {
-      opacity.value = withTiming(0, { duration: 400, easing: Easing.in(Easing.cubic) });
-      scale.value = withTiming(0, { duration: 400, easing: Easing.in(Easing.cubic) });
+      scale.value = withTiming(0, { duration: 300, easing: Easing.in(Easing.cubic) });
+      opacity.value = withTiming(0, { duration: 300 });
+      rotate.value = withTiming(rotation - 30, { duration: 300 });
+      translateX.value = withTiming(index % 2 === 0 ? -100 : 100, { duration: 300 });
     }
-  }, [visible]);
+  }, [visible, index, rotation]);
 
+  // Gentle floating animation
   useEffect(() => {
-    // Gentle floating animation with rotation
-    const animateBlob = () => {
-      translateX.value = withSequence(
-        withTiming(20 + index * 5, { duration: 3000 + index * 500, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-20 - index * 5, { duration: 3000 + index * 500, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 3000 + index * 500, easing: Easing.inOut(Easing.sin) })
-      );
+    const animateFloat = () => {
       translateY.value = withSequence(
-        withTiming(-15 - index * 3, { duration: 2500 + index * 400, easing: Easing.inOut(Easing.sin) }),
-        withTiming(15 + index * 3, { duration: 2500 + index * 400, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 2500 + index * 400, easing: Easing.inOut(Easing.sin) })
-      );
-      rotate.value = withSequence(
-        withTiming(5 + index * 2, { duration: 4000 + index * 600, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-5 - index * 2, { duration: 4000 + index * 600, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 4000 + index * 600, easing: Easing.inOut(Easing.sin) })
+        withTiming(-8, { duration: 2000 + index * 200, easing: Easing.inOut(Easing.sin) }),
+        withTiming(8, { duration: 2000 + index * 200, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 2000 + index * 200, easing: Easing.inOut(Easing.sin) })
       );
     };
 
-    animateBlob();
-    const interval = setInterval(animateBlob, 8000 + index * 1000);
-    return () => clearInterval(interval);
-  }, [index]);
+    if (visible) {
+      const timeout = setTimeout(animateFloat, 1000 + index * 150);
+      const interval = setInterval(animateFloat, 6000 + index * 300);
+      return () => {
+        clearTimeout(timeout);
+        clearInterval(interval);
+      };
+    }
+  }, [visible, index]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: translateX.value },
       { translateY: translateY.value },
-      { scale: scale.value },
       { rotate: `${rotate.value}deg` },
+      { scale: scale.value },
     ],
     opacity: opacity.value,
   }));
@@ -137,14 +136,33 @@ function AuroraBlob({
           position: 'absolute',
           left: x,
           top: y,
-          width: width,
-          height: height,
-          borderRadius: borderRadius,
-          backgroundColor: color,
+          width: 70,
+          height: 90,
+          borderRadius: 8,
+          backgroundColor: '#fff',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 8,
+          padding: 6,
         },
         animatedStyle,
       ]}
-    />
+    >
+      {/* Color portion */}
+      <View
+        style={{
+          flex: 1,
+          borderRadius: 4,
+          backgroundColor: colors[0],
+        }}
+      />
+      {/* White label area at bottom */}
+      <View style={{ height: 18, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: 30, height: 4, backgroundColor: '#ddd', borderRadius: 2 }} />
+      </View>
+    </Animated.View>
   );
 }
 
@@ -352,14 +370,14 @@ export default function OnboardingScreen() {
     return true;
   };
 
-  // Determine which aurora blobs are visible based on current slide
-  const isBlobVisible = (blobIndex: number) => {
-    if (currentQuestion === 0) return false; // Q1: no blobs
-    if (currentQuestion === 1) return blobIndex < 1; // Q2: 1 blob
-    if (currentQuestion === 2) return blobIndex < 2; // Q3: 2 blobs
-    if (currentQuestion === 3) return blobIndex < 3; // Q4: 3 blobs
-    if (currentQuestion === 4) return blobIndex < 5; // Q5: 5 blobs
-    return true; // Q6: all 6 blobs
+  // Determine which swatch cards are visible based on current slide
+  const isSwatchVisible = (swatchIndex: number) => {
+    if (currentQuestion === 0) return false; // Q1: no swatches
+    if (currentQuestion === 1) return swatchIndex < 2; // Q2: 2 swatches
+    if (currentQuestion === 2) return swatchIndex < 3; // Q3: 3 swatches
+    if (currentQuestion === 3) return swatchIndex < 4; // Q4: 4 swatches
+    if (currentQuestion === 4) return swatchIndex < 5; // Q5: 5 swatches
+    return true; // Q6: all 6 swatches
   };
 
   // Animated styles for slide content
@@ -390,18 +408,16 @@ export default function OnboardingScreen() {
         end={{ x: 1, y: 1 }}
       />
 
-      {/* Aurora blobs with varying shapes */}
-      <View style={styles.auroraContainer}>
-        {auroraBlobs.map((blob, index) => (
-          <AuroraBlob
+      {/* Color swatch cards */}
+      <View style={styles.swatchesContainer}>
+        {swatchCards.map((swatch, index) => (
+          <SwatchCard
             key={index}
-            x={blob.x}
-            y={blob.y}
-            width={blob.width}
-            height={blob.height}
-            borderRadius={blob.borderRadius}
-            color={blob.color}
-            visible={isBlobVisible(index)}
+            colors={swatch.colors}
+            rotation={swatch.rotation}
+            x={swatch.x}
+            y={swatch.y}
+            visible={isSwatchVisible(index)}
             index={index}
           />
         ))}
@@ -483,7 +499,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  auroraContainer: {
+  swatchesContainer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
   },
