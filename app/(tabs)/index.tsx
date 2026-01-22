@@ -1,14 +1,25 @@
-import { StyleSheet, View, Text, Pressable, Modal } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Modal, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Camera, Sparkles, Palette, SunDim, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
+import { Image } from 'expo-image';
+import Animated, {
+  useAnimatedStyle,
+  withTiming,
+  withRepeat,
+  useSharedValue,
+  interpolateColor,
+  Easing,
+} from 'react-native-reanimated';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 type LastUsedPalette =
   | { type: 'palette'; key: ColorPaletteKey }
@@ -41,6 +52,36 @@ export default function HomeScreen() {
   const [savedTestResult, setSavedTestResult] = useState<SavedTestResult>(null);
   const [showOpacitySheet, setShowOpacitySheet] = useState(false);
   const [capeOpacity, setCapeOpacity] = useState(0.85);
+
+  // Rainbow glow animation
+  const glowProgress = useSharedValue(0);
+  const pulseProgress = useSharedValue(0);
+
+  useEffect(() => {
+    glowProgress.value = withRepeat(
+      withTiming(1, { duration: 10000, easing: Easing.linear }),
+      -1,
+      false
+    );
+    pulseProgress.value = withRepeat(
+      withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, []);
+
+  const imageGlowStyle = useAnimatedStyle(() => {
+    const glowColor = interpolateColor(
+      glowProgress.value,
+      [0, 0.16, 0.33, 0.5, 0.66, 0.83, 1],
+      ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#9B59B6', '#FF6BD6', '#FF6B6B']
+    );
+    const shadowRadius = 25 + (pulseProgress.value * 20);
+    return {
+      shadowColor: glowColor,
+      shadowRadius: shadowRadius,
+    };
+  });
 
   useFocusEffect(
     useCallback(() => {
@@ -126,7 +167,14 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      <View style={[styles.content, { paddingTop: insets.top + 60 }]}>
+      <View style={[styles.content, { paddingTop: insets.top + 40 }]}>
+        <Animated.View style={[styles.heroImageContainer, imageGlowStyle]}>
+          <Image
+            source={require('@/assets/images/unicorn-cape.png')}
+            style={styles.heroImage}
+            contentFit="contain"
+          />
+        </Animated.View>
         <Text style={styles.title}>Color Cape</Text>
         <Text style={styles.subtitle}>
           Discover your perfect color palette
@@ -307,6 +355,24 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
+  },
+  heroImageContainer: {
+    alignSelf: 'center',
+    marginBottom: 20,
+    width: 140,
+    height: 140,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    elevation: 10,
+  },
+  heroImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 16,
   },
   title: {
     fontSize: 42,
