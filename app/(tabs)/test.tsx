@@ -12,6 +12,14 @@ import { useTabBar } from '@/contexts/tab-bar-context';
 import * as Haptics from 'expo-haptics';
 import Svg, { Polygon } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
+import Animated, {
+  useAnimatedStyle,
+  withTiming,
+  withRepeat,
+  useSharedValue,
+  interpolateColor,
+  Easing,
+} from 'react-native-reanimated';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const SAVED_TEST_RESULT_KEY = 'saved_test_result';
@@ -761,6 +769,38 @@ export default function TestScreen() {
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
 
+  // Rainbow glow animation for intro image
+  const glowProgress = useSharedValue(0);
+  const pulseProgress = useSharedValue(0);
+
+  useEffect(() => {
+    // Slowly cycle through colors (10 seconds per full cycle)
+    glowProgress.value = withRepeat(
+      withTiming(1, { duration: 10000, easing: Easing.linear }),
+      -1,
+      false
+    );
+    // Pulse animation (3 seconds per pulse)
+    pulseProgress.value = withRepeat(
+      withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, []);
+
+  const introGlowStyle = useAnimatedStyle(() => {
+    const glowColor = interpolateColor(
+      glowProgress.value,
+      [0, 0.16, 0.33, 0.5, 0.66, 0.83, 1],
+      ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#9B59B6', '#FF6BD6', '#FF6B6B']
+    );
+    const shadowRadius = 25 + (pulseProgress.value * 20);
+    return {
+      shadowColor: glowColor,
+      shadowRadius: shadowRadius,
+    };
+  });
+
   // Load cape opacity setting when screen comes into focus
   useFocusEffect(
     useCallback(() => {
@@ -1032,11 +1072,13 @@ export default function TestScreen() {
         </View>
 
         <View style={[styles.introContent, { paddingTop: insets.top + 80 }]}>
-          <Image
-            source={require('@/assets/images/unicorn-cape.png')}
-            style={styles.introImage}
-            contentFit="contain"
-          />
+          <Animated.View style={[styles.introImageContainer, introGlowStyle]}>
+            <Image
+              source={require('@/assets/images/unicorn-cape.png')}
+              style={styles.introImage}
+              contentFit="contain"
+            />
+          </Animated.View>
           <Text style={styles.introTitle}>Find Your Colors</Text>
           <Text style={styles.introSubtitle}>
             Discover your perfect color sub-season
@@ -1440,11 +1482,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     justifyContent: 'center',
   },
+  introImageContainer: {
+    alignSelf: 'center',
+    marginBottom: 24,
+    width: 170,
+    height: 170,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    elevation: 10,
+  },
   introImage: {
     width: 150,
     height: 150,
-    alignSelf: 'center',
-    marginBottom: 24,
+    borderRadius: 16,
   },
   introTitle: {
     fontSize: 32,
