@@ -13,7 +13,9 @@ import Animated, {
   withTiming,
   withSpring,
   withSequence,
+  withRepeat,
   useSharedValue,
+  interpolateColor,
   Easing,
   runOnJS,
 } from 'react-native-reanimated';
@@ -314,6 +316,44 @@ export default function OnboardingScreen() {
   const slideOpacity = useSharedValue(1);
   const slideTranslateY = useSharedValue(0);
 
+  // Rainbow glow animation
+  const glowProgress = useSharedValue(0);
+  const pulseProgress = useSharedValue(0);
+
+  useEffect(() => {
+    // Slowly cycle through colors (10 seconds per full cycle)
+    glowProgress.value = withRepeat(
+      withTiming(1, { duration: 10000, easing: Easing.linear }),
+      -1, // infinite
+      false // don't reverse
+    );
+    // Pulse animation (3 seconds per pulse)
+    pulseProgress.value = withRepeat(
+      withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }),
+      -1, // infinite
+      true // reverse for smooth pulse
+    );
+  }, []);
+
+  // Pulse intensity increases with progress (Q1=0, Q6=5)
+  const pulseIntensity = currentQuestion;
+
+  const glowAnimatedStyle = useAnimatedStyle(() => {
+    const glowColor = interpolateColor(
+      glowProgress.value,
+      [0, 0.16, 0.33, 0.5, 0.66, 0.83, 1],
+      ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#9B59B6', '#FF6BD6', '#FF6B6B']
+    );
+    // Pulse shadow radius - gets bigger as user progresses
+    const baseRadius = 20 + (pulseIntensity * 3);
+    const pulseAmount = 10 + (pulseIntensity * 4);
+    const shadowRadius = baseRadius + (pulseProgress.value * pulseAmount);
+    return {
+      shadowColor: glowColor,
+      shadowRadius: shadowRadius,
+    };
+  });
+
   const question = questions[currentQuestion];
   const isLastQuestion = currentQuestion === questions.length - 1;
 
@@ -459,13 +499,13 @@ export default function OnboardingScreen() {
 
       {/* Question with slide animation */}
       <Animated.View style={[styles.content, slideAnimatedStyle]}>
-        <View style={styles.imageContainer}>
+        <Animated.View style={[styles.imageContainer, glowAnimatedStyle]}>
           <Image
             source={slideImages[currentQuestion]}
             style={styles.slideImage}
             contentFit="contain"
           />
-        </View>
+        </Animated.View>
 
         <Text style={styles.questionText}>{question.question}</Text>
 
