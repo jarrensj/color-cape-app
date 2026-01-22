@@ -524,13 +524,6 @@ export default function OnboardingScreen() {
           ))}
         </View>
       </Animated.View>
-
-      {/* Footer */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
-        <Text style={styles.footerText}>
-          {currentQuestion + 1} of {questions.length}
-        </Text>
-      </View>
     </View>
   );
 }
@@ -634,15 +627,5 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
-  },
-  footer: {
-    alignItems: 'center',
-    paddingTop: 20,
-    zIndex: 10,
-  },
-  footerText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.5)',
   },
 });
