@@ -1219,27 +1219,6 @@ export default function TestScreen() {
             Discover your perfect color sub-season
           </Text>
 
-          <View style={styles.stepsContainer}>
-            <View style={styles.stepItem}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>1</Text>
-              </View>
-              <Text style={styles.stepText}>Undertone: Cool vs Warm</Text>
-            </View>
-            <View style={styles.stepItem}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>2</Text>
-              </View>
-              <Text style={styles.stepText}>Value: Light vs Deep</Text>
-            </View>
-            <View style={styles.stepItem}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>3</Text>
-              </View>
-              <Text style={styles.stepText}>Chroma: Bright vs Soft</Text>
-            </View>
-          </View>
-
           <Pressable style={styles.startButton} onPress={startTest}>
             <Text style={styles.startButtonText}>Start Test</Text>
           </Pressable>
@@ -1652,34 +1631,6 @@ const styles = StyleSheet.create({
     color: '#CCCCCC',
     textAlign: 'center',
     marginBottom: 48,
-  },
-  stepsContainer: {
-    marginBottom: 48,
-  },
-  stepItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  stepNumber: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  stepNumberText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000000',
-  },
-  stepText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    flex: 1,
   },
   startButton: {
     backgroundColor: '#FFFFFF',
