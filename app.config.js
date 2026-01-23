@@ -34,14 +34,6 @@ export default {
     },
     plugins: [
       'expo-router',
-      [
-        'expo-splash-screen',
-        {
-          image: './assets/images/splashscreen.png',
-          resizeMode: 'cover',
-          backgroundColor: '#000000',
-        },
-      ],
     ],
     experiments: {
       typedRoutes: true,
