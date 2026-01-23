@@ -86,9 +86,7 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       AsyncStorage.getItem(LAST_USED_PALETTE_KEY).then((value) => {
-        if (value) {
-          setLastUsed(JSON.parse(value));
-        }
+        setLastUsed(value ? JSON.parse(value) : null);
       });
       AsyncStorage.getItem(SAVED_TEST_RESULT_KEY).then((value) => {
         if (value) {

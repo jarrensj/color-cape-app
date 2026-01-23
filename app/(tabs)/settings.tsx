@@ -15,6 +15,7 @@ const CAMERA_SETTING_KEY = 'default_camera_facing';
 const MIRROR_SETTING_KEY = 'mirror_front_camera';
 const OPACITY_SETTING_KEY = 'cape_opacity';
 const SAVED_TEST_RESULT_KEY = 'saved_test_result';
+const LAST_USED_PALETTE_KEY = 'last_used_palette';
 
 const OPACITY_OPTIONS = [
   { label: 'Light', value: 0.5 },
@@ -117,6 +118,25 @@ export default function SettingsScreen() {
             setCapeOpacity(0.85);
             resetToDefaults(); // Reset palette preferences
             resetCustomCapes(); // Delete custom capes
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          },
+        },
+      ]
+    );
+  };
+
+  const clearLastViewedPalette = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      'Clear Last Viewed',
+      'This will remove the last viewed palette from the home screen. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.removeItem(LAST_USED_PALETTE_KEY);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           },
         },
@@ -861,6 +881,25 @@ export default function SettingsScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.settingButton,
+              pressed && styles.settingButtonPressed,
+            ]}
+            onPress={clearLastViewedPalette}
+          >
+            <View style={[styles.settingIcon, styles.settingIconTeal]}>
+              <Trash2 size={22} color="#5AC8FA" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Clear Last Viewed Palette</Text>
+              <Text style={styles.settingDescription}>
+                Remove the last viewed palette from home
+              </Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingButton,
+              styles.settingButtonMarginTop,
               pressed && styles.settingButtonPressed,
             ]}
             onPress={clearSavedTestResult}
