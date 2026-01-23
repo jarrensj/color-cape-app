@@ -358,10 +358,10 @@ const styles = StyleSheet.create({
   },
   heroImageContainer: {
     alignSelf: 'center',
-    marginBottom: 20,
-    width: 140,
-    height: 140,
-    borderRadius: 24,
+    marginBottom: 16,
+    width: 100,
+    height: 100,
+    borderRadius: 20,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
@@ -370,9 +370,9 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   heroImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 16,
+    width: 84,
+    height: 84,
+    borderRadius: 12,
   },
   title: {
     fontSize: 42,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center',
-    marginBottom: 48,
+    marginBottom: 24,
   },
   recentActivity: {
     flexDirection: 'row',
