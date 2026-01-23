@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, Share, Linking, TextInput } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, Share, Linking, TextInput, Platform, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check } from 'lucide-react-native';
+import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check, Smartphone } from 'lucide-react-native';
+import { setAppIcon, getAppIcon } from 'expo-dynamic-app-icon';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
@@ -15,6 +16,11 @@ const CAMERA_SETTING_KEY = 'default_camera_facing';
 const MIRROR_SETTING_KEY = 'mirror_front_camera';
 const OPACITY_SETTING_KEY = 'cape_opacity';
 const SAVED_TEST_RESULT_KEY = 'saved_test_result';
+
+const APP_ICON_OPTIONS = [
+  { id: 'default', label: 'Slate', image: require('@/assets/images/icon.png') },
+  { id: 'blue', label: 'Blue', image: require('@/assets/images/icon-blue.png') },
+];
 
 const OPACITY_OPTIONS = [
   { label: 'Light', value: 0.5 },
@@ -54,6 +60,7 @@ export default function SettingsScreen() {
   const [editingColorIndex, setEditingColorIndex] = useState<number | null>(null);
   const [hexInput, setHexInput] = useState('');
   const [editingCapeId, setEditingCapeId] = useState<string | null>(null);
+  const [selectedAppIcon, setSelectedAppIcon] = useState<string>('default');
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -76,7 +83,24 @@ export default function SettingsScreen() {
         setCapeOpacity(parseFloat(value));
       }
     });
+    // Load current app icon
+    if (Platform.OS === 'ios') {
+      const currentIcon = getAppIcon();
+      setSelectedAppIcon(currentIcon || 'default');
+    }
   }, []);
+
+  const handleAppIconChange = (iconId: string) => {
+    if (Platform.OS !== 'ios') {
+      Alert.alert('Not Available', 'App icon customization is only available on iOS.');
+      return;
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const success = setAppIcon(iconId === 'default' ? null : iconId);
+    if (success) {
+      setSelectedAppIcon(iconId);
+    }
+  };
 
   const handleToggleDefaultCamera = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -808,6 +832,50 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* App Icon Section - iOS only */}
+        {Platform.OS === 'ios' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>App Icon</Text>
+
+            <View style={styles.settingButton}>
+              <View style={[styles.settingIcon, styles.settingIconBlue]}>
+                <Smartphone size={22} color="#007AFF" strokeWidth={2} />
+              </View>
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingLabel}>Choose Icon</Text>
+                <Text style={styles.settingDescription}>
+                  Select your preferred app icon
+                </Text>
+              </View>
+            </View>
+            <View style={styles.appIconSelector}>
+              {APP_ICON_OPTIONS.map((option) => (
+                <Pressable
+                  key={option.id}
+                  style={[
+                    styles.appIconOption,
+                    selectedAppIcon === option.id && styles.appIconOptionActive,
+                  ]}
+                  onPress={() => handleAppIconChange(option.id)}
+                >
+                  <Image
+                    source={option.image}
+                    style={styles.appIconImage}
+                  />
+                  <Text
+                    style={[
+                      styles.appIconLabel,
+                      selectedAppIcon === option.id && styles.appIconLabelActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* Share Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Share</Text>
@@ -1308,6 +1376,39 @@ const styles = StyleSheet.create({
   capePreviewSegmentEditing: {
     borderWidth: 3,
     borderColor: '#FFFFFF',
+  },
+  appIconSelector: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 12,
+  },
+  appIconOption: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  appIconOptionActive: {
+    borderColor: '#007AFF',
+    backgroundColor: 'rgba(0, 122, 255, 0.15)',
+  },
+  appIconImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 14,
+    marginBottom: 8,
+  },
+  appIconLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  appIconLabelActive: {
+    color: '#007AFF',
   },
   customCapeActions: {
     flexDirection: 'row',

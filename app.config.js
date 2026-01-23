@@ -42,6 +42,19 @@ export default {
           backgroundColor: '#000000',
         },
       ],
+      [
+        'expo-dynamic-app-icon',
+        {
+          default: {
+            image: './assets/images/icon.png',
+            prerendered: true,
+          },
+          blue: {
+            image: './assets/images/icon-blue.png',
+            prerendered: true,
+          },
+        },
+      ],
     ],
     experiments: {
       typedRoutes: true,
