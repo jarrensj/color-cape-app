@@ -1,6 +1,6 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Alert } from 'react-native';
+import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
@@ -880,6 +880,12 @@ export default function TestScreen() {
   const [previewSeason, setPreviewSeason] = useState<string | null>(null);
   const [resultSaved, setResultSaved] = useState(false);
   const [resultInfoExpanded, setResultInfoExpanded] = useState(true);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [pendingSelection, setPendingSelection] = useState<{
+    option: 'A' | 'B';
+    scoreChange: number;
+    selectedOption: { name: string; description: string; colors: { name: string; hex: string }[] };
+  } | null>(null);
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const compositeRef = useRef<View>(null);
@@ -1142,48 +1148,52 @@ export default function TestScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     const selectedOption = option === 'A' ? currentTest.optionA : currentTest.optionB;
-    // Apply weighted scoring: A = cool/light/bright (-), B = warm/deep/soft (+)
     const scoreChange = (option === 'A' ? -1 : 1) * currentTest.weight;
 
-    Alert.alert(
-      'Confirm Selection',
-      `You selected "${selectedOption.name}". Continue?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Continue',
-          onPress: () => {
-            // Update score based on category
-            const newScores = { ...scores };
-            if (currentTest.category === 'undertone') {
-              newScores.undertone += scoreChange;
-            } else if (currentTest.category === 'value') {
-              newScores.value += scoreChange;
-            } else if (currentTest.category === 'chroma') {
-              newScores.chroma += scoreChange;
-            }
-            setScores(newScores);
+    setPendingSelection({ option, scoreChange, selectedOption });
+    setConfirmModalVisible(true);
+  };
 
-            // Move to next test or show result
-            if (currentTestIndex < TOTAL_TESTS - 1) {
-              setCurrentTestIndex(currentTestIndex + 1);
-              setCompareIndex(0);
-              setStep('capture1');
-            } else {
-              // Calculate result and top matches
-              const subSeason = determineSubSeason(newScores.undertone, newScores.value, newScores.chroma);
-              const matches = calculateTopMatches(newScores);
-              setResultSubSeason(subSeason);
-              setTopMatches(matches);
-              setStep('result');
-            }
-          },
-        },
-      ]
-    );
+  const confirmSelection = () => {
+    if (!pendingSelection) return;
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setConfirmModalVisible(false);
+
+    const { scoreChange } = pendingSelection;
+
+    // Update score based on category
+    const newScores = { ...scores };
+    if (currentTest.category === 'undertone') {
+      newScores.undertone += scoreChange;
+    } else if (currentTest.category === 'value') {
+      newScores.value += scoreChange;
+    } else if (currentTest.category === 'chroma') {
+      newScores.chroma += scoreChange;
+    }
+    setScores(newScores);
+
+    // Move to next test or show result
+    if (currentTestIndex < TOTAL_TESTS - 1) {
+      setCurrentTestIndex(currentTestIndex + 1);
+      setCompareIndex(0);
+      setStep('capture1');
+    } else {
+      // Calculate result and top matches
+      const subSeason = determineSubSeason(newScores.undertone, newScores.value, newScores.chroma);
+      const matches = calculateTopMatches(newScores);
+      setResultSubSeason(subSeason);
+      setTopMatches(matches);
+      setStep('result');
+    }
+
+    setPendingSelection(null);
+  };
+
+  const cancelSelection = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setConfirmModalVisible(false);
+    setPendingSelection(null);
   };
 
   // Get current overlay colors based on which photo we're taking
@@ -1564,6 +1574,40 @@ export default function TestScreen() {
             </Pressable>
           </View>
         </View>
+
+        {/* Confirmation Modal */}
+        <Modal
+          visible={confirmModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={cancelSelection}
+        >
+          <View style={styles.confirmModalOverlay}>
+            <View style={styles.confirmModalCard}>
+              <Text style={styles.confirmModalLabel}>You selected</Text>
+              <Text style={styles.confirmModalTitle}>{pendingSelection?.selectedOption.name}</Text>
+
+              {/* Color preview */}
+              <View style={styles.confirmModalColors}>
+                {pendingSelection?.selectedOption.colors.slice(0, 5).map((color, index) => (
+                  <View
+                    key={index}
+                    style={[styles.confirmModalColorDot, { backgroundColor: color.hex }]}
+                  />
+                ))}
+              </View>
+
+              <View style={styles.confirmModalButtons}>
+                <Pressable style={styles.confirmModalCancelButton} onPress={cancelSelection}>
+                  <Text style={styles.confirmModalCancelText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={styles.confirmModalConfirmButton} onPress={confirmSelection}>
+                  <Text style={styles.confirmModalConfirmText}>Confirm</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -2005,6 +2049,78 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  confirmModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  confirmModalCard: {
+    backgroundColor: '#1C1C1E',
+    borderRadius: 20,
+    paddingVertical: 28,
+    paddingHorizontal: 24,
+    width: '100%',
+    alignItems: 'center',
+  },
+  confirmModalLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.5)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  confirmModalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  confirmModalColors: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 28,
+  },
+  confirmModalColorDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  confirmModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  confirmModalCancelButton: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  confirmModalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  confirmModalConfirmButton: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  confirmModalConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
   },
   splitContainer: {
     flex: 1,
