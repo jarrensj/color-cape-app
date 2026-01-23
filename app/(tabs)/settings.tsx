@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, Share, Linking, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check } from 'lucide-react-native';
@@ -55,6 +56,8 @@ export default function SettingsScreen() {
   const [editingColorIndex, setEditingColorIndex] = useState<number | null>(null);
   const [hexInput, setHexInput] = useState('');
   const [editingCapeId, setEditingCapeId] = useState<string | null>(null);
+  const [hasLastViewedPalette, setHasLastViewedPalette] = useState(false);
+  const [hasSavedTestResult, setHasSavedTestResult] = useState(false);
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -78,6 +81,17 @@ export default function SettingsScreen() {
       }
     });
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem(LAST_USED_PALETTE_KEY).then((value) => {
+        setHasLastViewedPalette(value !== null);
+      });
+      AsyncStorage.getItem(SAVED_TEST_RESULT_KEY).then((value) => {
+        setHasSavedTestResult(value !== null);
+      });
+    }, [])
+  );
 
   const handleToggleDefaultCamera = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -137,6 +151,7 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.removeItem(LAST_USED_PALETTE_KEY);
+            setHasLastViewedPalette(false);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           },
         },
@@ -156,6 +171,7 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.removeItem(SAVED_TEST_RESULT_KEY);
+            setHasSavedTestResult(false);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           },
         },
@@ -881,17 +897,19 @@ export default function SettingsScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.settingButton,
-              pressed && styles.settingButtonPressed,
+              pressed && hasLastViewedPalette && styles.settingButtonPressed,
+              !hasLastViewedPalette && styles.settingButtonDisabled,
             ]}
             onPress={clearLastViewedPalette}
+            disabled={!hasLastViewedPalette}
           >
-            <View style={[styles.settingIcon, styles.settingIconTeal]}>
-              <Trash2 size={22} color="#5AC8FA" strokeWidth={2} />
+            <View style={[styles.settingIcon, styles.settingIconTeal, !hasLastViewedPalette && styles.settingIconDisabled]}>
+              <Trash2 size={22} color={hasLastViewedPalette ? "#5AC8FA" : "rgba(255,255,255,0.3)"} strokeWidth={2} />
             </View>
             <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Clear Last Viewed Palette</Text>
+              <Text style={[styles.settingLabel, !hasLastViewedPalette && styles.settingLabelDisabled]}>Clear Last Viewed Palette</Text>
               <Text style={styles.settingDescription}>
-                Remove the last viewed palette from home
+                {hasLastViewedPalette ? 'Remove the last viewed palette from home' : 'No last viewed palette to clear'}
               </Text>
             </View>
           </Pressable>
@@ -900,17 +918,19 @@ export default function SettingsScreen() {
             style={({ pressed }) => [
               styles.settingButton,
               styles.settingButtonMarginTop,
-              pressed && styles.settingButtonPressed,
+              pressed && hasSavedTestResult && styles.settingButtonPressed,
+              !hasSavedTestResult && styles.settingButtonDisabled,
             ]}
             onPress={clearSavedTestResult}
+            disabled={!hasSavedTestResult}
           >
-            <View style={[styles.settingIcon, styles.settingIconPurple]}>
-              <Trash2 size={22} color="#AF52DE" strokeWidth={2} />
+            <View style={[styles.settingIcon, styles.settingIconPurple, !hasSavedTestResult && styles.settingIconDisabled]}>
+              <Trash2 size={22} color={hasSavedTestResult ? "#AF52DE" : "rgba(255,255,255,0.3)"} strokeWidth={2} />
             </View>
             <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Clear Saved Test Result</Text>
+              <Text style={[styles.settingLabel, !hasSavedTestResult && styles.settingLabelDisabled]}>Clear Saved Test Result</Text>
               <Text style={styles.settingDescription}>
-                Remove your saved seasonal color result
+                {hasSavedTestResult ? 'Remove your saved seasonal color result' : 'No saved test result to clear'}
               </Text>
             </View>
           </Pressable>
@@ -1041,6 +1061,9 @@ const styles = StyleSheet.create({
   settingButtonPressed: {
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
+  settingButtonDisabled: {
+    opacity: 0.5,
+  },
   settingIcon: {
     width: 40,
     height: 40,
@@ -1070,6 +1093,12 @@ const styles = StyleSheet.create({
   },
   settingIconGray: {
     backgroundColor: 'rgba(142, 142, 147, 0.15)',
+  },
+  settingIconDisabled: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  settingLabelDisabled: {
+    color: 'rgba(255, 255, 255, 0.4)',
   },
   opacitySelector: {
     flexDirection: 'row',
