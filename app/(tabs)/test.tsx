@@ -999,6 +999,7 @@ export default function TestScreen() {
 
   const goHome = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    resetTest();
     router.push('/');
   };
 
@@ -1113,6 +1114,7 @@ export default function TestScreen() {
     setCurrentTestIndex(0);
     setScores({ undertone: 0, value: 0, chroma: 0 });
     setTestPhotos(diagnosticTests.map(() => ({ photo1: null, photo2: null })));
+    setResultSaved(false);
   };
 
   const takePhoto = async () => {
