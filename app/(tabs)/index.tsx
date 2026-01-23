@@ -89,9 +89,7 @@ export default function HomeScreen() {
         setLastUsed(value ? JSON.parse(value) : null);
       });
       AsyncStorage.getItem(SAVED_TEST_RESULT_KEY).then((value) => {
-        if (value) {
-          setSavedTestResult(JSON.parse(value));
-        }
+        setSavedTestResult(value ? JSON.parse(value) : null);
       });
       AsyncStorage.getItem(OPACITY_SETTING_KEY).then((value) => {
         if (value !== null) {
