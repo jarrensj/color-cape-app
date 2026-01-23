@@ -460,7 +460,15 @@ export default function CameraScreen() {
           <Pressable style={styles.captureButton} onPress={takePicture}>
             <View style={styles.captureButtonInner} />
           </Pressable>
-          <View style={styles.placeholder} />
+          {showColorModeToggle ? (
+            <Pressable style={styles.bottomColorModeToggle} onPress={handleToggleColorMode}>
+              <Text style={styles.colorModeToggleText}>
+                {getModeDisplay(getColorMode(currentPaletteKey!))}
+              </Text>
+            </Pressable>
+          ) : (
+            <View style={styles.placeholder} />
+          )}
         </View>
         </CameraView>
       ) : (
@@ -623,6 +631,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  bottomColorModeToggle: {
+    width: 50,
+    height: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   flipButton: {
     width: 44,

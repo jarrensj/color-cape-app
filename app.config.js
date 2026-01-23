@@ -13,6 +13,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'app.colorcape.colorcape',
+      buildNumber: '2',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
