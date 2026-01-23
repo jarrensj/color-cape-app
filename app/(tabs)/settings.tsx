@@ -884,7 +884,7 @@ export default function SettingsScreen() {
             <View style={styles.settingTextContainer}>
               <Text style={styles.settingLabel}>Manage Subscription</Text>
               <Text style={styles.settingDescription}>
-                View or cancel your subscription
+                View or manage your subscription
               </Text>
             </View>
           </Pressable>
