@@ -909,7 +909,7 @@ export default function SettingsScreen() {
             <View style={styles.settingTextContainer}>
               <Text style={[styles.settingLabel, !hasLastViewedPalette && styles.settingLabelDisabled]}>Clear Last Viewed Palette</Text>
               <Text style={styles.settingDescription}>
-                {hasLastViewedPalette ? 'Remove the last viewed palette from home' : 'No last viewed palette to clear'}
+                {hasLastViewedPalette ? 'Remove the last viewed palette from Home' : 'No last viewed palette to clear'}
               </Text>
             </View>
           </Pressable>
