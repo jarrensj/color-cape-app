@@ -1209,7 +1209,7 @@ export default function TestScreen() {
         <View style={[styles.introContent, { paddingTop: insets.top + 80 }]}>
           <Animated.View style={[styles.introImageContainer, introGlowStyle]}>
             <Image
-              source={require('@/assets/images/unicorn-cape.png')}
+              source={require('@/assets/images/icon.png')}
               style={styles.introImage}
               contentFit="contain"
             />
