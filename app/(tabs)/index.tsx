@@ -170,7 +170,7 @@ export default function HomeScreen() {
       <View style={[styles.content, { paddingTop: insets.top + 40 }]}>
         <Animated.View style={[styles.heroImageContainer, imageGlowStyle]}>
           <Image
-            source={require('@/assets/images/unicorn-cape.png')}
+            source={require('@/assets/images/icon.png')}
             style={styles.heroImage}
             contentFit="contain"
           />
