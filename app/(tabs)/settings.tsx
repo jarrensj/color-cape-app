@@ -43,7 +43,6 @@ const COLOR_PICKER_COLORS = [
 ];
 
 export default function SettingsScreen() {
-  const [showCustomerCenter, setShowCustomerCenter] = useState(false);
   const [showPaletteSheet, setShowPaletteSheet] = useState(false);
   const [showCustomCapeSheet, setShowCustomCapeSheet] = useState(false);
   const [highlightedKey, setHighlightedKey] = useState<ColorPaletteKey | null>(null);
@@ -310,9 +309,17 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleManageSubscription = () => {
+  const handleManageSubscription = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setShowCustomerCenter(true);
+    try {
+      await RevenueCatUI.presentCustomerCenter();
+    } catch (error) {
+      console.error('Error presenting customer center:', error);
+      Alert.alert(
+        'Unable to Open',
+        'Could not open subscription management. Please try again or manage your subscription in Settings > Apple ID > Subscriptions.'
+      );
+    }
   };
 
   const handleTogglePalette = (key: ColorPaletteKey) => {
@@ -348,12 +355,6 @@ export default function SettingsScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Customer Center Modal */}
-      {showCustomerCenter && (
-        <RevenueCatUI.CustomerCenter
-          onDismiss={() => setShowCustomerCenter(false)}
-        />
-      )}
 
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <Text style={styles.title}>Settings</Text>
