@@ -937,12 +937,14 @@ export default function TestScreen() {
     setTabBarVisible(step === 'intro');
   }, [step, setTabBarVisible]);
 
-  // Restore tab bar when leaving the screen entirely
-  useEffect(() => {
-    return () => {
-      setTabBarVisible(true);
-    };
-  }, [setTabBarVisible]);
+  // Restore tab bar when navigating away from this screen
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setTabBarVisible(true);
+      };
+    }, [setTabBarVisible])
+  );
 
   // Effect to capture the composite (photo + overlay) when pendingCapture is set
   useEffect(() => {
