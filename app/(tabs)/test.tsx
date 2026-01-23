@@ -151,7 +151,7 @@ const diagnosticTests = [
     id: 'undertone1',
     category: 'undertone',
     weight: 1.5,
-    question: 'Which metallic looks better against your skin?',
+    question: 'Which metallic looks better against your complexion?',
     optionA: {
       name: 'Silver',
       description: 'Cool metallic',

@@ -5,7 +5,7 @@ A personal color analysis app that helps you discover which colors look best on 
 ## Features
 
 ### Virtual Color Caping
-- Real-time camera overlay with color "capes" to see how different colors complement your skin tone
+- Real-time camera overlay with color "capes" to see how different colors complement your complexion
 - Long press on any color segment to view the color name and hex code
 - Capture and save photos with your favorite color overlays
 
