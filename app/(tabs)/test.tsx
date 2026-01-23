@@ -1118,6 +1118,7 @@ export default function TestScreen() {
     setTestPhotos(diagnosticTests.map(() => ({ photo1: null, photo2: null })));
     setResultSaved(false);
     setResultInfoExpanded(true);
+    setPreviewSeason(null);
   };
 
   const takePhoto = async () => {
