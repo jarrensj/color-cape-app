@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SwitchCamera, RefreshCw, ChevronLeft, Camera, Home, Save } from 'lucide-react-native';
+import { SwitchCamera, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Camera, Home, Save } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { useTabBar } from '@/contexts/tab-bar-context';
@@ -879,6 +879,7 @@ export default function TestScreen() {
   const [topMatches, setTopMatches] = useState<SubSeasonMatch[]>([]);
   const [previewSeason, setPreviewSeason] = useState<string | null>(null);
   const [resultSaved, setResultSaved] = useState(false);
+  const [resultInfoExpanded, setResultInfoExpanded] = useState(true);
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const compositeRef = useRef<View>(null);
@@ -1065,6 +1066,7 @@ export default function TestScreen() {
     setPendingCapture(null);
     setCompareIndex(0);
     setResultSaved(false);
+    setResultInfoExpanded(true);
   };
 
   const saveTestResult = async () => {
@@ -1115,6 +1117,7 @@ export default function TestScreen() {
     setScores({ undertone: 0, value: 0, chroma: 0 });
     setTestPhotos(diagnosticTests.map(() => ({ photo1: null, photo2: null })));
     setResultSaved(false);
+    setResultInfoExpanded(true);
   };
 
   const takePhoto = async () => {
@@ -1253,124 +1256,161 @@ export default function TestScreen() {
       setPreviewSeason(seasonKey);
     };
 
+    const toggleResultInfo = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setResultInfoExpanded(!resultInfoExpanded);
+    };
+
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
         {isFocused ? (
           <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front'}>
             <FullCape colors={displayedSeason.colors} opacity={capeOpacity} />
-
-            <View style={[styles.resultHeader, { paddingTop: insets.top + 12 }]}>
-            <Pressable style={styles.backButton} onPress={goHome}>
-              <Home size={28} color="#FFFFFF" strokeWidth={2} />
-            </Pressable>
-            <View style={styles.resultTitleContainer}>
-              <Text style={styles.resultTitle}>
-                {isPreview ? `Previewing ${displayedSeason.name}` : `You are a ${originalResult.name}!`}
-              </Text>
-              <Text style={styles.resultDescription}>{displayedSeason.description}</Text>
-            </View>
-            <Pressable style={styles.flipButton} onPress={toggleCameraFacing}>
-              <SwitchCamera size={24} color="#FFFFFF" strokeWidth={2} />
-            </Pressable>
-          </View>
-
-          <ScrollView
-            style={[styles.resultScrollView, { paddingBottom: insets.bottom + 20 }]}
-            contentContainerStyle={styles.resultScrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Score Breakdown */}
-            <View style={styles.scoreBreakdownContainer}>
-              <Text style={styles.sectionTitle}>Your Color Profile</Text>
-              <View style={styles.scoreRow}>
-                <Text style={styles.scoreLabel}>Undertone:</Text>
-                <View style={[styles.scoreBadge, scores.undertone < 0 ? styles.scoreBadgeCool : styles.scoreBadgeWarm]}>
-                  <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.undertone, 'undertone')}</Text>
-                </View>
-              </View>
-              <View style={styles.scoreRow}>
-                <Text style={styles.scoreLabel}>Value:</Text>
-                <View style={[styles.scoreBadge, scores.value < 0 ? styles.scoreBadgeLight : styles.scoreBadgeDeep]}>
-                  <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.value, 'value')}</Text>
-                </View>
-              </View>
-              <View style={styles.scoreRow}>
-                <Text style={styles.scoreLabel}>Chroma:</Text>
-                <View style={[styles.scoreBadge, scores.chroma < 0 ? styles.scoreBadgeBright : styles.scoreBadgeSoft]}>
-                  <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.chroma, 'chroma')}</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Top Matches - All Tappable */}
-            <View style={styles.topMatchesContainer}>
-              <Text style={styles.sectionTitle}>Your Matches</Text>
-              <Text style={styles.matchesHint}>Tap to preview colors</Text>
-              <View style={styles.matchesRow}>
-                {top3Matches.map((match, index) => (
-                  <Pressable
-                    key={match.key}
-                    style={[
-                      styles.matchOption,
-                      displayedSeasonKey === match.key && styles.matchOptionSelected,
-                      index !== 0 && styles.matchOptionAlt,
-                    ]}
-                    onPress={() => selectPreview(match.key)}
-                  >
-                    {index === 0 && <Text style={styles.bestMatchLabel}>Best</Text>}
-                    <Text style={[
-                      styles.matchOptionName,
-                      displayedSeasonKey === match.key && styles.matchOptionNameSelected,
-                    ]}>{match.name}</Text>
-                    <Text style={[
-                      styles.matchOptionPercent,
-                      displayedSeasonKey === match.key && styles.matchOptionPercentSelected,
-                    ]}>{match.percentage}%</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            {/* Styling Tips */}
-            <View style={styles.tipsContainer}>
-              <Text style={styles.sectionTitle}>Styling Tips for {displayedSeason.name}</Text>
-              {displayedSeason.tips.map((tip, index) => (
-                <View key={index} style={styles.tipItem}>
-                  <Text style={styles.tipBullet}>•</Text>
-                  <Text style={styles.tipText}>{tip}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Action Buttons */}
-            <View style={styles.resultButtons}>
-              <Pressable
-                style={[styles.saveResultButton, resultSaved && styles.saveResultButtonSaved]}
-                onPress={saveTestResult}
-                disabled={resultSaved}
-              >
-                <Save size={20} color={resultSaved ? '#34C759' : '#FFFFFF'} strokeWidth={2} />
-                <Text style={[styles.saveResultButtonText, resultSaved && styles.saveResultButtonTextSaved]}>
-                  {resultSaved ? 'Saved!' : 'Save Result'}
-                </Text>
-              </Pressable>
-
-              <Pressable style={styles.retakeButton} onPress={resetTest}>
-                <RefreshCw size={20} color="#000000" strokeWidth={2} />
-                <Text style={styles.retakeButtonText}>Retake Test</Text>
-              </Pressable>
-
-              <Pressable style={styles.homeButtonResult} onPress={goHome}>
-                <Home size={20} color="#FFFFFF" strokeWidth={2} />
-                <Text style={styles.homeButtonResultText}>Go Home</Text>
-              </Pressable>
-            </View>
-          </ScrollView>
           </CameraView>
         ) : (
           <View style={styles.camera} />
         )}
+
+        {/* Header - outside CameraView */}
+        <View style={[styles.resultHeader, { paddingTop: insets.top + 12 }]}>
+          <Pressable style={styles.backButton} onPress={goHome}>
+            <Home size={28} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
+          <Pressable style={styles.flipButton} onPress={toggleCameraFacing}>
+            <SwitchCamera size={24} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
+        </View>
+
+        {/* Collapsible Info Panel - outside CameraView */}
+        <View style={[
+          styles.resultInfoPanel,
+          {
+            paddingBottom: resultInfoExpanded ? insets.bottom + 20 : 0,
+            backgroundColor: resultInfoExpanded ? 'rgba(0, 0, 0, 0.92)' : 'rgba(0, 0, 0, 0.9)',
+          }
+        ]}>
+          {/* Toggle Handle */}
+          <Pressable
+            style={[
+              styles.resultInfoHandle,
+              !resultInfoExpanded && styles.resultInfoHandleMinimized
+            ]}
+            onPress={toggleResultInfo}
+          >
+            <View style={styles.resultInfoHandleBar} />
+            <Text style={[
+              styles.resultInfoHeader,
+              !resultInfoExpanded && styles.resultInfoHeaderMinimized
+            ]}>Results</Text>
+            <View style={styles.resultInfoHandleContent}>
+              <View style={styles.resultInfoHandleText}>
+                <Text style={[
+                  styles.resultInfoTitle,
+                  !resultInfoExpanded && styles.resultInfoTitleMinimized
+                ]}>
+                  {isPreview ? displayedSeason.name : originalResult.name}
+                </Text>
+              </View>
+              {resultInfoExpanded ? (
+                <ChevronDown size={24} color="#FFFFFF" strokeWidth={2} />
+              ) : (
+                <ChevronUp size={20} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+              )}
+            </View>
+          </Pressable>
+
+          {/* Expandable Content */}
+          {resultInfoExpanded && (
+            <ScrollView
+              style={styles.resultInfoContent}
+              contentContainerStyle={styles.resultInfoContentInner}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Score Breakdown */}
+              <View style={styles.scoreBreakdownContainer}>
+                <Text style={styles.sectionTitle}>Your Color Profile</Text>
+                <View style={styles.scoreRow}>
+                  <Text style={styles.scoreLabel}>Undertone:</Text>
+                  <View style={[styles.scoreBadge, scores.undertone < 0 ? styles.scoreBadgeCool : styles.scoreBadgeWarm]}>
+                    <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.undertone, 'undertone')}</Text>
+                  </View>
+                </View>
+                <View style={styles.scoreRow}>
+                  <Text style={styles.scoreLabel}>Value:</Text>
+                  <View style={[styles.scoreBadge, scores.value < 0 ? styles.scoreBadgeLight : styles.scoreBadgeDeep]}>
+                    <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.value, 'value')}</Text>
+                  </View>
+                </View>
+                <View style={styles.scoreRow}>
+                  <Text style={styles.scoreLabel}>Chroma:</Text>
+                  <View style={[styles.scoreBadge, scores.chroma < 0 ? styles.scoreBadgeBright : styles.scoreBadgeSoft]}>
+                    <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.chroma, 'chroma')}</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Top Matches - All Tappable */}
+              <View style={styles.topMatchesContainer}>
+                <Text style={styles.sectionTitle}>Your Matches</Text>
+                <Text style={styles.matchesHint}>Tap to preview colors</Text>
+                <View style={styles.matchesRow}>
+                  {top3Matches.map((match, index) => (
+                    <Pressable
+                      key={match.key}
+                      style={[
+                        styles.matchOption,
+                        displayedSeasonKey === match.key && styles.matchOptionSelected,
+                        index !== 0 && styles.matchOptionAlt,
+                      ]}
+                      onPress={() => selectPreview(match.key)}
+                    >
+                      {index === 0 && <Text style={styles.bestMatchLabel}>Best</Text>}
+                      <Text style={[
+                        styles.matchOptionName,
+                        displayedSeasonKey === match.key && styles.matchOptionNameSelected,
+                      ]}>{match.name}</Text>
+                      <Text style={[
+                        styles.matchOptionPercent,
+                        displayedSeasonKey === match.key && styles.matchOptionPercentSelected,
+                      ]}>{match.percentage}%</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+
+              {/* Styling Tips */}
+              <View style={styles.tipsContainer}>
+                <Text style={styles.sectionTitle}>Styling Tips for {displayedSeason.name}</Text>
+                {displayedSeason.tips.map((tip, index) => (
+                  <View key={index} style={styles.tipItem}>
+                    <Text style={styles.tipBullet}>•</Text>
+                    <Text style={styles.tipText}>{tip}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Action Buttons */}
+              <View style={styles.resultButtons}>
+                <Pressable
+                  style={[styles.saveResultButton, resultSaved && styles.saveResultButtonSaved]}
+                  onPress={saveTestResult}
+                  disabled={resultSaved}
+                >
+                  <Save size={20} color={resultSaved ? '#34C759' : '#FFFFFF'} strokeWidth={2} />
+                  <Text style={[styles.saveResultButtonText, resultSaved && styles.saveResultButtonTextSaved]}>
+                    {resultSaved ? 'Saved!' : 'Save Result'}
+                  </Text>
+                </Pressable>
+
+                <Pressable style={styles.retakeButton} onPress={resetTest}>
+                  <RefreshCw size={20} color="#000000" strokeWidth={2} />
+                  <Text style={styles.retakeButtonText}>Retake Test</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          )}
+        </View>
       </View>
     );
   }
@@ -2050,7 +2090,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingHorizontal: 20,
     zIndex: 10,
   },
@@ -2087,20 +2127,84 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 40,
   },
-  sectionTitle: {
-    fontSize: 16,
+  resultInfoPanel: {
+    position: 'absolute',
+    bottom: 20,
+    left: 16,
+    right: 16,
+    borderRadius: 20,
+    zIndex: 20,
+  },
+  resultInfoHandle: {
+    paddingTop: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+  },
+  resultInfoHandleMinimized: {
+    paddingTop: 10,
+    paddingBottom: 12,
+  },
+  resultInfoHandleBar: {
+    width: 36,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 8,
+  },
+  resultInfoHeader: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.5)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  resultInfoHeaderMinimized: {
+    fontSize: 11,
+    marginBottom: 4,
+  },
+  resultInfoHandleContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  resultInfoHandleText: {
+    flex: 1,
+    marginRight: 12,
+  },
+  resultInfoTitle: {
+    fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 12,
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+  },
+  resultInfoTitleMinimized: {
+    fontSize: 15,
+  },
+  resultInfoSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 2,
+  },
+  resultInfoContent: {
+    maxHeight: screenHeight * 0.4,
+  },
+  resultInfoContentInner: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginBottom: 10,
   },
   scoreBreakdownContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
   },
   scoreRow: {
     flexDirection: 'row',
@@ -2196,16 +2300,16 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.7)',
   },
   tipsContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
   },
   topMatchesContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
   },
   matchesHint: {
     fontSize: 12,
@@ -2382,5 +2486,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     pointerEvents: 'none',
+    zIndex: 5,
   },
 });
