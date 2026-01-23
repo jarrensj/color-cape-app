@@ -1239,7 +1239,7 @@ export default function TestScreen() {
           </Animated.View>
           <Text style={styles.introTitle}>Find Your Colors</Text>
           <Text style={styles.introSubtitle}>
-            Discover your perfect color sub-season
+            Discover your perfect colors
           </Text>
 
           <Pressable style={styles.startButton} onPress={startTest}>
