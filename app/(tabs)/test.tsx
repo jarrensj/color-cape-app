@@ -1119,11 +1119,16 @@ export default function TestScreen() {
     if (!cameraRef.current) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const result = await cameraRef.current.takePictureAsync();
+    try {
+      const result = await cameraRef.current.takePictureAsync();
 
-    if (result && (step === 'capture1' || step === 'capture2')) {
-      // Set pending capture - this triggers the composite capture via useEffect
-      setPendingCapture({ uri: result.uri, forStep: step });
+      if (result && (step === 'capture1' || step === 'capture2')) {
+        // Set pending capture - this triggers the composite capture via useEffect
+        setPendingCapture({ uri: result.uri, forStep: step });
+      }
+    } catch (error) {
+      // Camera may have unmounted during capture, ignore the error
+      console.log('Camera capture cancelled');
     }
   };
 
