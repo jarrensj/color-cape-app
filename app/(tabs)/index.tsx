@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   opacityValueText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#5856D6',
+    color: '#FFFFFF',
   },
   sheetOverlay: {
     flex: 1,
