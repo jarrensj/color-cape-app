@@ -267,7 +267,7 @@ export const colorPalettes = {
   },
   singleWhite: {
     name: 'White',
-    description: 'Pure and clean',
+    description: 'Bright and crisp',
     colors: [{ name: 'Pure White', hex: '#FFFFFF' }],
   },
   singleBlack: {
