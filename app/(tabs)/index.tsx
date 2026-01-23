@@ -125,11 +125,6 @@ export default function HomeScreen() {
 
   const lastUsedInfo = getLastUsedInfo();
 
-  const openLastUsed = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push('/(tabs)/camera');
-  };
-
   const openCamera = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/(tabs)/camera');
@@ -178,29 +173,6 @@ export default function HomeScreen() {
           Discover your perfect color palette
         </Text>
 
-        {lastUsedInfo && (
-          <Pressable
-            style={({ pressed }) => [
-              styles.recentActivity,
-              pressed && styles.recentActivityPressed,
-            ]}
-            onPress={openLastUsed}
-          >
-            <Text style={styles.recentLabel}>Last viewed</Text>
-            <View style={styles.recentContent}>
-              <Text style={styles.recentName}>{lastUsedInfo.name}</Text>
-              <View style={styles.recentColors}>
-                {lastUsedInfo.colors.map((color, index) => (
-                  <View
-                    key={index}
-                    style={[styles.recentColorDot, { backgroundColor: color.hex }]}
-                  />
-                ))}
-              </View>
-            </View>
-          </Pressable>
-        )}
-
         <View style={styles.cardsContainer}>
           <Pressable
             style={({ pressed }) => [
@@ -217,6 +189,20 @@ export default function HomeScreen() {
               <Text style={styles.cardDescription}>
                 Use camera to see how different color palettes look on you
               </Text>
+              {lastUsedInfo && (
+                <View style={styles.savedResultInline}>
+                  <Text style={styles.savedResultLabel}>Last viewed:</Text>
+                  <Text style={styles.savedResultName}>{lastUsedInfo.name}</Text>
+                  <View style={styles.savedResultColors}>
+                    {lastUsedInfo.colors.map((color, index) => (
+                      <View
+                        key={index}
+                        style={[styles.savedResultColorDot, { backgroundColor: color.hex }]}
+                      />
+                    ))}
+                  </View>
+                </View>
+              )}
             </View>
           </Pressable>
 
@@ -386,45 +372,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
   },
-  recentActivity: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  recentActivityPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  recentLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.5)',
-  },
-  recentContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  recentName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  recentColors: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  recentColorDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
   cardsContainer: {
     gap: 16,
   },
@@ -488,7 +435,7 @@ const styles = StyleSheet.create({
   savedResultName: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#9B59B6',
+    color: '#FFFFFF',
   },
   savedResultColors: {
     flexDirection: 'row',
