@@ -1259,8 +1259,8 @@ export default function TestScreen() {
             <FullCape colors={displayedSeason.colors} opacity={capeOpacity} />
 
             <View style={[styles.resultHeader, { paddingTop: insets.top + 12 }]}>
-            <Pressable style={styles.backButton} onPress={goBack}>
-              <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
+            <Pressable style={styles.backButton} onPress={goHome}>
+              <Home size={28} color="#FFFFFF" strokeWidth={2} />
             </Pressable>
             <View style={styles.resultTitleContainer}>
               <Text style={styles.resultTitle}>
