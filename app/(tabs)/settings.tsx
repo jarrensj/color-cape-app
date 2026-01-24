@@ -762,7 +762,7 @@ export default function SettingsScreen() {
               <View style={styles.settingTextContainer}>
                 <Text style={styles.settingLabel}>Create Custom Cape</Text>
                 <Text style={styles.settingDescription}>
-                  Design your own color palette ({customCapes.length}/3)
+                  Design your own color palette ({customCapes.length}/5)
                 </Text>
               </View>
             </Pressable>
