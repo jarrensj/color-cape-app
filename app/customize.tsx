@@ -63,12 +63,7 @@ export default function CustomizeScreen() {
   };
 
   const getNextCapeNumber = () => {
-    const numbers = customCapes
-      .map(c => {
-        const match = c.name.match(/Custom Cape (\d+)/);
-        return match ? parseInt(match[1], 10) : 0;
-      });
-    return Math.max(0, ...numbers) + 1;
+    return customCapes.length + 1;
   };
 
   const openCustomCapeCreator = (capeId?: string) => {
@@ -83,7 +78,7 @@ export default function CustomizeScreen() {
       setEditingCapeId(null);
       setCustomColorCount(4);
       setCustomColors(['#FF0000', '#00FF00', '#0000FF', '#FFD700']);
-      setCapeName(`Custom Cape ${getNextCapeNumber()}`);
+      setCapeName(`Untitled Custom ${getNextCapeNumber()}`);
     }
     setEditingColorIndex(null);
     setShowCustomCapeSheet(true);
@@ -142,7 +137,7 @@ export default function CustomizeScreen() {
     const existingCape = editingCapeId ? customCapes.find(c => c.id === editingCapeId) : null;
     const cape = {
       ...(editingCapeId && { id: editingCapeId }),
-      name: capeName.trim() || `Custom Cape ${getNextCapeNumber()}`,
+      name: capeName.trim() || `Untitled Custom ${getNextCapeNumber()}`,
       colors: customColors.slice(0, customColorCount).map((hex, i) => ({
         name: `Color ${i + 1}`,
         hex,
