@@ -7,6 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { ChevronLeft, ChevronUp, ChevronDown, X, Plus, Trash2, Check } from 'lucide-react-native';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
+import ColorPickerModal from '@/components/ColorPickerModal';
 
 const COLOR_COUNT_OPTIONS = [1, 2, 4, 8];
 
@@ -35,6 +36,7 @@ export default function CustomizeScreen() {
   const [editingColorIndex, setEditingColorIndex] = useState<number | null>(null);
   const [hexInput, setHexInput] = useState('');
   const [editingCapeId, setEditingCapeId] = useState<string | null>(null);
+  const [showColorPicker, setShowColorPicker] = useState(false);
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -95,6 +97,21 @@ export default function CustomizeScreen() {
       setCustomColors(newColors);
       setHexInput(color);
     }
+  };
+
+  const handleVisualPickerSelect = (color: string) => {
+    if (editingColorIndex !== null) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const newColors = [...customColors];
+      newColors[editingColorIndex] = color;
+      setCustomColors(newColors);
+      setHexInput(color);
+    }
+  };
+
+  const openVisualPicker = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowColorPicker(true);
   };
 
   const handleHexInputChange = (text: string) => {
@@ -276,7 +293,11 @@ export default function CustomizeScreen() {
                 <>
                   <Text style={styles.customCapeLabel}>Enter Hex Code</Text>
                   <View style={styles.hexInputContainer}>
-                    <View style={[styles.hexPreview, { backgroundColor: hexInput.length >= 4 ? hexInput : '#000' }]} />
+                    <Pressable onPress={openVisualPicker}>
+                      <View style={[styles.hexPreview, { backgroundColor: hexInput.length >= 4 ? hexInput : '#000' }]}>
+                        <View style={styles.hexPreviewTapHint} />
+                      </View>
+                    </Pressable>
                     <TextInput
                       style={styles.hexInput}
                       value={hexInput}
@@ -288,15 +309,15 @@ export default function CustomizeScreen() {
                     />
                   </View>
 
-                  <Text style={styles.customCapeLabel}>Or Pick a Color</Text>
-                  <View style={styles.colorPickerGrid}>
+                  <Text style={styles.customCapeLabelSmall}>Quick Colors</Text>
+                  <View style={styles.colorPickerGridSmall}>
                     {COLOR_PICKER_COLORS.map((color) => (
                       <Pressable
                         key={color}
                         style={[
-                          styles.colorPickerItem,
+                          styles.colorPickerItemSmall,
                           { backgroundColor: color },
-                          customColors[editingColorIndex] === color && styles.colorPickerItemSelected,
+                          customColors[editingColorIndex] === color && styles.colorPickerItemSmallSelected,
                         ]}
                         onPress={() => handleColorSelect(color)}
                       />
@@ -304,6 +325,13 @@ export default function CustomizeScreen() {
                   </View>
                 </>
               )}
+
+              <ColorPickerModal
+                visible={showColorPicker}
+                initialColor={hexInput || '#FF0000'}
+                onClose={() => setShowColorPicker(false)}
+                onSelect={handleVisualPickerSelect}
+              />
 
               <View style={styles.customCapeActions}>
                 {editingCapeId && (
@@ -760,6 +788,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 8,
   },
+  customCapeLabelSmall: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.5)',
+    marginTop: 16,
+    marginBottom: 6,
+  },
   colorCountSelector: {
     flexDirection: 'row',
     gap: 10,
@@ -809,7 +844,16 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    overflow: 'hidden',
+  },
+  hexPreviewTapHint: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
   },
   hexInput: {
     flex: 1,
@@ -835,6 +879,23 @@ const styles = StyleSheet.create({
   colorPickerItemSelected: {
     borderColor: '#FFFFFF',
     borderWidth: 3,
+  },
+  colorPickerGridSmall: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+    justifyContent: 'center',
+  },
+  colorPickerItemSmall: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  colorPickerItemSmallSelected: {
+    borderColor: '#FFFFFF',
+    borderWidth: 2,
   },
   customCapeActions: {
     flexDirection: 'row',
