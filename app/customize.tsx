@@ -369,7 +369,7 @@ export default function CustomizeScreen() {
         {/* Custom Capes Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Custom Capes</Text>
-          <Text style={styles.sectionDescription}>Create your own color palettes</Text>
+          <Text style={styles.sectionDescription}>Create your own color cape palettes</Text>
 
           {customCapes.map((cape) => (
             <Pressable
