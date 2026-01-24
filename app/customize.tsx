@@ -292,22 +292,18 @@ export default function CustomizeScreen() {
               {editingColorIndex !== null && (
                 <>
                   <Text style={styles.customCapeLabel}>Enter Hex Code</Text>
-                  <View style={styles.hexInputContainer}>
-                    <Pressable onPress={openVisualPicker}>
-                      <View style={[styles.hexPreview, { backgroundColor: hexInput.length >= 4 ? hexInput : '#000' }]}>
-                        <View style={styles.hexPreviewTapHint} />
-                      </View>
-                    </Pressable>
+                  <Pressable onPress={openVisualPicker} style={[styles.hexInputContainer, { backgroundColor: hexInput.length >= 4 ? hexInput : '#000' }]}>
+                    <View style={styles.hexInputOverlay} />
                     <TextInput
                       style={styles.hexInput}
                       value={hexInput}
                       onChangeText={handleHexInputChange}
                       placeholder="#FFFFFF"
-                      placeholderTextColor="rgba(255,255,255,0.3)"
+                      placeholderTextColor="rgba(255,255,255,0.5)"
                       autoCapitalize="characters"
                       maxLength={7}
                     />
-                  </View>
+                  </Pressable>
 
                   <Text style={styles.customCapeLabelSmall}>Quick Colors</Text>
                   <View style={styles.colorPickerGridSmall}>
@@ -833,35 +829,25 @@ const styles = StyleSheet.create({
   hexInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 12,
-  },
-  hexPreview: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     overflow: 'hidden',
+    position: 'relative',
   },
-  hexPreviewTapHint: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  hexInputOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
   },
   hexInput: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#FFFFFF',
     fontFamily: 'monospace',
-    paddingVertical: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   colorPickerGrid: {
     flexDirection: 'row',
