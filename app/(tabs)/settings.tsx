@@ -91,6 +91,12 @@ export default function SettingsScreen() {
     }, [])
   );
 
+  // Check if settings are at defaults
+  const isAtDefaults = defaultFrontCamera === true &&
+    mirrorFrontCamera === true &&
+    capeOpacity === 1.0 &&
+    customCapes.length === 0;
+
   const handleToggleDefaultCamera = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setDefaultFrontCamera(value);
@@ -937,17 +943,19 @@ export default function SettingsScreen() {
             style={({ pressed }) => [
               styles.settingButton,
               styles.settingButtonMarginTop,
-              pressed && styles.settingButtonPressed,
+              pressed && !isAtDefaults && styles.settingButtonPressed,
+              isAtDefaults && styles.settingButtonDisabled,
             ]}
             onPress={resetSettings}
+            disabled={isAtDefaults}
           >
-            <View style={styles.settingIcon}>
-              <RefreshCw size={22} color="#FF3B30" strokeWidth={2} />
+            <View style={[styles.settingIcon, isAtDefaults && styles.settingIconDisabled]}>
+              <RefreshCw size={22} color={isAtDefaults ? "rgba(255,255,255,0.3)" : "#FF3B30"} strokeWidth={2} />
             </View>
             <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Reset Settings</Text>
+              <Text style={[styles.settingLabel, isAtDefaults && styles.settingLabelDisabled]}>Reset Settings</Text>
               <Text style={styles.settingDescription}>
-                Restore camera and cape settings to defaults
+                {isAtDefaults ? 'Settings are already at defaults' : 'Restore camera and cape settings to defaults'}
               </Text>
             </View>
           </Pressable>
