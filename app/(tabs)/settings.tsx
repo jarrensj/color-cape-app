@@ -62,7 +62,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
-  const { preferences, customCapes, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults, resetCustomCapes, saveCustomCape, deleteCustomCape, toggleCustomCape, moveCustomCapeUp, moveCustomCapeDown, canAddCustomCape } = usePalettePreferences();
+  const { preferences, customCapes, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults, resetCustomCapes, saveCustomCape, deleteCustomCape, toggleCustomCape, moveCustomCapeUp, moveCustomCapeDown, canAddCustomCape, getDefaultCapeName } = usePalettePreferences();
 
   useEffect(() => {
     AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
@@ -274,10 +274,9 @@ export default function SettingsScreen() {
   const handleSaveCustomCape = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const existingCape = editingCapeId ? customCapes.find(c => c.id === editingCapeId) : null;
-    const capeNumber = customCapes.length + 1;
     const cape = {
       ...(editingCapeId && { id: editingCapeId }),
-      name: existingCape?.name || `Untitled Custom ${capeNumber}`,
+      name: existingCape?.name || getDefaultCapeName(),
       colors: customColors.slice(0, customColorCount).map((hex, i) => ({
         name: `Color ${i + 1}`,
         hex,

@@ -39,6 +39,7 @@ type PalettePreferencesContextType = {
   moveCustomCapeUp: (id: string) => void;
   moveCustomCapeDown: (id: string) => void;
   canAddCustomCape: () => boolean;
+  getDefaultCapeName: () => string;
   getColorMode: (key: ColorPaletteKey) => ColorMode;
   toggleColorMode: (key: ColorPaletteKey) => void;
   isSeasonalPalette: (key: ColorPaletteKey) => boolean;
@@ -244,6 +245,8 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
 
   const canAddCustomCape = () => customCapes.length < MAX_CUSTOM_CAPES;
 
+  const getDefaultCapeName = () => `Untitled Custom ${customCapes.length + 1}`;
+
   const togglePalette = (key: ColorPaletteKey) => {
     const newPrefs = {
       ...preferences,
@@ -325,6 +328,7 @@ export function PalettePreferencesProvider({ children }: { children: ReactNode }
         moveCustomCapeUp,
         moveCustomCapeDown,
         canAddCustomCape,
+        getDefaultCapeName,
         getColorMode,
         toggleColorMode,
         isSeasonalPalette,

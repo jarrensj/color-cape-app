@@ -54,16 +54,13 @@ export default function CustomizeScreen() {
     toggleCustomCape,
     moveCustomCapeUp,
     moveCustomCapeDown,
-    canAddCustomCape
+    canAddCustomCape,
+    getDefaultCapeName
   } = usePalettePreferences();
 
   const goBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.back();
-  };
-
-  const getNextCapeNumber = () => {
-    return customCapes.length + 1;
   };
 
   const openCustomCapeCreator = (capeId?: string) => {
@@ -78,7 +75,7 @@ export default function CustomizeScreen() {
       setEditingCapeId(null);
       setCustomColorCount(4);
       setCustomColors(['#FF0000', '#00FF00', '#0000FF', '#FFD700']);
-      setCapeName(`Untitled Custom ${getNextCapeNumber()}`);
+      setCapeName(getDefaultCapeName());
     }
     setEditingColorIndex(null);
     setShowCustomCapeSheet(true);
@@ -137,7 +134,7 @@ export default function CustomizeScreen() {
     const existingCape = editingCapeId ? customCapes.find(c => c.id === editingCapeId) : null;
     const cape = {
       ...(editingCapeId && { id: editingCapeId }),
-      name: capeName.trim() || `Untitled Custom ${getNextCapeNumber()}`,
+      name: capeName.trim() || getDefaultCapeName(),
       colors: customColors.slice(0, customColorCount).map((hex, i) => ({
         name: `Color ${i + 1}`,
         hex,
