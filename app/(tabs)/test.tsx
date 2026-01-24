@@ -768,7 +768,7 @@ function LeftHalfCape({ colors }: { colors: { name: string; hex: string }[] }) {
               key={index}
               points={points}
               fill={color.hex}
-              opacity={0.85}
+              opacity={1}
               stroke="#FFFFFF"
               strokeWidth={1}
             />
@@ -812,7 +812,7 @@ function RightHalfCape({ colors }: { colors: { name: string; hex: string }[] }) 
               key={index}
               points={points}
               fill={color.hex}
-              opacity={0.85}
+              opacity={1}
               stroke="#FFFFFF"
               strokeWidth={1}
             />
@@ -824,7 +824,7 @@ function RightHalfCape({ colors }: { colors: { name: string; hex: string }[] }) 
 }
 
 // Full cape for result
-function FullCape({ colors, opacity = 0.85 }: { colors: { name: string; hex: string }[]; opacity?: number }) {
+function FullCape({ colors, opacity = 1 }: { colors: { name: string; hex: string }[]; opacity?: number }) {
   const centerX = screenWidth / 2;
   const centerY = screenHeight * 0.50;
   const neckRadius = 120;
@@ -891,7 +891,7 @@ export default function TestScreen() {
   const compositeRef = useRef<View>(null);
   const [pendingCapture, setPendingCapture] = useState<{ uri: string; forStep: 'capture1' | 'capture2' } | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
-  const [capeOpacity, setCapeOpacity] = useState(0.85);
+  const [capeOpacity, setCapeOpacity] = useState(1);
   const router = useRouter();
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();

@@ -51,7 +51,7 @@ export default function HomeScreen() {
   const [lastUsed, setLastUsed] = useState<LastUsedPalette>(null);
   const [savedTestResult, setSavedTestResult] = useState<SavedTestResult>(null);
   const [showOpacitySheet, setShowOpacitySheet] = useState(false);
-  const [capeOpacity, setCapeOpacity] = useState(0.85);
+  const [capeOpacity, setCapeOpacity] = useState(1);
 
   // Rainbow glow animation
   const glowProgress = useSharedValue(0);

@@ -18,7 +18,7 @@ import { usePalettePreferences } from '@/context/palette-preferences-context';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 // Component to create the draping cape with vertical color strips
-function ColorCape({ colors, opacity = 0.85 }: { colors: { name: string; hex: string }[]; opacity?: number }) {
+function ColorCape({ colors, opacity = 1 }: { colors: { name: string; hex: string }[]; opacity?: number }) {
   const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string } | null>(null);
   const centerX = screenWidth / 2;
   const centerY = screenHeight * 0.50;
@@ -118,7 +118,7 @@ const LAST_USED_PALETTE_KEY = 'last_used_palette';
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('front');
   const [mirrorEnabled, setMirrorEnabled] = useState(true);
-  const [capeOpacity, setCapeOpacity] = useState(0.85);
+  const [capeOpacity, setCapeOpacity] = useState(1);
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
   const [paletteKey, setPaletteKey] = useState<ColorPaletteKey | null>(null);
