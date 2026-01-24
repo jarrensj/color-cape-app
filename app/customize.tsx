@@ -293,9 +293,7 @@ export default function CustomizeScreen() {
                   <Text style={styles.customCapeLabel}>Enter Hex Code</Text>
                   <View style={styles.hexInputContainer}>
                     <Pressable onPress={openVisualPicker}>
-                      <View style={[styles.hexPreview, { backgroundColor: hexInput.length >= 4 ? hexInput : '#000' }]}>
-                        <View style={styles.hexPreviewTapHint} />
-                      </View>
+                      <View style={[styles.hexPreview, { backgroundColor: hexInput.length >= 4 ? hexInput : '#000' }]} />
                     </Pressable>
                     <TextInput
                       style={styles.hexInput}
@@ -838,15 +836,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.3)',
-    overflow: 'hidden',
-  },
-  hexPreviewTapHint: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
   },
   hexInput: {
     flex: 1,
