@@ -240,9 +240,8 @@ export default function CustomizeScreen() {
         transparent={true}
         onRequestClose={() => setShowCustomCapeSheet(false)}
       >
-        <View style={styles.sheetOverlay}>
-          <Pressable style={styles.sheetBackdrop} onPress={() => setShowCustomCapeSheet(false)} />
-          <View style={[styles.sheetContent, { paddingBottom: insets.bottom + 20, maxHeight: '90%' }]}>
+        <View style={[styles.sheetOverlay, { paddingTop: insets.top }]}>
+          <View style={[styles.sheetContent, { paddingBottom: insets.bottom + 20, flex: 1 }]}>
             <View style={styles.sheetHeader}>
               <Text style={styles.sheetTitle}>{editingCapeId ? 'Edit Custom Cape' : 'Create Custom Cape'}</Text>
               <Pressable onPress={() => { setShowCustomCapeSheet(false); setEditingCapeId(null); }} style={styles.sheetClose}>
@@ -754,16 +753,10 @@ const styles = StyleSheet.create({
   },
   sheetOverlay: {
     flex: 1,
-    justifyContent: 'flex-end',
-  },
-  sheetBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#1C1C1E',
   },
   sheetContent: {
-    backgroundColor: '#1C1C1E',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    flex: 1,
     paddingTop: 16,
     paddingHorizontal: 16,
   },
