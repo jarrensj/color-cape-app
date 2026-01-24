@@ -10,7 +10,7 @@ type CustomCape = {
   position: number; // Index in the combined list (0 = first)
 };
 
-const MAX_CUSTOM_CAPES = 3;
+const MAX_CUSTOM_CAPES = 5;
 
 type PalettePreferences = {
   order: ColorPaletteKey[];

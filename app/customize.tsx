@@ -400,7 +400,7 @@ export default function CustomizeScreen() {
               onPress={() => openCustomCapeCreator()}
             >
               <Plus size={20} color="#5AC8FA" strokeWidth={2} />
-              <Text style={styles.createButtonText}>Create Custom Cape ({customCapes.length}/3)</Text>
+              <Text style={styles.createButtonText}>Create Custom Cape ({customCapes.length}/5)</Text>
             </Pressable>
           )}
         </View>
