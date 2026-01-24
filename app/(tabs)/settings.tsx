@@ -279,7 +279,7 @@ export default function SettingsScreen() {
       : customCapes.length + 1;
     const cape = {
       ...(editingCapeId && { id: editingCapeId }),
-      name: `Custom Cape ${capeNumber}`,
+      name: `Untitled Custom ${capeNumber}`,
       colors: customColors.slice(0, customColorCount).map((hex, i) => ({
         name: `Color ${i + 1}`,
         hex,
