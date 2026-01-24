@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -36,6 +36,7 @@ export default function CustomizeScreen() {
   const [editingColorIndex, setEditingColorIndex] = useState<number | null>(null);
   const [hexInput, setHexInput] = useState('');
   const [editingCapeId, setEditingCapeId] = useState<string | null>(null);
+  const [capeName, setCapeName] = useState('');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
@@ -61,6 +62,15 @@ export default function CustomizeScreen() {
     router.back();
   };
 
+  const getNextCapeNumber = () => {
+    const numbers = customCapes
+      .map(c => {
+        const match = c.name.match(/Custom Cape (\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+    return Math.max(0, ...numbers) + 1;
+  };
+
   const openCustomCapeCreator = (capeId?: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const existingCape = capeId ? customCapes.find(c => c.id === capeId) : null;
@@ -68,10 +78,12 @@ export default function CustomizeScreen() {
       setEditingCapeId(existingCape.id);
       setCustomColorCount(existingCape.colors.length);
       setCustomColors(existingCape.colors.map(c => c.hex));
+      setCapeName(existingCape.name);
     } else {
       setEditingCapeId(null);
       setCustomColorCount(4);
       setCustomColors(['#FF0000', '#00FF00', '#0000FF', '#FFD700']);
+      setCapeName(`Custom Cape ${getNextCapeNumber()}`);
     }
     setEditingColorIndex(null);
     setShowCustomCapeSheet(true);
@@ -128,12 +140,9 @@ export default function CustomizeScreen() {
   const handleSaveCustomCape = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const existingCape = editingCapeId ? customCapes.find(c => c.id === editingCapeId) : null;
-    const capeNumber = existingCape
-      ? customCapes.findIndex(c => c.id === editingCapeId) + 1
-      : customCapes.length + 1;
     const cape = {
       ...(editingCapeId && { id: editingCapeId }),
-      name: `Custom Cape ${capeNumber}`,
+      name: capeName.trim() || `Custom Cape ${getNextCapeNumber()}`,
       colors: customColors.slice(0, customColorCount).map((hex, i) => ({
         name: `Color ${i + 1}`,
         hex,
@@ -235,6 +244,17 @@ export default function CustomizeScreen() {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.customCapeLabel}>Cape Name</Text>
+              <TextInput
+                style={styles.capeNameInput}
+                value={capeName}
+                onChangeText={setCapeName}
+                placeholder="Enter cape name"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                autoCorrect={false}
+                maxLength={30}
+              />
+
               <Text style={styles.customCapeLabel}>Number of Colors</Text>
               <View style={styles.colorCountSelector}>
                 {COLOR_COUNT_OPTIONS.map((count) => (
@@ -753,6 +773,15 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.7)',
     marginTop: 20,
     marginBottom: 8,
+  },
+  capeNameInput: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   customCapeLabelSmall: {
     fontSize: 12,
