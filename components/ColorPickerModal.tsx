@@ -7,6 +7,9 @@ import {
   Modal,
   PanResponder,
   Dimensions,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { X, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -100,6 +103,8 @@ export default function ColorPickerModal({
   const [hue, setHue] = useState(0);
   const [saturation, setSaturation] = useState(1);
   const [value, setValue] = useState(1);
+  const [hexInput, setHexInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     if (visible && initialColor) {
@@ -109,9 +114,46 @@ export default function ColorPickerModal({
         setHue(h);
         setSaturation(s);
         setValue(v);
+        setHexInput(initialColor.toUpperCase());
       }
     }
   }, [visible, initialColor]);
+
+  // Update hex input when color changes via picker (not when typing)
+  useEffect(() => {
+    if (!isTyping) {
+      const rgb = hsvToRgb(hue, saturation, value);
+      const hex = rgbToHex(...rgb);
+      setHexInput(hex);
+    }
+  }, [hue, saturation, value, isTyping]);
+
+  const handleHexInputChange = (text: string) => {
+    let hex = text.toUpperCase();
+    if (!hex.startsWith('#')) {
+      hex = '#' + hex;
+    }
+    hex = '#' + hex.slice(1).replace(/[^0-9A-F]/g, '').slice(0, 6);
+    setHexInput(hex);
+  };
+
+  const handleHexInputFocus = () => {
+    setIsTyping(true);
+  };
+
+  const handleHexInputBlur = () => {
+    setIsTyping(false);
+    // Update picker when done typing
+    if (hexInput.length === 4 || hexInput.length === 7) {
+      const rgb = hexToRgb(hexInput);
+      if (rgb) {
+        const [h, s, v] = rgbToHsv(...rgb);
+        setHue(h);
+        setSaturation(s);
+        setValue(v);
+      }
+    }
+  };
 
   const currentRgb = hsvToRgb(hue, saturation, value);
   const currentHex = rgbToHex(...currentRgb);
@@ -159,7 +201,10 @@ export default function ColorPickerModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         <Pressable style={styles.backdrop} onPress={onClose} />
         <View style={styles.container}>
           <View style={styles.header}>
@@ -223,10 +268,23 @@ export default function ColorPickerModal({
             />
           </View>
 
-          {/* Preview and Hex */}
+          {/* Preview and Hex Input */}
           <View style={styles.previewRow}>
             <View style={[styles.preview, { backgroundColor: currentHex }]} />
-            <Text style={styles.hexText}>{currentHex}</Text>
+            <TextInput
+              style={styles.hexInput}
+              value={hexInput}
+              onChangeText={handleHexInputChange}
+              onFocus={handleHexInputFocus}
+              onBlur={handleHexInputBlur}
+              placeholder="#FFFFFF"
+              placeholderTextColor="rgba(255,255,255,0.3)"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={7}
+            />
           </View>
 
           {/* Actions */}
@@ -235,7 +293,7 @@ export default function ColorPickerModal({
             <Text style={styles.confirmText}>Select Color</Text>
           </Pressable>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -325,11 +383,16 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  hexText: {
+  hexInput: {
+    flex: 1,
     fontSize: 20,
     fontWeight: '700',
     color: '#FFFFFF',
     fontFamily: 'monospace',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   confirmButton: {
     flexDirection: 'row',

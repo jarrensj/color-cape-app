@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, TextInput } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -112,21 +112,6 @@ export default function CustomizeScreen() {
   const openVisualPicker = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowColorPicker(true);
-  };
-
-  const handleHexInputChange = (text: string) => {
-    let hex = text.toUpperCase();
-    if (!hex.startsWith('#')) {
-      hex = '#' + hex;
-    }
-    hex = '#' + hex.slice(1).replace(/[^0-9A-F]/g, '').slice(0, 6);
-    setHexInput(hex);
-
-    if (editingColorIndex !== null && (hex.length === 4 || hex.length === 7)) {
-      const newColors = [...customColors];
-      newColors[editingColorIndex] = hex;
-      setCustomColors(newColors);
-    }
   };
 
   const handleColorSlotPress = (index: number) => {
@@ -290,21 +275,11 @@ export default function CustomizeScreen() {
 
               {editingColorIndex !== null && (
                 <>
-                  <Text style={styles.customCapeLabel}>Enter Hex Code</Text>
-                  <View style={styles.hexInputContainer}>
-                    <Pressable onPress={openVisualPicker}>
-                      <View style={[styles.hexPreview, { backgroundColor: hexInput.length >= 4 ? hexInput : '#000' }]} />
-                    </Pressable>
-                    <TextInput
-                      style={styles.hexInput}
-                      value={hexInput}
-                      onChangeText={handleHexInputChange}
-                      placeholder="#FFFFFF"
-                      placeholderTextColor="rgba(255,255,255,0.3)"
-                      autoCapitalize="characters"
-                      maxLength={7}
-                    />
-                  </View>
+                  <Text style={styles.customCapeLabel}>Choose Color</Text>
+                  <Pressable style={styles.hexInputContainer} onPress={openVisualPicker}>
+                    <View style={[styles.hexPreview, { backgroundColor: hexInput.length >= 4 ? hexInput : '#000' }]} />
+                    <Text style={styles.hexDisplayText}>{hexInput || 'Tap to pick color'}</Text>
+                  </Pressable>
 
                   <Text style={styles.customCapeLabelSmall}>Quick Colors</Text>
                   <View style={styles.colorPickerGridSmall}>
@@ -837,13 +812,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  hexInput: {
+  hexDisplayText: {
     flex: 1,
     fontSize: 18,
     fontWeight: '600',
     color: '#FFFFFF',
     fontFamily: 'monospace',
-    paddingVertical: 8,
   },
   colorPickerGrid: {
     flexDirection: 'row',
