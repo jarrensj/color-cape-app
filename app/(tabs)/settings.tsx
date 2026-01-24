@@ -50,7 +50,7 @@ export default function SettingsScreen() {
   const [highlightedKey, setHighlightedKey] = useState<ColorPaletteKey | null>(null);
   const [defaultFrontCamera, setDefaultFrontCamera] = useState(true);
   const [mirrorFrontCamera, setMirrorFrontCamera] = useState(true);
-  const [capeOpacity, setCapeOpacity] = useState(0.85);
+  const [capeOpacity, setCapeOpacity] = useState(1.0);
   const [customColorCount, setCustomColorCount] = useState(4);
   const [customColors, setCustomColors] = useState<string[]>(['#FF0000', '#00FF00', '#0000FF', '#FFD700']);
   const [editingColorIndex, setEditingColorIndex] = useState<number | null>(null);
@@ -76,9 +76,7 @@ export default function SettingsScreen() {
       }
     });
     AsyncStorage.getItem(OPACITY_SETTING_KEY).then((value) => {
-      if (value !== null) {
-        setCapeOpacity(parseFloat(value));
-      }
+      setCapeOpacity(value !== null ? parseFloat(value) : 1.0);
     });
   }, []);
 
@@ -129,7 +127,7 @@ export default function SettingsScreen() {
             ]);
             setDefaultFrontCamera(true);
             setMirrorFrontCamera(true);
-            setCapeOpacity(0.85);
+            setCapeOpacity(1.0);
             resetToDefaults(); // Reset palette preferences
             resetCustomCapes(); // Delete custom capes
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

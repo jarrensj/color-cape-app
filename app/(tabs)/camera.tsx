@@ -118,7 +118,7 @@ const LAST_USED_PALETTE_KEY = 'last_used_palette';
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('front');
   const [mirrorEnabled, setMirrorEnabled] = useState(true);
-  const [capeOpacity, setCapeOpacity] = useState(0.85);
+  const [capeOpacity, setCapeOpacity] = useState(1.0);
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
   const [paletteKey, setPaletteKey] = useState<ColorPaletteKey | null>(null);
@@ -144,9 +144,7 @@ export default function CameraScreen() {
         }
       });
       AsyncStorage.getItem(OPACITY_SETTING_KEY).then((value) => {
-        if (value !== null) {
-          setCapeOpacity(parseFloat(value));
-        }
+        setCapeOpacity(value !== null ? parseFloat(value) : 1.0);
       });
     }, [])
   );

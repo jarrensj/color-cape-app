@@ -51,7 +51,7 @@ export default function HomeScreen() {
   const [lastUsed, setLastUsed] = useState<LastUsedPalette>(null);
   const [savedTestResult, setSavedTestResult] = useState<SavedTestResult>(null);
   const [showOpacitySheet, setShowOpacitySheet] = useState(false);
-  const [capeOpacity, setCapeOpacity] = useState(0.85);
+  const [capeOpacity, setCapeOpacity] = useState(1.0);
 
   // Rainbow glow animation
   const glowProgress = useSharedValue(0);
@@ -92,9 +92,7 @@ export default function HomeScreen() {
         setSavedTestResult(value ? JSON.parse(value) : null);
       });
       AsyncStorage.getItem(OPACITY_SETTING_KEY).then((value) => {
-        if (value !== null) {
-          setCapeOpacity(parseFloat(value));
-        }
+        setCapeOpacity(value !== null ? parseFloat(value) : 1.0);
       });
     }, [])
   );
@@ -151,7 +149,7 @@ export default function HomeScreen() {
 
   const getOpacityLabel = () => {
     const option = OPACITY_OPTIONS.find(o => o.value === capeOpacity);
-    return option?.label || 'Strong';
+    return option?.label || 'Full';
   };
 
   return (

@@ -891,7 +891,7 @@ export default function TestScreen() {
   const compositeRef = useRef<View>(null);
   const [pendingCapture, setPendingCapture] = useState<{ uri: string; forStep: 'capture1' | 'capture2' } | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
-  const [capeOpacity, setCapeOpacity] = useState(0.85);
+  const [capeOpacity, setCapeOpacity] = useState(1.0);
   const router = useRouter();
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
@@ -932,9 +932,7 @@ export default function TestScreen() {
   useFocusEffect(
     useCallback(() => {
       AsyncStorage.getItem('cape_opacity').then((value) => {
-        if (value !== null) {
-          setCapeOpacity(parseFloat(value));
-        }
+        setCapeOpacity(value !== null ? parseFloat(value) : 1.0);
       });
     }, [])
   );
