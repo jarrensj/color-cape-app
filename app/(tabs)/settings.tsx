@@ -274,12 +274,10 @@ export default function SettingsScreen() {
   const handleSaveCustomCape = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const existingCape = editingCapeId ? customCapes.find(c => c.id === editingCapeId) : null;
-    const capeNumber = existingCape
-      ? customCapes.findIndex(c => c.id === editingCapeId) + 1
-      : customCapes.length + 1;
+    const capeNumber = customCapes.length + 1;
     const cape = {
       ...(editingCapeId && { id: editingCapeId }),
-      name: `Untitled Custom ${capeNumber}`,
+      name: existingCape?.name || `Untitled Custom ${capeNumber}`,
       colors: customColors.slice(0, customColorCount).map((hex, i) => ({
         name: `Color ${i + 1}`,
         hex,
