@@ -25,7 +25,7 @@ const OPACITY_OPTIONS = [
   { label: 'Full', value: 1.0 },
 ];
 
-const COLOR_COUNT_OPTIONS = [1, 2, 4, 8];
+const COLOR_COUNT_OPTIONS = [1, 2, 3, 4, 8];
 
 const COLOR_PICKER_COLORS = [
   // Reds & Pinks

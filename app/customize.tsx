@@ -9,7 +9,7 @@ import { usePalettePreferences } from '@/context/palette-preferences-context';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 import ColorPickerModal from '@/components/ColorPickerModal';
 
-const COLOR_COUNT_OPTIONS = [1, 2, 4, 8];
+const COLOR_COUNT_OPTIONS = [1, 2, 3, 4, 8];
 
 const COLOR_PICKER_COLORS = [
   // Reds & Pinks
