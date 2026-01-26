@@ -25,7 +25,14 @@ function ColorCape({ colors, opacity = 0.85 }: { colors: { name: string; hex: st
   const neckRadius = 120;
   const capeRadius = Math.max(screenWidth, screenHeight) * 2;
   const segmentCount = colors.length;
-  const anglePerSegment = Math.PI / segmentCount;
+
+  // Extend spread angle for capes with more colors to make each stripe appear thicker
+  // Base: 180° (π), scales up to ~210° for 8 colors
+  const baseSpread = Math.PI;
+  const extraSpread = segmentCount > 4 ? (segmentCount - 4) * 0.065 : 0; // ~7.5° extra per color beyond 4
+  const totalSpread = baseSpread + extraSpread;
+  const startOffset = -extraSpread / 2; // Center the extended spread
+  const anglePerSegment = totalSpread / segmentCount;
 
   const handleLongPress = (color: { name: string; hex: string }) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -67,8 +74,8 @@ function ColorCape({ colors, opacity = 0.85 }: { colors: { name: string; hex: st
         ) : (
           // Multiple colors: draw polygon segments
           colors.map((color, index) => {
-            const startAngle = index * anglePerSegment;
-            const endAngle = (index + 1) * anglePerSegment;
+            const startAngle = startOffset + index * anglePerSegment;
+            const endAngle = startOffset + (index + 1) * anglePerSegment;
 
             const x1 = centerX + Math.cos(startAngle) * neckRadius;
             const y1 = centerY + Math.sin(startAngle) * neckRadius;

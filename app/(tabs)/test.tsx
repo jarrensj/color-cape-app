@@ -743,14 +743,20 @@ function LeftHalfCape({ colors }: { colors: { name: string; hex: string }[] }) {
   const neckRadius = 100;
   const capeRadius = Math.max(screenWidth, screenHeight) * 2;
   const segmentCount = colors.length;
-  const anglePerSegment = Math.PI / segmentCount;
+
+  // Extend spread angle for capes with more colors to make each stripe appear thicker
+  const baseSpread = Math.PI;
+  const extraSpread = segmentCount > 4 ? (segmentCount - 4) * 0.065 : 0;
+  const totalSpread = baseSpread + extraSpread;
+  const startOffset = -extraSpread / 2;
+  const anglePerSegment = totalSpread / segmentCount;
 
   return (
     <View style={styles.leftHalfCapeContainer} pointerEvents="none">
       <Svg width={screenWidth} height={screenHeight} style={StyleSheet.absoluteFill}>
         {colors.map((color, index) => {
-          const startAngle = index * anglePerSegment;
-          const endAngle = (index + 1) * anglePerSegment;
+          const startAngle = startOffset + index * anglePerSegment;
+          const endAngle = startOffset + (index + 1) * anglePerSegment;
 
           const x1 = centerX + Math.cos(startAngle) * neckRadius;
           const y1 = centerY + Math.sin(startAngle) * neckRadius;
@@ -787,14 +793,20 @@ function RightHalfCape({ colors }: { colors: { name: string; hex: string }[] }) 
   const neckRadius = 100;
   const capeRadius = Math.max(screenWidth, screenHeight) * 2;
   const segmentCount = colors.length;
-  const anglePerSegment = Math.PI / segmentCount;
+
+  // Extend spread angle for capes with more colors to make each stripe appear thicker
+  const baseSpread = Math.PI;
+  const extraSpread = segmentCount > 4 ? (segmentCount - 4) * 0.065 : 0;
+  const totalSpread = baseSpread + extraSpread;
+  const startOffset = -extraSpread / 2;
+  const anglePerSegment = totalSpread / segmentCount;
 
   return (
     <View style={styles.rightHalfCapeContainer} pointerEvents="none">
       <Svg width={screenWidth} height={screenHeight} style={[StyleSheet.absoluteFill, { left: -halfWidth }]}>
         {colors.map((color, index) => {
-          const startAngle = index * anglePerSegment;
-          const endAngle = (index + 1) * anglePerSegment;
+          const startAngle = startOffset + index * anglePerSegment;
+          const endAngle = startOffset + (index + 1) * anglePerSegment;
 
           const x1 = centerX + Math.cos(startAngle) * neckRadius;
           const y1 = centerY + Math.sin(startAngle) * neckRadius;
@@ -830,14 +842,20 @@ function FullCape({ colors, opacity = 0.85 }: { colors: { name: string; hex: str
   const neckRadius = 120;
   const capeRadius = Math.max(screenWidth, screenHeight) * 2;
   const segmentCount = colors.length;
-  const anglePerSegment = Math.PI / segmentCount;
+
+  // Extend spread angle for capes with more colors to make each stripe appear thicker
+  const baseSpread = Math.PI;
+  const extraSpread = segmentCount > 4 ? (segmentCount - 4) * 0.065 : 0;
+  const totalSpread = baseSpread + extraSpread;
+  const startOffset = -extraSpread / 2;
+  const anglePerSegment = totalSpread / segmentCount;
 
   return (
     <View style={styles.fullCapeContainer} pointerEvents="none">
       <Svg width={screenWidth} height={screenHeight} style={StyleSheet.absoluteFill}>
         {colors.map((color, index) => {
-          const startAngle = index * anglePerSegment;
-          const endAngle = (index + 1) * anglePerSegment;
+          const startAngle = startOffset + index * anglePerSegment;
+          const endAngle = startOffset + (index + 1) * anglePerSegment;
 
           const x1 = centerX + Math.cos(startAngle) * neckRadius;
           const y1 = centerY + Math.sin(startAngle) * neckRadius;
