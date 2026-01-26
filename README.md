@@ -7,7 +7,12 @@ A personal color analysis app that helps you discover which colors look best on 
 ### Virtual Color Caping
 - Real-time camera overlay with color "capes" to see how different colors complement your complexion
 - Long press on any color segment to view the color name and hex code
+- Cape mode toggle for seasonal palettes (All 8, Core 4, or Accent 4 colors)
 - Capture and save photos with your favorite color overlays
+
+### Seasonal Color Analysis Test
+- Take a quick diagnostic test to discover your seasonal color palette
+- Get matched to one of 12 sub-seasons with personalized results
 
 ### 30+ Color Palettes
 - **Seasonal Palettes**: Light Spring, Warm Spring, Bright Spring, Light Summer, Cool Summer, Soft Summer, Soft Autumn, Warm Autumn, Deep Autumn, Deep Winter, Cool Winter, Bright Winter
@@ -15,7 +20,8 @@ A personal color analysis app that helps you discover which colors look best on 
 - **Single Colors**: White, Black, Navy, Burgundy, Forest Green, Coral, Lavender, Mustard, Blush, Teal, Camel, Ruby
 
 ### Custom Capes
-- Create up to 3 custom color palettes
+- Create up to 5 custom color palettes
+- Name your custom capes for easy identification
 - Choose 1, 2, 4, or 8 colors per cape
 - Pick colors from a preset grid or enter custom hex codes
 - Toggle and reorder custom capes alongside built-in palettes
@@ -34,6 +40,8 @@ A personal color analysis app that helps you discover which colors look best on 
 ### Additional Features
 - Save caped photos to your gallery
 - Share the app with friends
+- Clear last viewed palette or saved test result
+- Reset settings to defaults
 - Privacy-focused design
 - Subscription management
 
