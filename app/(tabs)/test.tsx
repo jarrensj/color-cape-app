@@ -1240,6 +1240,10 @@ export default function TestScreen() {
             Discover your perfect colors
           </Text>
 
+          <Text style={styles.privacyNotice}>
+            Your privacy matters — face data stays on your device and is never saved or sent to any servers.
+          </Text>
+
           <Pressable style={styles.startButton} onPress={startTest}>
             <Text style={styles.startButtonText}>Start Test</Text>
           </Pressable>
@@ -1722,7 +1726,16 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#CCCCCC',
     textAlign: 'center',
-    marginBottom: 48,
+    marginBottom: 24,
+  },
+  privacyNotice: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.5)',
+    textAlign: 'center',
+    marginBottom: 32,
+    paddingHorizontal: 20,
+    lineHeight: 18,
   },
   startButton: {
     backgroundColor: '#FFFFFF',
