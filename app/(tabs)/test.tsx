@@ -1047,7 +1047,7 @@ export default function TestScreen() {
           We need your permission to access the camera for the color test.
         </Text>
         <Pressable style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Grant Permission</Text>
+          <Text style={styles.permissionButtonText}>Continue</Text>
         </Pressable>
       </View>
     );
