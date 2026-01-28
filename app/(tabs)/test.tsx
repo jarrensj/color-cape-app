@@ -21,6 +21,8 @@ import Animated, {
   useSharedValue,
   interpolateColor,
   Easing,
+  FadeIn,
+  FadeOut,
 } from 'react-native-reanimated';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -935,6 +937,8 @@ export default function TestScreen() {
   const [basePhoto, setBasePhoto] = useState<string | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
   const [capeOpacity, setCapeOpacity] = useState(1.0);
+  const [showTransition, setShowTransition] = useState(false);
+  const [transitionData, setTransitionData] = useState<{ category: string; description: string } | null>(null);
   const router = useRouter();
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
@@ -1223,9 +1227,18 @@ export default function TestScreen() {
 
     // Move to next test or show result
     if (currentTestIndex < TOTAL_TESTS - 1) {
-      setCurrentTestIndex(currentTestIndex + 1);
-      setCompareIndex(0);
-      setStep('capture1');
+      const nextTest = diagnosticTests[currentTestIndex + 1];
+      const categoryLabel = nextTest.category === 'undertone' ? 'Undertone' :
+                           nextTest.category === 'value' ? 'Value' : 'Chroma';
+      const categoryDesc = nextTest.category === 'undertone'
+        ? 'This test determines if your skin has warm, cool, or neutral undertones by comparing how metallic and neutral colors look against your complexion.'
+        : nextTest.category === 'value'
+        ? 'This test finds your ideal color depth — whether light, delicate shades or deep, bold colors complement you best.'
+        : 'This test measures your color clarity — whether you look better in bright, saturated colors or soft, muted tones.';
+
+      // Show transition overlay
+      setTransitionData({ category: categoryLabel, description: categoryDesc });
+      setShowTransition(true);
     } else {
       // Calculate result and top matches
       const subSeason = determineSubSeason(newScores.undertone, newScores.value, newScores.chroma);
@@ -1242,6 +1255,14 @@ export default function TestScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setConfirmModalVisible(false);
     setPendingSelection(null);
+  };
+
+  const advanceToNextTest = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setCurrentTestIndex(currentTestIndex + 1);
+    setCompareIndex(0);
+    setShowTransition(false);
+    setTransitionData(null);
   };
 
   // Get current overlay colors based on which photo we're taking
@@ -1692,6 +1713,23 @@ export default function TestScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* Transition Overlay */}
+        {showTransition && transitionData && (
+          <Animated.View
+            style={styles.transitionOverlay}
+            entering={FadeIn.duration(400)}
+            exiting={FadeOut.duration(400)}
+          >
+            <View style={styles.transitionContent}>
+              <Text style={styles.transitionTitle}>{transitionData.category} Test</Text>
+              <Text style={styles.transitionDescription}>{transitionData.description}</Text>
+              <Pressable style={styles.transitionButton} onPress={advanceToNextTest}>
+                <Text style={styles.transitionButtonText}>Next</Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+        )}
       </View>
     );
   }
@@ -2370,6 +2408,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   confirmModalConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  transitionOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  transitionContent: {
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  transitionTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 16,
+  },
+  transitionDescription: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  transitionButton: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 48,
+    paddingVertical: 14,
+    borderRadius: 30,
+  },
+  transitionButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#000000',
