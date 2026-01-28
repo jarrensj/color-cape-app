@@ -1,6 +1,6 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Modal, Alert } from 'react-native';
+import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Modal, Alert, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
@@ -1087,12 +1087,24 @@ export default function TestScreen() {
   }
 
   if (!permission.granted) {
+    const wasDenied = !permission.canAskAgain;
+
     return (
       <View style={styles.permissionContainer}>
         <StatusBar style="light" />
         <Text style={styles.permissionTitle}>Camera Access Required</Text>
-        <Pressable style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Continue</Text>
+        {wasDenied && (
+          <Text style={styles.permissionText}>
+            Permission was denied. Please enable in Settings.
+          </Text>
+        )}
+        <Pressable
+          style={styles.permissionButton}
+          onPress={wasDenied ? () => Linking.openSettings() : requestPermission}
+        >
+          <Text style={styles.permissionButtonText}>
+            {wasDenied ? 'Open Settings' : 'Continue'}
+          </Text>
         </Pressable>
       </View>
     );

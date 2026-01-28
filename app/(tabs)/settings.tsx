@@ -978,6 +978,21 @@ export default function SettingsScreen() {
               thumbColor={mirrorFrontCamera ? '#34C759' : '#f4f3f4'}
             />
           </View>
+
+          <Pressable
+            style={[styles.settingButton, styles.settingButtonMarginTop]}
+            onPress={() => Linking.openSettings()}
+          >
+            <View style={[styles.settingIcon, styles.settingIconPurple]}>
+              <Shield size={22} color="#AF52DE" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Camera Permissions</Text>
+              <Text style={styles.settingDescription}>
+                Manage camera access in Settings
+              </Text>
+            </View>
+          </Pressable>
         </View>
 
         {/* Cape Section */}
