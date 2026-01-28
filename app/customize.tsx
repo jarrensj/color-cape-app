@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, TextInput } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, TextInput, Share, KeyboardAvoidingView, Platform } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { ChevronLeft, ChevronUp, ChevronDown, X, Plus, Trash2, Check } from 'lucide-react-native';
+import { ChevronLeft, ChevronUp, ChevronDown, X, Plus, Trash2, Check, Download, Upload } from 'lucide-react-native';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 import ColorPickerModal from '@/components/ColorPickerModal';
@@ -38,6 +39,9 @@ export default function CustomizeScreen() {
   const [editingCapeId, setEditingCapeId] = useState<string | null>(null);
   const [capeName, setCapeName] = useState('');
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importJson, setImportJson] = useState('');
+  const [importError, setImportError] = useState('');
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -165,6 +169,83 @@ export default function CustomizeScreen() {
         },
       ]
     );
+  };
+
+  const handleExportCape = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const exportData = {
+      name: capeName.trim() || getDefaultCapeName(),
+      colors: customColors.slice(0, customColorCount).map((hex, i) => ({
+        name: `Color ${i + 1}`,
+        hex,
+      })),
+    };
+    const jsonString = JSON.stringify(exportData, null, 2);
+    try {
+      await Share.share({
+        message: jsonString,
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  const handleImportCape = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setImportJson('');
+    setImportError('');
+    setShowImportModal(true);
+  };
+
+  const handlePasteFromClipboard = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const text = await Clipboard.getStringAsync();
+      setImportJson(text);
+    } catch (error) {
+      Alert.alert('Error', 'Could not read from clipboard');
+    }
+  };
+
+  const handleConfirmImport = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setImportError('');
+
+    try {
+      const data = JSON.parse(importJson);
+
+      // Validate structure
+      if (!data.colors || !Array.isArray(data.colors) || data.colors.length === 0) {
+        setImportError('Data must contain a "colors" array with at least one color.');
+        return;
+      }
+
+      // Validate colors
+      const validColorCounts = [1, 2, 4, 8];
+      const colorCount = data.colors.length;
+      if (!validColorCounts.includes(colorCount)) {
+        setImportError('Cape must have 1, 2, 4, or 8 colors.');
+        return;
+      }
+
+      // Validate each color has hex
+      for (const color of data.colors) {
+        if (!color.hex || typeof color.hex !== 'string' || !/^#[0-9A-Fa-f]{3,6}$/.test(color.hex)) {
+          setImportError('Each color must have a valid hex code (e.g., #FF0000).');
+          return;
+        }
+      }
+
+      // Import successful - load into form
+      setCapeName(data.name || getDefaultCapeName());
+      setCustomColorCount(colorCount);
+      setCustomColors(data.colors.map((c: { hex: string }) => c.hex.toUpperCase()));
+      setEditingColorIndex(null);
+      setShowImportModal(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      setImportError('Invalid JSON. Could not parse the data.');
+    }
   };
 
   const triggerHighlight = (key: ColorPaletteKey) => {
@@ -316,6 +397,82 @@ export default function CustomizeScreen() {
                 onClose={() => setShowColorPicker(false)}
                 onSelect={handleVisualPickerSelect}
               />
+
+              {/* Import Modal */}
+              <Modal
+                visible={showImportModal}
+                animationType="fade"
+                transparent={true}
+                onRequestClose={() => setShowImportModal(false)}
+              >
+                <KeyboardAvoidingView
+                  style={styles.importModalOverlay}
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                  <View style={styles.importModalContent}>
+                    <View style={styles.sheetHeader}>
+                      <Text style={styles.sheetTitle}>Import Cape</Text>
+                      <Pressable onPress={() => setShowImportModal(false)} style={styles.sheetClose}>
+                        <X size={24} color="#FFFFFF" />
+                      </Pressable>
+                    </View>
+                    <Text style={styles.importDescription}>
+                      Paste the exported cape JSON data below
+                    </Text>
+                    <TextInput
+                      style={[styles.importTextInput, importError && styles.importTextInputError]}
+                      value={importJson}
+                      onChangeText={(text) => {
+                        setImportJson(text);
+                        setImportError('');
+                      }}
+                      placeholder='{"name": "My Cape", "colors": [{"hex": "#FF0000"}]}'
+                      placeholderTextColor="rgba(255,255,255,0.2)"
+                      multiline
+                      numberOfLines={6}
+                      autoCorrect={false}
+                      autoCapitalize="none"
+                    />
+                    {importError ? (
+                      <Text style={styles.importErrorText}>{importError}</Text>
+                    ) : null}
+                    <View style={styles.importActions}>
+                      <Pressable
+                        style={styles.pasteButton}
+                        onPress={handlePasteFromClipboard}
+                      >
+                        <Text style={styles.pasteButtonText}>Paste from Clipboard</Text>
+                      </Pressable>
+                      <Pressable
+                        style={[styles.customCapeButton, styles.customCapeButtonSave]}
+                        onPress={handleConfirmImport}
+                      >
+                        <Check size={18} color="#000000" strokeWidth={2} />
+                        <Text style={styles.customCapeButtonSaveText}>Import</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </KeyboardAvoidingView>
+              </Modal>
+
+              {/* Import/Export Section */}
+              <Text style={styles.customCapeLabel}>Import / Export</Text>
+              <View style={styles.importExportRow}>
+                <Pressable
+                  style={[styles.importExportButton]}
+                  onPress={handleImportCape}
+                >
+                  <Download size={18} color="#5AC8FA" strokeWidth={2} />
+                  <Text style={styles.importExportButtonText}>Import</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.importExportButton]}
+                  onPress={handleExportCape}
+                >
+                  <Upload size={18} color="#5AC8FA" strokeWidth={2} />
+                  <Text style={styles.importExportButtonText}>Export</Text>
+                </Pressable>
+              </View>
 
               <View style={styles.customCapeActions}>
                 {editingCapeId && (
@@ -904,5 +1061,77 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#000000',
+  },
+  importExportRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  importExportButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(90, 200, 250, 0.15)',
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 8,
+  },
+  importExportButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#5AC8FA',
+  },
+  importModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  importModalContent: {
+    backgroundColor: '#1C1C1E',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 400,
+  },
+  importDescription: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.5)',
+    marginBottom: 16,
+  },
+  importTextInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 14,
+    fontFamily: 'monospace',
+    color: '#FFFFFF',
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
+  importTextInputError: {
+    borderWidth: 1,
+    borderColor: '#FF3B30',
+  },
+  importErrorText: {
+    color: '#FF3B30',
+    fontSize: 13,
+    marginTop: 8,
+  },
+  importActions: {
+    marginTop: 16,
+    gap: 12,
+  },
+  pasteButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  pasteButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
 });
