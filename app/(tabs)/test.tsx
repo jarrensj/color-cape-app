@@ -1362,7 +1362,7 @@ export default function TestScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.introContent, { paddingTop: insets.top + 80 }]}>
+        <View style={[styles.introContent, { paddingTop: insets.top + 40 }]}>
           <Animated.View style={[styles.introImageContainer, introGlowStyle]}>
             <Image
               source={require('@/assets/images/icon.png')}
@@ -1373,6 +1373,9 @@ export default function TestScreen() {
           <Text style={styles.introTitle}>Find Your Colors</Text>
           <Text style={styles.introSubtitle}>
             Discover your perfect colors
+          </Text>
+          <Text style={styles.introPrivacyNote}>
+            Your photos are never uploaded or sent anywhere.
           </Text>
 
           <Pressable style={styles.startButton} onPress={startTest}>
@@ -1926,7 +1929,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#CCCCCC',
     textAlign: 'center',
-    marginBottom: 48,
+    marginBottom: 16,
+  },
+  introPrivacyNote: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.5)',
+    textAlign: 'center',
+    marginBottom: 40,
   },
   startButton: {
     backgroundColor: '#FFFFFF',
