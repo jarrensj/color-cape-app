@@ -444,7 +444,15 @@ export default function CustomizeScreen() {
                         <Text style={styles.pasteButtonText}>Paste from Clipboard</Text>
                       </Pressable>
                       <Pressable
-                        style={[styles.customCapeButton, styles.customCapeButtonSave]}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          paddingVertical: 14,
+                          borderRadius: 12,
+                          gap: 8,
+                          backgroundColor: '#FFFFFF',
+                        }}
                         onPress={handleConfirmImport}
                       >
                         <Check size={18} color="#000000" strokeWidth={2} />
