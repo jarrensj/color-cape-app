@@ -939,7 +939,7 @@ export default function TestScreen() {
   const [compareIndex, setCompareIndex] = useState(0);
   const [capeOpacity, setCapeOpacity] = useState(1.0);
   const [showTransition, setShowTransition] = useState(false);
-  const [transitionData, setTransitionData] = useState<{ title: string; category: string; description: string; isFirstTest?: boolean } | null>(null);
+  const [transitionData, setTransitionData] = useState<{ title: string; category: string; description: string; isFirstTest?: boolean; goingBack?: boolean } | null>(null);
   const router = useRouter();
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
@@ -1149,16 +1149,54 @@ export default function TestScreen() {
       setStep('intro');
       setBasePhoto(null);
     } else if (step === 'capture1') {
-      if (currentTestIndex === 0) {
+      if (showTransition) {
+        // If transition is showing, just dismiss it and go back to photo
+        setShowTransition(false);
+        setTransitionData(null);
+        setStep('photo');
+      } else if (currentTestIndex === 0) {
         // First test - go back to photo step to retake
         setStep('photo');
       } else {
-        // Go back to previous test
+        // Go back to previous test - show transition for it
+        const prevTest = diagnosticTests[currentTestIndex - 1];
+        const categoryLabel = prevTest.category === 'undertone' ? 'Undertone Test' :
+                             prevTest.category === 'value' ? 'Value Test' : 'Chroma Test';
+        const categoryDesc = prevTest.category === 'undertone'
+          ? 'This test determines if your skin has warm, cool, or neutral undertones by comparing how metallic and neutral colors look against your complexion.'
+          : prevTest.category === 'value'
+          ? 'This test finds your ideal color depth — whether light, delicate shades or deep, bold colors complement you best.'
+          : 'This test measures your color clarity — whether you look better in bright, saturated colors or soft, muted tones.';
+
+        setTransitionData({
+          title: `${prevTest.optionA.name} vs ${prevTest.optionB.name}`,
+          category: categoryLabel,
+          description: categoryDesc,
+          goingBack: true,
+        });
+        setShowTransition(true);
         setCurrentTestIndex(currentTestIndex - 1);
         setCompareIndex(0);
+        compareScrollRef.current?.scrollTo({ x: 0, animated: false });
       }
     } else if (step === 'result') {
-      // Go back to last test
+      // Go back to last test - show transition for it
+      const lastTest = diagnosticTests[TOTAL_TESTS - 1];
+      const categoryLabel = lastTest.category === 'undertone' ? 'Undertone Test' :
+                           lastTest.category === 'value' ? 'Value Test' : 'Chroma Test';
+      const categoryDesc = lastTest.category === 'undertone'
+        ? 'This test determines if your skin has warm, cool, or neutral undertones by comparing how metallic and neutral colors look against your complexion.'
+        : lastTest.category === 'value'
+        ? 'This test finds your ideal color depth — whether light, delicate shades or deep, bold colors complement you best.'
+        : 'This test measures your color clarity — whether you look better in bright, saturated colors or soft, muted tones.';
+
+      setTransitionData({
+        title: `${lastTest.optionA.name} vs ${lastTest.optionB.name}`,
+        category: categoryLabel,
+        description: categoryDesc,
+        goingBack: true,
+      });
+      setShowTransition(true);
       setStep('capture1');
     }
   };
@@ -1264,8 +1302,8 @@ export default function TestScreen() {
 
   const advanceToNextTest = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // Only increment if not the first test intro
-    if (!transitionData?.isFirstTest) {
+    // Only increment if not the first test intro and not going back
+    if (!transitionData?.isFirstTest && !transitionData?.goingBack) {
       setCurrentTestIndex(currentTestIndex + 1);
     }
     setCompareIndex(0);
