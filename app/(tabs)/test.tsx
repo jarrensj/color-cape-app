@@ -1,6 +1,6 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Modal } from 'react-native';
+import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Modal, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
@@ -649,7 +649,7 @@ function determineSubSeason(
   }
 }
 
-type TestStep = 'intro' | 'capture1' | 'capture2' | 'compare' | 'result';
+type TestStep = 'intro' | 'photo' | 'capture1' | 'capture2' | 'compare' | 'result';
 type TestScores = {
   undertone: number; // negative = cool, positive = warm
   value: number;     // negative = light, positive = deep
@@ -823,6 +823,48 @@ function RightHalfCape({ colors }: { colors: { name: string; hex: string }[] }) 
   );
 }
 
+// Outline-only cape for positioning guide
+function CapeOutline({ segments = 4 }: { segments?: number }) {
+  const centerX = screenWidth / 2;
+  const centerY = screenHeight * 0.50;
+  const neckRadius = 120;
+  const capeRadius = Math.max(screenWidth, screenHeight) * 2;
+  const anglePerSegment = Math.PI / segments;
+
+  return (
+    <View style={styles.fullCapeContainer} pointerEvents="none">
+      <Svg width={screenWidth} height={screenHeight} style={StyleSheet.absoluteFill}>
+        {Array.from({ length: segments }).map((_, index) => {
+          const startAngle = index * anglePerSegment;
+          const endAngle = (index + 1) * anglePerSegment;
+
+          const x1 = centerX + Math.cos(startAngle) * neckRadius;
+          const y1 = centerY + Math.sin(startAngle) * neckRadius;
+          const x2 = centerX + Math.cos(endAngle) * neckRadius;
+          const y2 = centerY + Math.sin(endAngle) * neckRadius;
+          const x3 = centerX + Math.cos(endAngle) * capeRadius;
+          const y3 = centerY + Math.sin(endAngle) * capeRadius;
+          const x4 = centerX + Math.cos(startAngle) * capeRadius;
+          const y4 = centerY + Math.sin(startAngle) * capeRadius;
+
+          const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
+
+          return (
+            <Polygon
+              key={index}
+              points={points}
+              fill="transparent"
+              stroke="rgba(255,255,255,0.5)"
+              strokeWidth={2}
+              strokeDasharray="10,5"
+            />
+          );
+        })}
+      </Svg>
+    </View>
+  );
+}
+
 // Full cape for result
 function FullCape({ colors, opacity = 0.85 }: { colors: { name: string; hex: string }[]; opacity?: number }) {
   const centerX = screenWidth / 2;
@@ -890,6 +932,7 @@ export default function TestScreen() {
   const cameraRef = useRef<CameraView>(null);
   const compositeRef = useRef<View>(null);
   const [pendingCapture, setPendingCapture] = useState<{ uri: string; forStep: 'capture1' | 'capture2' } | null>(null);
+  const [basePhoto, setBasePhoto] = useState<string | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
   const [capeOpacity, setCapeOpacity] = useState(1.0);
   const router = useRouter();
@@ -1061,6 +1104,7 @@ export default function TestScreen() {
   const resetTest = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setStep('intro');
+    setBasePhoto(null);
     setCurrentTestIndex(0);
     setScores({ undertone: 0, value: 0, chroma: 0 });
     setTestPhotos(diagnosticTests.map(() => ({ photo1: null, photo2: null })));
@@ -1095,28 +1139,29 @@ export default function TestScreen() {
 
   const goBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (step === 'capture1') {
+    if (step === 'photo') {
+      // Go back to intro
+      setStep('intro');
+      setBasePhoto(null);
+    } else if (step === 'capture1') {
       if (currentTestIndex === 0) {
-        // First test - go to intro
-        setStep('intro');
+        // First test - go back to photo step to retake
+        setStep('photo');
       } else {
-        // Go back to previous test's compare
+        // Go back to previous test
         setCurrentTestIndex(currentTestIndex - 1);
-        setStep('compare');
+        setCompareIndex(0);
       }
-    } else if (step === 'capture2') {
-      setStep('capture1');
-    } else if (step === 'compare') {
-      setStep('capture2');
     } else if (step === 'result') {
-      // Go back to last test's compare
-      setStep('compare');
+      // Go back to last test
+      setStep('capture1');
     }
   };
 
   const startTest = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setStep('capture1');
+    setStep('photo');
+    setBasePhoto(null);
     setCurrentTestIndex(0);
     setScores({ undertone: 0, value: 0, chroma: 0 });
     setTestPhotos(diagnosticTests.map(() => ({ photo1: null, photo2: null })));
@@ -1132,9 +1177,14 @@ export default function TestScreen() {
     try {
       const result = await cameraRef.current.takePictureAsync();
 
-      if (result && (step === 'capture1' || step === 'capture2')) {
-        // Set pending capture - this triggers the composite capture via useEffect
-        setPendingCapture({ uri: result.uri, forStep: step });
+      if (result) {
+        if (step === 'photo') {
+          // Base photo capture - store for confirmation
+          setBasePhoto(result.uri);
+        } else if (step === 'capture1' || step === 'capture2') {
+          // Set pending capture - this triggers the composite capture via useEffect
+          setPendingCapture({ uri: result.uri, forStep: step });
+        }
       }
     } catch (error) {
       // Camera may have unmounted during capture, ignore the error
@@ -1246,6 +1296,105 @@ export default function TestScreen() {
 
           <Pressable style={styles.goHomeButton} onPress={goHome}>
             <Text style={styles.goHomeButtonText}>Go back home</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  // Photo capture screen (take single base photo)
+  if (step === 'photo') {
+    const confirmAndStart = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setStep('capture1');
+    };
+
+    const retakePhoto = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setBasePhoto(null);
+    };
+
+    // Show confirmation if photo taken, otherwise show camera
+    if (basePhoto) {
+      return (
+        <View style={styles.container}>
+          <StatusBar style="light" />
+
+          {/* Show captured photo with outline */}
+          <Image source={{ uri: basePhoto }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <CapeOutline segments={4} />
+
+          {/* Header */}
+          <View style={[styles.captureHeader, { paddingTop: insets.top + 12 }]}>
+            <Pressable style={styles.backButton} onPress={retakePhoto}>
+              <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
+            </Pressable>
+            <View style={styles.captureHeaderText}>
+              <Text style={styles.captureTitle}>Looking Good!</Text>
+              <Text style={styles.captureSubtitle}>Ready to start the color test?</Text>
+            </View>
+            <View style={{ width: 44 }} />
+          </View>
+
+          {/* Confirm buttons */}
+          <View style={[styles.photoConfirmControls, { paddingBottom: insets.bottom + 20 }]}>
+            <Pressable style={styles.retakePhotoButton} onPress={retakePhoto}>
+              <RefreshCw size={20} color="#FFFFFF" strokeWidth={2} />
+              <Text style={styles.retakePhotoButtonText}>Retake</Text>
+            </Pressable>
+            <Pressable style={styles.confirmStartButton} onPress={confirmAndStart}>
+              <Text style={styles.confirmStartButtonText}>Confirm & Start</Text>
+            </Pressable>
+          </View>
+        </View>
+      );
+    }
+
+    // Camera view for taking photo
+    return (
+      <View style={styles.container}>
+        <StatusBar style="light" />
+
+        {isFocused ? (
+          <CameraView
+            style={StyleSheet.absoluteFill}
+            facing={facing}
+            ref={cameraRef}
+            mirror={facing === 'front'}
+          >
+            <CapeOutline segments={4} />
+          </CameraView>
+        ) : (
+          <View style={StyleSheet.absoluteFill} />
+        )}
+
+        {/* Header */}
+        <View style={[styles.captureHeader, { paddingTop: insets.top + 12 }]}>
+          <Pressable style={styles.backButton} onPress={goBack}>
+            <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
+          <View style={styles.captureHeaderText}>
+            <Text style={styles.captureTitle}>Take Your Photo</Text>
+            <Text style={styles.captureSubtitle}>This will be used for all comparisons</Text>
+          </View>
+          <View style={{ width: 44 }} />
+        </View>
+
+        {/* Instruction */}
+        <View style={styles.instructionBanner}>
+          <Text style={styles.instructionText}>Position yourself within the cape outline</Text>
+        </View>
+
+        {/* Capture button */}
+        <View style={[styles.captureControls, { paddingBottom: insets.bottom + 20 }]}>
+          <Pressable style={styles.exitTestButton} onPress={exitTest}>
+            <Home size={20} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
+          <Pressable style={styles.captureButton} onPress={takePhoto}>
+            <Camera size={32} color="#000000" strokeWidth={2} />
+          </Pressable>
+          <Pressable style={styles.flipButtonSmall} onPress={toggleCameraFacing}>
+            <SwitchCamera size={20} color="#FFFFFF" strokeWidth={2} />
           </Pressable>
         </View>
       </View>
@@ -1424,80 +1573,9 @@ export default function TestScreen() {
     );
   }
 
-  // Capture screens (capture1 and capture2)
-  if (step === 'capture1' || step === 'capture2') {
-    const overlay = getCurrentOverlay();
-    const isFirst = step === 'capture1';
-    const instruction = isFirst
-      ? `Take a photo with ${overlay.name} colors`
-      : `Now take a photo with ${overlay.name} colors`;
-
-    return (
-      <View style={styles.container}>
-        <StatusBar style="light" />
-
-        {isFocused ? (
-          <CameraView
-            style={StyleSheet.absoluteFill}
-            facing={facing}
-            ref={cameraRef}
-            mirror={facing === 'front'}
-          >
-            <FullCape colors={overlay.colors} opacity={capeOpacity} />
-          </CameraView>
-        ) : (
-          <View style={StyleSheet.absoluteFill} />
-        )}
-
-        {/* Hidden composite view for capturing photo + overlay */}
-        {pendingCapture && (
-          <View
-            ref={compositeRef}
-            style={styles.compositeView}
-            collapsable={false}
-          >
-            <Image source={{ uri: pendingCapture.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-            <FullCape colors={overlay.colors} opacity={capeOpacity} />
-          </View>
-        )}
-
-        {/* Header */}
-        <View style={[styles.captureHeader, { paddingTop: insets.top + 12 }]}>
-          <Pressable style={styles.backButton} onPress={goBack}>
-            <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
-          </Pressable>
-          <View style={styles.captureHeaderText}>
-            <Text style={styles.captureTitle}>{overlay.name}</Text>
-            <Text style={styles.captureSubtitle}>{overlay.description}</Text>
-          </View>
-          <View style={{ width: 44 }} />
-        </View>
-
-        {/* Instruction */}
-        <View style={styles.instructionBanner}>
-          <Text style={styles.instructionText}>{instruction}</Text>
-        </View>
-
-        {/* Capture button */}
-        <View style={[styles.captureControls, { paddingBottom: insets.bottom + 20 }]}>
-          <Pressable style={styles.exitTestButton} onPress={exitTest}>
-            <Home size={20} color="#FFFFFF" strokeWidth={2} />
-          </Pressable>
-          <Pressable style={styles.captureButton} onPress={takePhoto}>
-            <Camera size={32} color="#000000" strokeWidth={2} />
-          </Pressable>
-          <Pressable style={styles.flipButtonSmall} onPress={toggleCameraFacing}>
-            <SwitchCamera size={20} color="#FFFFFF" strokeWidth={2} />
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
-
-  // Compare screen
-  if (step === 'compare' && photo1 && photo2) {
+  // Compare screen - swipe between options with live overlays
+  if (step === 'capture1' && basePhoto) {
     const currentOption = compareIndex === 0 ? currentTest.optionA : currentTest.optionB;
-    const currentPhoto = compareIndex === 0 ? photo1 : photo2;
 
     const handleScroll = (event: any) => {
       const offsetX = event.nativeEvent.contentOffset.x;
@@ -1508,11 +1586,17 @@ export default function TestScreen() {
       }
     };
 
+    const handleConfirmPress = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const option = compareIndex === 0 ? 'A' : 'B';
+      selectOption(option);
+    };
+
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
 
-        {/* Full-screen swipeable photos */}
+        {/* Swipeable overlays on base photo */}
         <ScrollView
           horizontal
           pagingEnabled
@@ -1522,11 +1606,13 @@ export default function TestScreen() {
         >
           {/* Option A */}
           <View style={styles.compareFullPage}>
-            <Image source={{ uri: photo1 }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <Image source={{ uri: basePhoto }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <FullCape colors={currentTest.optionA.colors} opacity={capeOpacity} />
           </View>
           {/* Option B */}
           <View style={styles.compareFullPage}>
-            <Image source={{ uri: photo2 }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <Image source={{ uri: basePhoto }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <FullCape colors={currentTest.optionB.colors} opacity={capeOpacity} />
           </View>
         </ScrollView>
 
@@ -1544,8 +1630,8 @@ export default function TestScreen() {
           </Pressable>
         </View>
 
-        {/* Footer */}
-        <View style={[styles.compareFooterNew, { paddingBottom: insets.bottom + 20 }]}>
+        {/* Footer - box-none allows swipes through but buttons still work */}
+        <View style={[styles.compareFooterNew, { paddingBottom: insets.bottom + 20 }]} pointerEvents="box-none">
           <Text style={styles.compareQuestion}>{currentTest.question}</Text>
 
           {/* Page indicators */}
@@ -1842,7 +1928,7 @@ const styles = StyleSheet.create({
   },
   instructionBanner: {
     position: 'absolute',
-    top: screenHeight * 0.19,
+    top: screenHeight * 0.14,
     alignSelf: 'center',
     left: 0,
     right: 0,
@@ -1875,6 +1961,167 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  continueButton: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 30,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  continueButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000000',
+  },
+  photoConfirmControls: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    gap: 16,
+  },
+  retakePhotoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    gap: 8,
+  },
+  retakePhotoButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  confirmStartButton: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 30,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+  },
+  confirmStartButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000000',
+  },
+  captureProgress: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  captureBottomPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    zIndex: 100,
+  },
+  captureQuestion: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  currentOptionBadge: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  currentOptionLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 4,
+  },
+  currentOptionName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  currentOptionNameCentered: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  optionsIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    gap: 8,
+  },
+  testProgressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 16,
+  },
+  testProgressDot: {
+    width: 28,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  testProgressDotComplete: {
+    backgroundColor: '#34C759',
+  },
+  testProgressDotCurrent: {
+    backgroundColor: '#FFFFFF',
+  },
+  pageDotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  pageDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  pageDotActive: {
+    width: 24,
+    backgroundColor: '#FFFFFF',
+  },
+  swipeHintText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  captureActionButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  captureActionButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#000000',
   },
   exitTestButton: {
     width: 48,
@@ -2024,6 +2271,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.6)',
     marginBottom: 16,
+  },
+  swipeHintFloating: {
+    position: 'absolute',
+    bottom: 180,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   selectionButtons: {
     flexDirection: 'row',
