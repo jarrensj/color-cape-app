@@ -273,12 +273,12 @@ const questions: Question[] = [
   },
   {
     id: 'preview_colors',
-    question: 'Would you like to see how different colors look on you?',
+    question: 'Want to try colors on yourself?',
     options: [
       { label: 'Yes, that would be amazing!', value: 'yes_amazing' },
       { label: "Sure, I'm curious", value: 'curious' },
       { label: "Maybe, if it's easy", value: 'maybe' },
-      { label: 'I prefer to wing it', value: 'wing_it' },
+      { label: 'Maybe later', value: 'maybe_later' },
     ],
   },
 ];
