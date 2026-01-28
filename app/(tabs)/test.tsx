@@ -1241,6 +1241,13 @@ export default function TestScreen() {
     const selectedOption = option === 'A' ? currentTest.optionA : currentTest.optionB;
     const scoreChange = (option === 'A' ? -1 : 1) * currentTest.weight;
 
+    // Scroll to show the selected option
+    const newIndex = option === 'A' ? 0 : 1;
+    if (newIndex !== compareIndex) {
+      setCompareIndex(newIndex);
+      compareScrollRef.current?.scrollTo({ x: newIndex * screenWidth, animated: true });
+    }
+
     setPendingSelection({ option, scoreChange, selectedOption });
     setConfirmModalVisible(true);
   };
