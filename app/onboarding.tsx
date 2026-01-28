@@ -26,8 +26,6 @@ const slideImages = [
   require('@/assets/images/dressing-room-unicorn.png'),
   require('@/assets/images/unicorn-test-taking.png'),
   require('@/assets/images/selfie-unicorn.png'),
-  require('@/assets/images/unicorn-suit.png'),
-  require('@/assets/images/unicorn-cape.png'),
 ];
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -275,32 +273,12 @@ const questions: Question[] = [
   },
   {
     id: 'preview_colors',
-    question: 'Would you like to see how different color palettes look on you?',
+    question: 'Would you like to see how different colors look on you?',
     options: [
       { label: 'Yes, that would be amazing!', value: 'yes_amazing' },
       { label: "Sure, I'm curious", value: 'curious' },
       { label: "Maybe, if it's easy", value: 'maybe' },
-      { label: 'I usually just guess', value: 'guess' },
-    ],
-  },
-  {
-    id: 'confidence',
-    question: 'How confident are you in choosing colors right now?',
-    options: [
-      { label: 'Not confident at all', value: 'not_confident' },
-      { label: 'A little unsure', value: 'unsure' },
-      { label: 'Somewhat confident', value: 'somewhat' },
-      { label: 'Very confident', value: 'confident' },
-    ],
-  },
-  {
-    id: 'curiosity',
-    question: 'Do you wonder what colors could look good on you?',
-    options: [
-      { label: 'Yes, all the time!', value: 'all_the_time' },
-      { label: 'Sometimes I do', value: 'sometimes' },
-      { label: 'Not really, but I\'m curious', value: 'curious' },
-      { label: 'I already know my colors', value: 'know_already' },
+      { label: 'I prefer to wing it', value: 'wing_it' },
     ],
   },
 ];
@@ -403,21 +381,17 @@ export default function OnboardingScreen() {
   // Determine which dots are visible based on current slide
   const isDotVisible = (dotIndex: number) => {
     if (currentQuestion === 0) return false;
-    if (currentQuestion === 1) return dotIndex < 3;
-    if (currentQuestion === 2) return dotIndex < 6;
-    if (currentQuestion === 3) return dotIndex < 9;
-    if (currentQuestion === 4) return dotIndex < 12;
-    return true;
+    if (currentQuestion === 1) return dotIndex < 5;
+    if (currentQuestion === 2) return dotIndex < 10;
+    return true; // Q4: all dots
   };
 
   // Determine which swatch cards are visible based on current slide
   const isSwatchVisible = (swatchIndex: number) => {
     if (currentQuestion === 0) return false; // Q1: no swatches
     if (currentQuestion === 1) return swatchIndex < 2; // Q2: 2 swatches
-    if (currentQuestion === 2) return swatchIndex < 3; // Q3: 3 swatches
-    if (currentQuestion === 3) return swatchIndex < 4; // Q4: 4 swatches
-    if (currentQuestion === 4) return swatchIndex < 5; // Q5: 5 swatches
-    return true; // Q6: all 6 swatches
+    if (currentQuestion === 2) return swatchIndex < 4; // Q3: 4 swatches
+    return true; // Q4: all 6 swatches
   };
 
   // Animated styles for slide content
@@ -430,9 +404,7 @@ export default function OnboardingScreen() {
   const getGradientColors = (): [string, string, string] => {
     if (currentQuestion === 0) return ['#000000', '#000000', '#050505'];
     if (currentQuestion === 1) return ['#0d0510', '#050510', '#0a0515'];
-    if (currentQuestion === 2) return ['#150a18', '#0a0a18', '#100a20'];
-    if (currentQuestion === 3) return ['#1a0f20', '#0f1025', '#151028'];
-    if (currentQuestion === 4) return ['#201530', '#15152d', '#1a1535'];
+    if (currentQuestion === 2) return ['#180d1c', '#0d0d1c', '#120d22'];
     return ['#281a3a', '#1a1a38', '#201a40']; // Final: rich purple/blue tones
   };
 
