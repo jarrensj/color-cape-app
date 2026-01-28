@@ -939,7 +939,7 @@ export default function TestScreen() {
   const [compareIndex, setCompareIndex] = useState(0);
   const [capeOpacity, setCapeOpacity] = useState(1.0);
   const [showTransition, setShowTransition] = useState(false);
-  const [transitionData, setTransitionData] = useState<{ category: string; description: string } | null>(null);
+  const [transitionData, setTransitionData] = useState<{ title: string; category: string; description: string; isFirstTest?: boolean } | null>(null);
   const router = useRouter();
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
@@ -1229,16 +1229,20 @@ export default function TestScreen() {
     // Move to next test or show result
     if (currentTestIndex < TOTAL_TESTS - 1) {
       const nextTest = diagnosticTests[currentTestIndex + 1];
-      const categoryLabel = nextTest.category === 'undertone' ? 'Undertone' :
-                           nextTest.category === 'value' ? 'Value' : 'Chroma';
+      const categoryLabel = nextTest.category === 'undertone' ? 'Undertone Test' :
+                           nextTest.category === 'value' ? 'Value Test' : 'Chroma Test';
       const categoryDesc = nextTest.category === 'undertone'
         ? 'This test determines if your skin has warm, cool, or neutral undertones by comparing how metallic and neutral colors look against your complexion.'
         : nextTest.category === 'value'
         ? 'This test finds your ideal color depth — whether light, delicate shades or deep, bold colors complement you best.'
         : 'This test measures your color clarity — whether you look better in bright, saturated colors or soft, muted tones.';
 
-      // Show transition overlay
-      setTransitionData({ category: categoryLabel, description: categoryDesc });
+      // Show transition overlay with comparison as title
+      setTransitionData({
+        title: `${nextTest.optionA.name} vs ${nextTest.optionB.name}`,
+        category: categoryLabel,
+        description: categoryDesc,
+      });
       setShowTransition(true);
     } else {
       // Calculate result and top matches
@@ -1260,7 +1264,10 @@ export default function TestScreen() {
 
   const advanceToNextTest = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setCurrentTestIndex(currentTestIndex + 1);
+    // Only increment if not the first test intro
+    if (!transitionData?.isFirstTest) {
+      setCurrentTestIndex(currentTestIndex + 1);
+    }
     setCompareIndex(0);
     setShowTransition(false);
     setTransitionData(null);
@@ -1330,6 +1337,15 @@ export default function TestScreen() {
   if (step === 'photo') {
     const confirmAndStart = () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      // Show transition for first test
+      const firstTest = diagnosticTests[0];
+      setTransitionData({
+        title: `${firstTest.optionA.name} vs ${firstTest.optionB.name}`,
+        category: 'Undertone Test',
+        description: 'This test determines if your skin has warm, cool, or neutral undertones by comparing how metallic and neutral colors look against your complexion.',
+        isFirstTest: true,
+      });
+      setShowTransition(true);
       setStep('capture1');
     };
 
@@ -1726,7 +1742,8 @@ export default function TestScreen() {
             exiting={FadeOut.duration(400)}
           >
             <View style={styles.transitionContent}>
-              <Text style={styles.transitionTitle}>{transitionData.category} Test</Text>
+              <Text style={styles.transitionCategory}>{transitionData.category}</Text>
+              <Text style={styles.transitionTitle}>{transitionData.title}</Text>
               <Text style={styles.transitionDescription}>{transitionData.description}</Text>
               <Pressable style={styles.transitionButton} onPress={advanceToNextTest}>
                 <Text style={styles.transitionButtonText}>Next</Text>
@@ -2427,8 +2444,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 40,
   },
+  transitionCategory: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.6)',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
   transitionTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
     color: '#FFFFFF',
     marginBottom: 16,
