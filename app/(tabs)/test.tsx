@@ -1790,9 +1790,14 @@ export default function TestScreen() {
               <Text style={styles.transitionCategory}>{transitionData.category}</Text>
               <Text style={styles.transitionTitle}>{transitionData.title}</Text>
               <Text style={styles.transitionDescription}>{transitionData.description}</Text>
-              <Pressable style={styles.transitionButton} onPress={advanceToNextTest}>
-                <Text style={styles.transitionButtonText}>Next</Text>
-              </Pressable>
+              <View style={styles.transitionButtons}>
+                <Pressable style={styles.transitionBackButton} onPress={goBack}>
+                  <Text style={styles.transitionBackButtonText}>Back</Text>
+                </Pressable>
+                <Pressable style={styles.transitionButton} onPress={advanceToNextTest}>
+                  <Text style={styles.transitionButtonText}>Next</Text>
+                </Pressable>
+              </View>
             </View>
           </Animated.View>
         )}
@@ -2510,6 +2515,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 32,
+  },
+  transitionButtons: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  transitionBackButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 30,
+  },
+  transitionBackButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   transitionButton: {
     backgroundColor: '#FFFFFF',
