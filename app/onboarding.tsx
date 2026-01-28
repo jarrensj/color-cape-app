@@ -336,19 +336,8 @@ export default function OnboardingScreen() {
   const isLastQuestion = currentQuestion === questions.length - 1;
 
   const animateSlideTransition = useCallback((direction: 'forward' | 'back', callback: () => void) => {
-    const exitDirection = direction === 'forward' ? -30 : 30;
-    const enterDirection = direction === 'forward' ? 30 : -30;
-
-    // Exit animation
-    slideOpacity.value = withTiming(0, { duration: 150, easing: Easing.in(Easing.cubic) });
-    slideTranslateY.value = withTiming(exitDirection, { duration: 150, easing: Easing.in(Easing.cubic) }, () => {
-      runOnJS(callback)();
-      // Reset position for entry
-      slideTranslateY.value = enterDirection;
-      // Enter animation
-      slideOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) });
-      slideTranslateY.value = withSpring(0, { damping: 20, stiffness: 200 });
-    });
+    // Instant transition - no animation
+    callback();
   }, []);
 
   const selectOption = async (value: string) => {
@@ -452,7 +441,7 @@ export default function OnboardingScreen() {
       {/* Progress indicator */}
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <View style={styles.progressContainer}>
-          {questions.map((_, index) => (
+          {[0, 1, 2, 3, 4].map((index) => (
             <View
               key={index}
               style={[
@@ -572,6 +561,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 40,
+    height: 100,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
