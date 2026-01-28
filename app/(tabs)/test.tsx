@@ -933,6 +933,7 @@ export default function TestScreen() {
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const compositeRef = useRef<View>(null);
+  const compareScrollRef = useRef<ScrollView>(null);
   const [pendingCapture, setPendingCapture] = useState<{ uri: string; forStep: 'capture1' | 'capture2' } | null>(null);
   const [basePhoto, setBasePhoto] = useState<string | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
@@ -1263,6 +1264,8 @@ export default function TestScreen() {
     setCompareIndex(0);
     setShowTransition(false);
     setTransitionData(null);
+    // Scroll back to first option
+    compareScrollRef.current?.scrollTo({ x: 0, animated: false });
   };
 
   // Get current overlay colors based on which photo we're taking
@@ -1619,6 +1622,7 @@ export default function TestScreen() {
 
         {/* Swipeable overlays on base photo */}
         <ScrollView
+          ref={compareScrollRef}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
