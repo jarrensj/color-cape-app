@@ -16,6 +16,7 @@ export default {
       buildNumber: '2',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSCameraUsageDescription: 'Allow $(PRODUCT_NAME) to access your camera to show color capes over you for color comparison.',
       },
     },
     android: {
