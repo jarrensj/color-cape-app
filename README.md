@@ -19,6 +19,7 @@ A personal color analysis app that helps you discover which colors look best on 
 - Choose 1, 2, 4, or 8 colors per cape
 - Pick colors from a preset grid or enter custom hex codes
 - Toggle and reorder custom capes alongside built-in palettes
+- Share custom capes via import/export
 
 ### Palette Management
 - Enable/disable individual palettes
