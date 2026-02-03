@@ -154,6 +154,7 @@ const diagnosticTests = [
     category: 'undertone',
     weight: 1.5,
     question: 'Which metallic looks better against your complexion?',
+    lookFor: 'Notice which metal makes your skin glow and look healthy vs. appear dull, sallow, or washed out.',
     optionA: {
       name: 'Silver',
       description: 'Cool metallic',
@@ -181,6 +182,7 @@ const diagnosticTests = [
     category: 'undertone',
     weight: 1.0,
     question: 'Which neutral white flatters you more?',
+    lookFor: 'See which shade brightens your face and eyes vs. makes your skin look tired or yellowish.',
     optionA: {
       name: 'Pure White',
       description: 'Crisp and cool',
@@ -208,6 +210,7 @@ const diagnosticTests = [
     category: 'value',
     weight: 1.2,
     question: 'Which color depth suits you better?',
+    lookFor: 'Compare which depth brings out your features vs. overwhelms them or makes you fade into the background.',
     optionA: {
       name: 'Light',
       description: 'Soft pastels',
@@ -235,6 +238,7 @@ const diagnosticTests = [
     category: 'value',
     weight: 1.0,
     question: 'Which intensity range looks better on you?',
+    lookFor: 'Look for which intensity makes your face the focal point vs. the colors stealing attention away.',
     optionA: {
       name: 'Delicate',
       description: 'Airy and light',
@@ -262,6 +266,7 @@ const diagnosticTests = [
     category: 'chroma',
     weight: 1.2,
     question: 'Which color clarity suits you?',
+    lookFor: 'Watch for which clarity makes you look vibrant and alive vs. harsh or washed out.',
     optionA: {
       name: 'Bright',
       description: 'Clear and vivid',
@@ -289,6 +294,7 @@ const diagnosticTests = [
     category: 'chroma',
     weight: 1.0,
     question: 'Which saturation level flatters you?',
+    lookFor: 'Notice which saturation level harmonizes with your natural coloring vs. clashes or competes with it.',
     optionA: {
       name: 'Saturated',
       description: 'Punchy and electric',
@@ -939,7 +945,7 @@ export default function TestScreen() {
   const [compareIndex, setCompareIndex] = useState(0);
   const [capeOpacity, setCapeOpacity] = useState(1.0);
   const [showTransition, setShowTransition] = useState(false);
-  const [transitionData, setTransitionData] = useState<{ title: string; category: string; description: string; isFirstTest?: boolean; goingBack?: boolean } | null>(null);
+  const [transitionData, setTransitionData] = useState<{ title: string; category: string; description: string; lookFor: string; isFirstTest?: boolean; goingBack?: boolean } | null>(null);
   const router = useRouter();
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
@@ -1181,6 +1187,7 @@ export default function TestScreen() {
           title: `${prevTest.optionA.name} vs ${prevTest.optionB.name}`,
           category: categoryLabel,
           description: categoryDesc,
+          lookFor: prevTest.lookFor,
           goingBack: true,
         });
         setShowTransition(true);
@@ -1203,6 +1210,7 @@ export default function TestScreen() {
         title: `${lastTest.optionA.name} vs ${lastTest.optionB.name}`,
         category: categoryLabel,
         description: categoryDesc,
+        lookFor: lastTest.lookFor,
         goingBack: true,
       });
       setShowTransition(true);
@@ -1296,6 +1304,7 @@ export default function TestScreen() {
         title: `${nextTest.optionA.name} vs ${nextTest.optionB.name}`,
         category: categoryLabel,
         description: categoryDesc,
+        lookFor: nextTest.lookFor,
       });
       setShowTransition(true);
     } else {
@@ -1400,6 +1409,7 @@ export default function TestScreen() {
         title: `${firstTest.optionA.name} vs ${firstTest.optionB.name}`,
         category: 'Undertone Test',
         description: 'This test determines if your skin has warm, cool, or neutral undertones by comparing how metallic and neutral colors look against your complexion.',
+        lookFor: firstTest.lookFor,
         isFirstTest: true,
       });
       setShowTransition(true);
@@ -1802,6 +1812,10 @@ export default function TestScreen() {
               <Text style={styles.transitionCategory}>{transitionData.category}</Text>
               <Text style={styles.transitionTitle}>{transitionData.title}</Text>
               <Text style={styles.transitionDescription}>{transitionData.description}</Text>
+              <View style={styles.transitionLookForContainer}>
+                <Text style={styles.transitionLookForLabel}>What to look for:</Text>
+                <Text style={styles.transitionLookFor}>{transitionData.lookFor}</Text>
+              </View>
               <View style={styles.transitionButtons}>
                 <Pressable style={styles.transitionBackButton} onPress={goBack}>
                   <Text style={styles.transitionBackButtonText}>Back</Text>
@@ -2533,7 +2547,29 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
     lineHeight: 24,
+    marginBottom: 20,
+  },
+  transitionLookForContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 32,
+  },
+  transitionLookForLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.6)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  transitionLookFor: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 22,
   },
   transitionButtons: {
     flexDirection: 'row',
