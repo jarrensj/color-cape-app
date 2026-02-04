@@ -300,7 +300,7 @@ const diagnosticTests = [
     weight: 1.0,
     question: 'Which saturation level flatters you?',
     guide: 'Notice which saturation level harmonizes with your natural coloring vs. clashes or competes with it.',
-    lookFor: 'See how the color interacts with your hair, eyes, and skin tone. The right saturation will create a cohesive look, while the wrong one will feel disconnected or jarring.',
+    lookFor: 'Notice if your eyes and skin appear vibrant or flat. The right saturation makes your coloring look richer, while the wrong one can make you look washed out or like the color is fighting for attention.',
     optionA: {
       name: 'Saturated',
       description: 'Punchy and electric',
