@@ -1195,7 +1195,7 @@ export default function SettingsScreen() {
 
         {/* App Version */}
         <View style={[styles.versionContainer, { paddingBottom: insets.bottom + 20 }]}>
-          <Text style={styles.versionText}>Version 1.0.0-beta</Text>
+          <Text style={styles.versionText}>Version 1.0.1-beta</Text>
         </View>
       </ScrollView>
     </View>
