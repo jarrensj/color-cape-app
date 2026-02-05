@@ -9,6 +9,7 @@ import { useState, useCallback, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
+import { useLanguage } from '@/context/language-context';
 import { Image } from 'expo-image';
 import Animated, {
   useAnimatedStyle,
@@ -38,16 +39,17 @@ const SAVED_TEST_RESULT_KEY = 'saved_test_result';
 const OPACITY_SETTING_KEY = 'cape_opacity';
 
 const OPACITY_OPTIONS = [
-  { label: 'Light', value: 0.5 },
-  { label: 'Medium', value: 0.7 },
-  { label: 'Strong', value: 0.85 },
-  { label: 'Full', value: 1.0 },
+  { labelKey: 'settings.opacity.light', value: 0.5 },
+  { labelKey: 'settings.opacity.medium', value: 0.7 },
+  { labelKey: 'settings.opacity.strong', value: 0.85 },
+  { labelKey: 'settings.opacity.full', value: 1.0 },
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { customCapes, preferences } = usePalettePreferences();
+  const { t } = useLanguage();
   const [lastUsed, setLastUsed] = useState<LastUsedPalette>(null);
   const [savedTestResult, setSavedTestResult] = useState<SavedTestResult>(null);
   const [showOpacitySheet, setShowOpacitySheet] = useState(false);
@@ -149,7 +151,7 @@ export default function HomeScreen() {
 
   const getOpacityLabel = () => {
     const option = OPACITY_OPTIONS.find(o => o.value === capeOpacity);
-    return option?.label || 'Full';
+    return option ? t(option.labelKey) : t('settings.opacity.full');
   };
 
   return (
@@ -164,9 +166,9 @@ export default function HomeScreen() {
             contentFit="contain"
           />
         </Animated.View>
-        <Text style={styles.title}>Color Cape</Text>
+        <Text style={styles.title}>{t('home.title')}</Text>
         <Text style={styles.subtitle}>
-          Discover your perfect color palette
+          {t('home.subtitle')}
         </Text>
 
         <View style={styles.cardsContainer}>
@@ -181,13 +183,13 @@ export default function HomeScreen() {
               <Camera size={24} color="#FFFFFF" strokeWidth={2} />
             </View>
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Try Palettes</Text>
+              <Text style={styles.cardTitle}>{t('home.tryPalettes')}</Text>
               <Text style={styles.cardDescription}>
-                Use camera to see how different color palettes look on you
+                {t('home.tryPalettes.description')}
               </Text>
               {lastUsedInfo && (
                 <View style={styles.savedResultInline}>
-                  <Text style={styles.savedResultLabel}>Last viewed:</Text>
+                  <Text style={styles.savedResultLabel}>{t('home.lastViewed')}</Text>
                   <Text style={styles.savedResultName}>{lastUsedInfo.name}</Text>
                   <View style={styles.savedResultColors}>
                     {lastUsedInfo.colors.map((color, index) => (
@@ -213,13 +215,13 @@ export default function HomeScreen() {
               <Sparkles size={24} color="#FFFFFF" strokeWidth={2} />
             </View>
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Take the Test</Text>
+              <Text style={styles.cardTitle}>{t('home.takeTest')}</Text>
               <Text style={styles.cardDescription}>
-                Find your seasonal color palette in a test
+                {t('home.takeTest.description')}
               </Text>
               {savedTestResult && (
                 <View style={styles.savedResultInline}>
-                  <Text style={styles.savedResultLabel}>Last saved result:</Text>
+                  <Text style={styles.savedResultLabel}>{t('home.lastSavedResult')}</Text>
                   <Text style={styles.savedResultName}>{savedTestResult.name}</Text>
                   <View style={styles.savedResultColors}>
                     {savedTestResult.colors.map((color, index) => (
@@ -245,9 +247,9 @@ export default function HomeScreen() {
               <Palette size={24} color="#FFFFFF" strokeWidth={2} />
             </View>
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Customize Capes</Text>
+              <Text style={styles.cardTitle}>{t('home.customizeCapes')}</Text>
               <Text style={styles.cardDescription}>
-                Toggle palettes, reorder, and create your own custom capes
+                {t('home.customizeCapes.description')}
               </Text>
             </View>
           </Pressable>
@@ -263,12 +265,12 @@ export default function HomeScreen() {
               <SunDim size={24} color="#FFFFFF" strokeWidth={2} />
             </View>
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Cape Opacity</Text>
+              <Text style={styles.cardTitle}>{t('home.capeOpacity')}</Text>
               <Text style={styles.cardDescription}>
-                Adjust how visible the color overlay appears
+                {t('home.capeOpacity.description')}
               </Text>
               <View style={styles.opacityValueInline}>
-                <Text style={styles.opacityValueLabel}>Current:</Text>
+                <Text style={styles.opacityValueLabel}>{t('home.current')}</Text>
                 <Text style={styles.opacityValueText}>{getOpacityLabel()}</Text>
               </View>
             </View>
@@ -287,13 +289,13 @@ export default function HomeScreen() {
           <Pressable style={styles.sheetBackdrop} onPress={() => setShowOpacitySheet(false)} />
           <View style={[styles.sheetContent, { paddingBottom: insets.bottom + 20 }]}>
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>Cape Opacity</Text>
+              <Text style={styles.sheetTitle}>{t('home.opacity.sheet.title')}</Text>
               <Pressable onPress={() => setShowOpacitySheet(false)} style={styles.sheetClose}>
                 <X size={24} color="#FFFFFF" />
               </Pressable>
             </View>
             <Text style={styles.sheetDescription}>
-              Choose how visible the color overlay appears on camera
+              {t('home.opacity.sheet.description')}
             </Text>
 
             <View style={styles.opacityOptions}>
@@ -315,7 +317,7 @@ export default function HomeScreen() {
                       capeOpacity === option.value && styles.opacityOptionTextActive,
                     ]}
                   >
-                    {option.label}
+                    {t(option.labelKey)}
                   </Text>
                 </Pressable>
               ))}

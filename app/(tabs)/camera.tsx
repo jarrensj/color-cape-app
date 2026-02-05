@@ -14,6 +14,7 @@ import { captureRef } from 'react-native-view-shot';
 import Svg, { Polygon, Path } from 'react-native-svg';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
+import { useLanguage } from '@/context/language-context';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -129,6 +130,7 @@ export default function CameraScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
   const { getEnabledPalettes, customCapes, preferences, getColorMode, toggleColorMode, isSeasonalPalette } = usePalettePreferences();
+  const { t } = useLanguage();
 
   // Reload settings when screen comes into focus (e.g., after changing in Settings)
   useFocusEffect(
@@ -163,7 +165,7 @@ export default function CameraScreen() {
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant permission to save photos to your gallery.');
+        Alert.alert(t('camera.permissionNeeded'), t('camera.permissionNeededMessage'));
         return;
       }
 
@@ -177,17 +179,17 @@ export default function CameraScreen() {
 
       await MediaLibrary.saveToLibraryAsync(uri);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Saved!', 'Photo with color overlay saved to your gallery.');
+      Alert.alert(t('camera.saved'), t('camera.savedMessage'));
     } catch (error) {
       console.error('Error saving photo:', error);
-      Alert.alert('Error', 'Failed to save photo.');
+      Alert.alert(t('camera.error'), t('camera.errorSaving'));
     }
   }
 
   if (!permission) {
     return (
       <View style={styles.container}>
-        <Text style={styles.loadingText}>Loading camera...</Text>
+        <Text style={styles.loadingText}>{t('camera.loading')}</Text>
       </View>
     );
   }
@@ -196,12 +198,12 @@ export default function CameraScreen() {
     return (
       <View style={styles.permissionContainer}>
         <StatusBar style="light" />
-        <Text style={styles.permissionTitle}>Camera Access Required</Text>
+        <Text style={styles.permissionTitle}>{t('camera.permissionTitle')}</Text>
         <Text style={styles.permissionText}>
-          We need your permission to access the camera.
+          {t('camera.permissionText')}
         </Text>
         <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Continue</Text>
+          <Text style={styles.permissionButtonText}>{t('camera.continue')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -276,11 +278,11 @@ export default function CameraScreen() {
         {/* Bottom controls */}
         <View style={[styles.photoButtonContainer, { paddingBottom: insets.bottom + 20 }]}>
           <TouchableOpacity style={styles.retakeButton} onPress={retake}>
-            <Text style={styles.retakeButtonText}>Back</Text>
+            <Text style={styles.retakeButtonText}>{t('camera.back')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.saveButton} onPress={savePhoto}>
             <Download size={20} color="#000000" strokeWidth={2} />
-            <Text style={styles.saveButtonText}>Save</Text>
+            <Text style={styles.saveButtonText}>{t('camera.save')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -293,9 +295,9 @@ export default function CameraScreen() {
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
-        <Text style={styles.loadingText}>No palettes enabled. Enable some in Settings.</Text>
+        <Text style={styles.loadingText}>{t('camera.noPalettes')}</Text>
         <Pressable style={styles.permissionButton} onPress={goHome}>
-          <Text style={styles.permissionButtonText}>Go to Settings</Text>
+          <Text style={styles.permissionButtonText}>{t('camera.goToSettings')}</Text>
         </Pressable>
       </View>
     );
@@ -303,9 +305,9 @@ export default function CameraScreen() {
 
   // Get display text for color mode
   const getModeDisplay = (mode: 'all8' | 'first4' | 'last4') => {
-    if (mode === 'all8') return 'All 8';
-    if (mode === 'first4') return 'Core';
-    return 'Accent';
+    if (mode === 'all8') return t('camera.colorMode.all8');
+    if (mode === 'first4') return t('camera.colorMode.core');
+    return t('camera.colorMode.accent');
   };
 
   // Get current label based on selection
@@ -313,7 +315,7 @@ export default function CameraScreen() {
     if (selectedCustomCapeId) {
       const customCape = customCapes.find(c => c.id === selectedCustomCapeId);
       if (customCape) {
-        return { name: customCape.name, description: `${customCape.colors.length} custom colors` };
+        return { name: customCape.name, description: `${customCape.colors.length} ${t('camera.customColors')}` };
       }
     }
     if (currentPaletteKey && currentPalette) {
@@ -322,7 +324,7 @@ export default function CameraScreen() {
       const colorCount = mode === 'all8' ? 8 : 4;
       return {
         name: currentPalette.name,
-        description: isSeasonal ? `${colorCount} colors` : currentPalette.description,
+        description: isSeasonal ? `${colorCount} ${t('camera.colors')}` : currentPalette.description,
       };
     }
     return { name: '', description: '' };

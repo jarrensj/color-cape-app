@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 import { ChevronLeft, ChevronUp, ChevronDown, X, Plus, Trash2, Check, Download, Upload } from 'lucide-react-native';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
+import { useLanguage } from '@/context/language-context';
 import ColorPickerModal from '@/components/ColorPickerModal';
 
 const COLOR_COUNT_OPTIONS = [1, 2, 4, 8];
@@ -61,6 +62,7 @@ export default function CustomizeScreen() {
     canAddCustomCape,
     getDefaultCapeName
   } = usePalettePreferences();
+  const { t } = useLanguage();
 
   const goBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -154,12 +156,12 @@ export default function CustomizeScreen() {
   const handleDeleteCustomCape = (capeId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Alert.alert(
-      'Delete Custom Cape',
-      'Are you sure you want to delete this custom cape?',
+      t('customize.alert.deleteTitle'),
+      t('customize.alert.deleteMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('alert.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('customize.alert.delete'),
           style: 'destructive',
           onPress: () => {
             deleteCustomCape(capeId);
@@ -287,11 +289,11 @@ export default function CustomizeScreen() {
   const handleResetPalettes = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Alert.alert(
-      'Reset Palettes',
-      'This will reset all palette settings to defaults. Are you sure?',
+      t('customize.alert.resetTitle'),
+      t('customize.alert.resetMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Reset', style: 'destructive', onPress: resetToDefaults },
+        { text: t('alert.cancel'), style: 'cancel' },
+        { text: t('alert.reset'), style: 'destructive', onPress: resetToDefaults },
       ]
     );
   };
@@ -310,25 +312,25 @@ export default function CustomizeScreen() {
         <View style={[styles.sheetOverlay, { paddingTop: insets.top }]}>
           <View style={[styles.sheetContent, { paddingBottom: insets.bottom + 20, flex: 1 }]}>
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>{editingCapeId ? 'Edit Custom Cape' : 'Create Custom Cape'}</Text>
+              <Text style={styles.sheetTitle}>{editingCapeId ? t('customize.modal.editTitle') : t('customize.modal.createTitle')}</Text>
               <Pressable onPress={() => { setShowCustomCapeSheet(false); setEditingCapeId(null); }} style={styles.sheetClose}>
                 <X size={24} color="#FFFFFF" />
               </Pressable>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={styles.customCapeLabel}>Cape Name</Text>
+              <Text style={styles.customCapeLabel}>{t('customize.modal.capeName')}</Text>
               <TextInput
                 style={styles.capeNameInput}
                 value={capeName}
                 onChangeText={setCapeName}
-                placeholder="Enter cape name"
+                placeholder={t('customize.modal.capeNamePlaceholder')}
                 placeholderTextColor="rgba(255,255,255,0.3)"
                 autoCorrect={false}
                 maxLength={30}
               />
 
-              <Text style={styles.customCapeLabel}>Number of Colors</Text>
+              <Text style={styles.customCapeLabel}>{t('customize.modal.numberOfColors')}</Text>
               <View style={styles.colorCountSelector}>
                 {COLOR_COUNT_OPTIONS.map((count) => (
                   <Pressable
@@ -351,7 +353,7 @@ export default function CustomizeScreen() {
                 ))}
               </View>
 
-              <Text style={styles.customCapeLabel}>Tap a color to edit</Text>
+              <Text style={styles.customCapeLabel}>{t('customize.modal.tapToEdit')}</Text>
               <View style={styles.capePreview}>
                 {customColors.slice(0, customColorCount).map((color, index) => (
                   <Pressable
@@ -368,13 +370,13 @@ export default function CustomizeScreen() {
 
               {editingColorIndex !== null && (
                 <>
-                  <Text style={styles.customCapeLabel}>Choose Color</Text>
+                  <Text style={styles.customCapeLabel}>{t('customize.modal.chooseColor')}</Text>
                   <Pressable style={styles.hexInputContainer} onPress={openVisualPicker}>
                     <View style={[styles.hexPreview, { backgroundColor: hexInput.length >= 4 ? hexInput : '#000' }]} />
-                    <Text style={styles.hexDisplayText}>{hexInput || 'Tap to pick color'}</Text>
+                    <Text style={styles.hexDisplayText}>{hexInput || t('customize.modal.tapToPickColor')}</Text>
                   </Pressable>
 
-                  <Text style={styles.customCapeLabelSmall}>Quick Colors</Text>
+                  <Text style={styles.customCapeLabelSmall}>{t('customize.modal.quickColors')}</Text>
                   <View style={styles.colorPickerGridSmall}>
                     {COLOR_PICKER_COLORS.map((color) => (
                       <Pressable
@@ -411,13 +413,13 @@ export default function CustomizeScreen() {
                 >
                   <View style={styles.importModalContent}>
                     <View style={styles.sheetHeader}>
-                      <Text style={styles.sheetTitle}>Import Cape</Text>
+                      <Text style={styles.sheetTitle}>{t('customize.import.title')}</Text>
                       <Pressable onPress={() => setShowImportModal(false)} style={styles.sheetClose}>
                         <X size={24} color="#FFFFFF" />
                       </Pressable>
                     </View>
                     <Text style={styles.importDescription}>
-                      Paste the exported cape JSON data below
+                      {t('customize.import.description')}
                     </Text>
                     <TextInput
                       style={[styles.importTextInput, importError && styles.importTextInputError]}
@@ -441,7 +443,7 @@ export default function CustomizeScreen() {
                         style={styles.pasteButton}
                         onPress={handlePasteFromClipboard}
                       >
-                        <Text style={styles.pasteButtonText}>Paste from Clipboard</Text>
+                        <Text style={styles.pasteButtonText}>{t('customize.import.paste')}</Text>
                       </Pressable>
                       <Pressable
                         style={{
@@ -456,7 +458,7 @@ export default function CustomizeScreen() {
                         onPress={handleConfirmImport}
                       >
                         <Check size={18} color="#000000" strokeWidth={2} />
-                        <Text style={styles.customCapeButtonSaveText}>Import</Text>
+                        <Text style={styles.customCapeButtonSaveText}>{t('customize.modal.import')}</Text>
                       </Pressable>
                     </View>
                   </View>
@@ -464,21 +466,21 @@ export default function CustomizeScreen() {
               </Modal>
 
               {/* Import/Export Section */}
-              <Text style={styles.customCapeLabel}>Import / Export</Text>
+              <Text style={styles.customCapeLabel}>{t('customize.modal.importExport')}</Text>
               <View style={styles.importExportRow}>
                 <Pressable
                   style={[styles.importExportButton]}
                   onPress={handleImportCape}
                 >
                   <Download size={18} color="#5AC8FA" strokeWidth={2} />
-                  <Text style={styles.importExportButtonText}>Import</Text>
+                  <Text style={styles.importExportButtonText}>{t('customize.modal.import')}</Text>
                 </Pressable>
                 <Pressable
                   style={[styles.importExportButton]}
                   onPress={handleExportCape}
                 >
                   <Upload size={18} color="#5AC8FA" strokeWidth={2} />
-                  <Text style={styles.importExportButtonText}>Export</Text>
+                  <Text style={styles.importExportButtonText}>{t('customize.modal.export')}</Text>
                 </Pressable>
               </View>
 
@@ -489,7 +491,7 @@ export default function CustomizeScreen() {
                     onPress={() => handleDeleteCustomCape(editingCapeId)}
                   >
                     <Trash2 size={18} color="#FF3B30" strokeWidth={2} />
-                    <Text style={styles.customCapeButtonDeleteText}>Delete</Text>
+                    <Text style={styles.customCapeButtonDeleteText}>{t('customize.modal.delete')}</Text>
                   </Pressable>
                 )}
                 <Pressable
@@ -497,7 +499,7 @@ export default function CustomizeScreen() {
                   onPress={handleSaveCustomCape}
                 >
                   <Check size={18} color="#000000" strokeWidth={2} />
-                  <Text style={styles.customCapeButtonSaveText}>Save Cape</Text>
+                  <Text style={styles.customCapeButtonSaveText}>{t('customize.modal.saveCape')}</Text>
                 </Pressable>
               </View>
             </ScrollView>
@@ -510,15 +512,15 @@ export default function CustomizeScreen() {
         <Pressable style={styles.backButton} onPress={goBack}>
           <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
         </Pressable>
-        <Text style={styles.title}>Customize Capes</Text>
+        <Text style={styles.title}>{t('customize.title')}</Text>
         <View style={{ width: 44 }} />
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Custom Capes Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Custom Capes</Text>
-          <Text style={styles.sectionDescription}>Create your own color cape palettes</Text>
+          <Text style={styles.sectionTitle}>{t('customize.customCapes')}</Text>
+          <Text style={styles.sectionDescription}>{t('customize.customCapes.description')}</Text>
 
           {customCapes.map((cape) => (
             <Pressable
@@ -539,7 +541,7 @@ export default function CustomizeScreen() {
               </View>
               <View style={styles.capeInfo}>
                 <Text style={styles.capeName}>{cape.name}</Text>
-                <Text style={styles.capeDescription}>{cape.colors.length} colors</Text>
+                <Text style={styles.capeDescription}>{cape.colors.length} {t('customize.colors')}</Text>
               </View>
               <Switch
                 value={cape.enabled}
@@ -562,15 +564,15 @@ export default function CustomizeScreen() {
               onPress={() => openCustomCapeCreator()}
             >
               <Plus size={20} color="#5AC8FA" strokeWidth={2} />
-              <Text style={styles.createButtonText}>Create Custom Cape ({customCapes.length}/5)</Text>
+              <Text style={styles.createButtonText}>{t('customize.createCustomCape')} ({customCapes.length}/5)</Text>
             </Pressable>
           )}
         </View>
 
         {/* All Palettes Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>All Palettes</Text>
-          <Text style={styles.sectionDescription}>Toggle and reorder your capes</Text>
+          <Text style={styles.sectionTitle}>{t('customize.allPalettes')}</Text>
+          <Text style={styles.sectionDescription}>{t('customize.allPalettes.description')}</Text>
 
           <View style={styles.paletteList}>
             {(() => {
@@ -713,7 +715,7 @@ export default function CustomizeScreen() {
               ]}
               onPress={handleToggleAll}
             >
-              <Text style={styles.actionButtonText}>{allEnabled ? 'Disable All' : 'Enable All'}</Text>
+              <Text style={styles.actionButtonText}>{allEnabled ? t('customize.disableAll') : t('customize.enableAll')}</Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -722,7 +724,7 @@ export default function CustomizeScreen() {
               ]}
               onPress={handleResetPalettes}
             >
-              <Text style={styles.actionButtonText}>Reset to Defaults</Text>
+              <Text style={styles.actionButtonText}>{t('customize.resetToDefaults')}</Text>
             </Pressable>
           </View>
         </View>

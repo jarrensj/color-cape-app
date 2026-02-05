@@ -7,10 +7,11 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check, Download, Upload } from 'lucide-react-native';
+import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check, Download, Upload, Globe } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
+import { useLanguage, LANGUAGES, LanguageCode } from '@/context/language-context';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
 
 const CAMERA_SETTING_KEY = 'default_camera_facing';
@@ -68,6 +69,12 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
   const { preferences, customCapes, togglePalette, setAllEnabled, movePaletteUp, movePaletteDown, resetToDefaults, resetCustomCapes, saveCustomCape, deleteCustomCape, toggleCustomCape, moveCustomCapeUp, moveCustomCapeDown, canAddCustomCape, getDefaultCapeName } = usePalettePreferences();
+  const { language, setLanguage, t } = useLanguage();
+
+  const handleLanguageChange = (code: LanguageCode) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setLanguage(code);
+  };
 
   useEffect(() => {
     AsyncStorage.getItem(CAMERA_SETTING_KEY).then((value) => {
@@ -939,9 +946,47 @@ export default function SettingsScreen() {
           )}
         </View>
 
+        {/* Language Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('settings.language')}</Text>
+
+          <View style={styles.settingButton}>
+            <View style={[styles.settingIcon, styles.settingIconBlue]}>
+              <Globe size={22} color="#007AFF" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>{t('settings.language')}</Text>
+              <Text style={styles.settingDescription}>
+                {t('settings.language.description')}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.languageSelector}>
+            {LANGUAGES.map((lang) => (
+              <Pressable
+                key={lang.code}
+                style={[
+                  styles.languageButton,
+                  language === lang.code && styles.languageButtonActive,
+                ]}
+                onPress={() => handleLanguageChange(lang.code)}
+              >
+                <Text
+                  style={[
+                    styles.languageButtonText,
+                    language === lang.code && styles.languageButtonTextActive,
+                  ]}
+                >
+                  {lang.nativeLabel}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
         {/* Camera Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Camera</Text>
+          <Text style={styles.sectionTitle}>{t('settings.camera')}</Text>
 
           <View style={[styles.settingButton]}>
             <View style={[styles.settingIcon, styles.settingIconBlue]}>
@@ -1290,6 +1335,29 @@ const styles = StyleSheet.create({
   },
   settingLabelDisabled: {
     color: 'rgba(255, 255, 255, 0.4)',
+  },
+  languageSelector: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 8,
+  },
+  languageButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center',
+  },
+  languageButtonActive: {
+    backgroundColor: 'rgba(0, 122, 255, 0.3)',
+  },
+  languageButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  languageButtonTextActive: {
+    color: '#007AFF',
   },
   opacitySelector: {
     flexDirection: 'row',

@@ -7,6 +7,8 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useOnboarding } from '@/context/onboarding-context';
+import { useLanguage } from '@/context/language-context';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useAnimatedStyle,
@@ -44,8 +46,9 @@ const rainbowColors = [
 
 type Question = {
   id: string;
-  question: string;
-  options: { label: string; value: string }[];
+  questionKey: string;
+  optionKeys: string[];
+  optionValues: string[];
 };
 
 // Color swatch card configurations - positioned around edges to avoid content area
@@ -243,43 +246,27 @@ function ConfettiDot({
 const questions: Question[] = [
   {
     id: 'color_preference',
-    question: 'Do you prefer...',
-    options: [
-      { label: 'Neutrals', value: 'neutrals' },
-      { label: 'Color', value: 'color' },
-      { label: 'Mostly neutrals with some color', value: 'mostly_neutrals' },
-      { label: "I'm trying to experiment more", value: 'experimenting' },
-    ],
+    questionKey: 'onboarding.q1.question',
+    optionKeys: ['onboarding.q1.opt1', 'onboarding.q1.opt2', 'onboarding.q1.opt3', 'onboarding.q1.opt4'],
+    optionValues: ['neutrals', 'color', 'mostly_neutrals', 'experimenting'],
   },
   {
     id: 'overwhelmed',
-    question: 'Do you ever feel overwhelmed by color choices when shopping?',
-    options: [
-      { label: 'Yes, all the time!', value: 'always' },
-      { label: 'Sometimes', value: 'sometimes' },
-      { label: 'Not really', value: 'not_really' },
-      { label: 'I just grab and go', value: 'grab_and_go' },
-    ],
+    questionKey: 'onboarding.q2.question',
+    optionKeys: ['onboarding.q2.opt1', 'onboarding.q2.opt2', 'onboarding.q2.opt3', 'onboarding.q2.opt4'],
+    optionValues: ['always', 'sometimes', 'not_really', 'grab_and_go'],
   },
   {
     id: 'taken_test',
-    question: 'Have you ever taken a color analysis test?',
-    options: [
-      { label: 'Yes, I know my season', value: 'yes_know' },
-      { label: 'Yes, but I forgot my results', value: 'yes_forgot' },
-      { label: 'No, but I want to!', value: 'no_want_to' },
-      { label: "No, what's that?", value: 'no_whats_that' },
-    ],
+    questionKey: 'onboarding.q3.question',
+    optionKeys: ['onboarding.q3.opt1', 'onboarding.q3.opt2', 'onboarding.q3.opt3', 'onboarding.q3.opt4'],
+    optionValues: ['yes_know', 'yes_forgot', 'no_want_to', 'no_whats_that'],
   },
   {
     id: 'preview_colors',
-    question: 'Want to try colors on yourself?',
-    options: [
-      { label: 'Yes, that would be amazing!', value: 'yes_amazing' },
-      { label: "Sure, I'm curious", value: 'curious' },
-      { label: "Maybe, if it's easy", value: 'maybe' },
-      { label: 'Maybe later', value: 'maybe_later' },
-    ],
+    questionKey: 'onboarding.q4.question',
+    optionKeys: ['onboarding.q4.opt1', 'onboarding.q4.opt2', 'onboarding.q4.opt3', 'onboarding.q4.opt4'],
+    optionValues: ['yes_amazing', 'curious', 'maybe', 'maybe_later'],
   },
 ];
 
@@ -289,6 +276,7 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setHasOnboarded } = useOnboarding();
+  const { t } = useLanguage();
 
   // Animation values for slide transitions
   const slideOpacity = useSharedValue(1);
@@ -438,24 +426,31 @@ export default function OnboardingScreen() {
         ))}
       </View>
 
-      {/* Progress indicator */}
+      {/* Header with progress and language toggle */}
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-        <View style={styles.progressContainer}>
-          {[0, 1, 2, 3, 4].map((index) => (
-            <View
-              key={index}
-              style={[
-                styles.progressDot,
-                index <= currentQuestion && styles.progressDotActive,
-              ]}
-            />
-          ))}
+        <View style={styles.headerRow}>
+          <View style={styles.backButtonContainer}>
+            {currentQuestion > 0 && (
+              <Pressable style={styles.backButton} onPress={goBack}>
+                <Text style={styles.backButtonText}>{t('onboarding.back')}</Text>
+              </Pressable>
+            )}
+          </View>
+          <View style={styles.progressContainer}>
+            {[0, 1, 2, 3, 4].map((index) => (
+              <View
+                key={index}
+                style={[
+                  styles.progressDot,
+                  index <= currentQuestion && styles.progressDotActive,
+                ]}
+              />
+            ))}
+          </View>
+          <View style={styles.languageToggleContainer}>
+            <LanguageToggle />
+          </View>
         </View>
-        {currentQuestion > 0 && (
-          <Pressable style={styles.backButton} onPress={goBack}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
-        )}
       </View>
 
       {/* Question with slide animation */}
@@ -468,19 +463,19 @@ export default function OnboardingScreen() {
           />
         </Animated.View>
 
-        <Text style={styles.questionText}>{question.question}</Text>
+        <Text style={styles.questionText}>{t(question.questionKey)}</Text>
 
         <View style={styles.optionsContainer}>
-          {question.options.map((option) => (
+          {question.optionKeys.map((optionKey, index) => (
             <Pressable
-              key={option.value}
+              key={question.optionValues[index]}
               style={({ pressed }) => [
                 styles.optionButton,
                 pressed && styles.optionButtonPressed,
               ]}
-              onPress={() => selectOption(option.value)}
+              onPress={() => selectOption(question.optionValues[index])}
             >
-              <Text style={styles.optionText}>{option.label}</Text>
+              <Text style={styles.optionText}>{t(optionKey)}</Text>
             </Pressable>
           ))}
         </View>
@@ -506,11 +501,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     zIndex: 10,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  backButtonContainer: {
+    width: 60,
+    alignItems: 'flex-start',
+  },
   progressContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 8,
-    marginBottom: 16,
+    flex: 1,
+  },
+  languageToggleContainer: {
+    width: 60,
+    alignItems: 'flex-end',
   },
   progressDot: {
     width: 10,

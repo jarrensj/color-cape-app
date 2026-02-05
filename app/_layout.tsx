@@ -10,6 +10,7 @@ import { OnboardingProvider, useOnboarding } from '@/context/onboarding-context'
 import { RevenueCatProvider, useRevenueCat } from '@/context/revenuecat-context';
 import { PalettePreferencesProvider } from '@/context/palette-preferences-context';
 import { TabBarProvider } from '@/contexts/tab-bar-context';
+import { LanguageProvider } from '@/context/language-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -79,14 +80,16 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <RevenueCatProvider>
-      <OnboardingProvider>
-        <PalettePreferencesProvider>
-          <TabBarProvider>
-            <RootLayoutNav />
-          </TabBarProvider>
-        </PalettePreferencesProvider>
-      </OnboardingProvider>
-    </RevenueCatProvider>
+    <LanguageProvider>
+      <RevenueCatProvider>
+        <OnboardingProvider>
+          <PalettePreferencesProvider>
+            <TabBarProvider>
+              <RootLayoutNav />
+            </TabBarProvider>
+          </PalettePreferencesProvider>
+        </OnboardingProvider>
+      </RevenueCatProvider>
+    </LanguageProvider>
   );
 }

@@ -9,6 +9,7 @@ import { SwitchCamera, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Camera, H
 import { useRouter } from 'expo-router';
 import { useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { useTabBar } from '@/contexts/tab-bar-context';
+import { useLanguage } from '@/context/language-context';
 import * as Haptics from 'expo-haptics';
 import Svg, { Polygon } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
@@ -955,6 +956,7 @@ export default function TestScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
+  const { t } = useLanguage();
 
   // Rainbow glow animation for intro image
   const glowProgress = useSharedValue(0);
@@ -1093,7 +1095,7 @@ export default function TestScreen() {
   if (!permission) {
     return (
       <View style={styles.container}>
-        <Text style={styles.loadingText}>Loading camera...</Text>
+        <Text style={styles.loadingText}>{t('test.loading')}</Text>
       </View>
     );
   }
@@ -1104,10 +1106,10 @@ export default function TestScreen() {
     return (
       <View style={styles.permissionContainer}>
         <StatusBar style="light" />
-        <Text style={styles.permissionTitle}>Camera Access Required</Text>
+        <Text style={styles.permissionTitle}>{t('test.permissionTitle')}</Text>
         {wasDenied && (
           <Text style={styles.permissionText}>
-            Permission was denied. Please enable in Settings.
+            {t('test.permissionText')}
           </Text>
         )}
         <Pressable
@@ -1115,7 +1117,7 @@ export default function TestScreen() {
           onPress={wasDenied ? () => Linking.openSettings() : requestPermission}
         >
           <Text style={styles.permissionButtonText}>
-            {wasDenied ? 'Open Settings' : 'Continue'}
+            {wasDenied ? t('camera.goToSettings') : t('test.continue')}
           </Text>
         </Pressable>
       </View>
@@ -1388,20 +1390,20 @@ export default function TestScreen() {
               contentFit="contain"
             />
           </Animated.View>
-          <Text style={styles.introTitle}>Find Your Colors</Text>
+          <Text style={styles.introTitle}>{t('test.intro.title')}</Text>
           <Text style={styles.introSubtitle}>
-            Discover your perfect colors
+            {t('test.intro.subtitle')}
           </Text>
           <Text style={styles.introPrivacyNote}>
-            For your privacy, your photos are never uploaded or sent anywhere.
+            {t('test.intro.privacyNote')}
           </Text>
 
           <Pressable style={styles.startButton} onPress={startTest}>
-            <Text style={styles.startButtonText}>Start Test</Text>
+            <Text style={styles.startButtonText}>{t('test.intro.startButton')}</Text>
           </Pressable>
 
           <Pressable style={styles.goHomeButton} onPress={goHome}>
-            <Text style={styles.goHomeButtonText}>Go back home</Text>
+            <Text style={styles.goHomeButtonText}>{t('test.intro.goHome')}</Text>
           </Pressable>
         </View>
       </View>
@@ -1447,8 +1449,8 @@ export default function TestScreen() {
               <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
             </Pressable>
             <View style={styles.captureHeaderText}>
-              <Text style={styles.captureTitle}>Looking Good!</Text>
-              <Text style={styles.captureSubtitle}>Ready to start the color test?</Text>
+              <Text style={styles.captureTitle}>{t('test.confirm.title')}</Text>
+              <Text style={styles.captureSubtitle}>{t('test.confirm.subtitle')}</Text>
             </View>
             <View style={{ width: 44 }} />
           </View>
@@ -1457,10 +1459,10 @@ export default function TestScreen() {
           <View style={[styles.photoConfirmControls, { paddingBottom: insets.bottom + 20 }]}>
             <Pressable style={styles.retakePhotoButton} onPress={retakePhoto}>
               <RefreshCw size={20} color="#FFFFFF" strokeWidth={2} />
-              <Text style={styles.retakePhotoButtonText}>Retake</Text>
+              <Text style={styles.retakePhotoButtonText}>{t('test.confirm.retake')}</Text>
             </Pressable>
             <Pressable style={styles.confirmStartButton} onPress={confirmAndStart}>
-              <Text style={styles.confirmStartButtonText}>Confirm & Start</Text>
+              <Text style={styles.confirmStartButtonText}>{t('test.confirm.start')}</Text>
             </Pressable>
           </View>
         </View>
@@ -1491,15 +1493,15 @@ export default function TestScreen() {
             <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
           </Pressable>
           <View style={styles.captureHeaderText}>
-            <Text style={styles.captureTitle}>Take Your Photo</Text>
-            <Text style={styles.captureSubtitle}>This will be used for all comparisons</Text>
+            <Text style={styles.captureTitle}>{t('test.capture.title')}</Text>
+            <Text style={styles.captureSubtitle}>{t('test.capture.subtitle')}</Text>
           </View>
           <View style={{ width: 44 }} />
         </View>
 
         {/* Instruction */}
         <View style={styles.instructionBanner}>
-          <Text style={styles.instructionText}>Position yourself within the cape outline</Text>
+          <Text style={styles.instructionText}>{t('test.capture.instruction')}</Text>
         </View>
 
         {/* Capture button */}
@@ -1604,21 +1606,21 @@ export default function TestScreen() {
             >
               {/* Score Breakdown */}
               <View style={styles.scoreBreakdownContainer}>
-                <Text style={styles.sectionTitle}>Your Color Profile</Text>
+                <Text style={styles.sectionTitle}>{t('test.results.colorProfile')}</Text>
                 <View style={styles.scoreRow}>
-                  <Text style={styles.scoreLabel}>Undertone:</Text>
+                  <Text style={styles.scoreLabel}>{t('test.results.undertone')}</Text>
                   <View style={[styles.scoreBadge, scores.undertone < 0 ? styles.scoreBadgeCool : styles.scoreBadgeWarm]}>
                     <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.undertone, 'undertone')}</Text>
                   </View>
                 </View>
                 <View style={styles.scoreRow}>
-                  <Text style={styles.scoreLabel}>Value:</Text>
+                  <Text style={styles.scoreLabel}>{t('test.results.value')}</Text>
                   <View style={[styles.scoreBadge, scores.value < 0 ? styles.scoreBadgeLight : styles.scoreBadgeDeep]}>
                     <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.value, 'value')}</Text>
                   </View>
                 </View>
                 <View style={styles.scoreRow}>
-                  <Text style={styles.scoreLabel}>Chroma:</Text>
+                  <Text style={styles.scoreLabel}>{t('test.results.chroma')}</Text>
                   <View style={[styles.scoreBadge, scores.chroma < 0 ? styles.scoreBadgeBright : styles.scoreBadgeSoft]}>
                     <Text style={styles.scoreBadgeText}>{getScoreLabel(scores.chroma, 'chroma')}</Text>
                   </View>
@@ -1627,8 +1629,8 @@ export default function TestScreen() {
 
               {/* Top Matches - All Tappable */}
               <View style={styles.topMatchesContainer}>
-                <Text style={styles.sectionTitle}>Your Matches</Text>
-                <Text style={styles.matchesHint}>Tap to preview colors</Text>
+                <Text style={styles.sectionTitle}>{t('test.results.yourMatches')}</Text>
+                <Text style={styles.matchesHint}>{t('test.results.tapToPreview')}</Text>
                 <View style={styles.matchesRow}>
                   {top3Matches.map((match, index) => (
                     <Pressable
@@ -1640,7 +1642,7 @@ export default function TestScreen() {
                       ]}
                       onPress={() => selectPreview(match.key)}
                     >
-                      {index === 0 && <Text style={styles.bestMatchLabel}>Best</Text>}
+                      {index === 0 && <Text style={styles.bestMatchLabel}>{t('test.results.best')}</Text>}
                       <Text style={[
                         styles.matchOptionName,
                         displayedSeasonKey === match.key && styles.matchOptionNameSelected,
@@ -1656,7 +1658,7 @@ export default function TestScreen() {
 
               {/* Styling Tips */}
               <View style={styles.tipsContainer}>
-                <Text style={styles.sectionTitle}>Styling Tips for {displayedSeason.name}</Text>
+                <Text style={styles.sectionTitle}>{t('test.results.stylingTips')} {displayedSeason.name}</Text>
                 {displayedSeason.tips.map((tip, index) => (
                   <View key={index} style={styles.tipItem}>
                     <Text style={styles.tipBullet}>•</Text>
@@ -1674,13 +1676,13 @@ export default function TestScreen() {
                 >
                   <Save size={20} color={resultSaved ? '#34C759' : '#FFFFFF'} strokeWidth={2} />
                   <Text style={[styles.saveResultButtonText, resultSaved && styles.saveResultButtonTextSaved]}>
-                    {resultSaved ? 'Saved!' : 'Save Result'}
+                    {resultSaved ? t('test.results.saved') : t('test.results.saveResult')}
                   </Text>
                 </Pressable>
 
                 <Pressable style={styles.retakeButton} onPress={resetTest}>
                   <RefreshCw size={20} color="#000000" strokeWidth={2} />
-                  <Text style={styles.retakeButtonText}>Retake Test</Text>
+                  <Text style={styles.retakeButtonText}>{t('test.results.retakeTest')}</Text>
                 </Pressable>
               </View>
             </ScrollView>
@@ -1758,7 +1760,7 @@ export default function TestScreen() {
             <View style={[styles.pageIndicator, compareIndex === 1 && styles.pageIndicatorActive]} />
           </View>
 
-          <Text style={styles.swipeHint}>Swipe to compare</Text>
+          <Text style={styles.swipeHint}>{t('test.compare.swipeHint')}</Text>
 
           {/* Selection buttons */}
           <View style={styles.selectionButtons}>
@@ -1766,13 +1768,13 @@ export default function TestScreen() {
               style={[styles.selectButton, compareIndex === 0 && styles.selectButtonHighlight]}
               onPress={() => selectOption('A')}
             >
-              <Text style={styles.selectButtonText}>Choose {currentTest.optionA.name}</Text>
+              <Text style={styles.selectButtonText}>{t('test.compare.choose')} {currentTest.optionA.name}</Text>
             </Pressable>
             <Pressable
               style={[styles.selectButton, compareIndex === 1 && styles.selectButtonHighlight]}
               onPress={() => selectOption('B')}
             >
-              <Text style={styles.selectButtonText}>Choose {currentTest.optionB.name}</Text>
+              <Text style={styles.selectButtonText}>{t('test.compare.choose')} {currentTest.optionB.name}</Text>
             </Pressable>
           </View>
         </View>
@@ -1786,7 +1788,7 @@ export default function TestScreen() {
         >
           <View style={styles.confirmModalOverlay}>
             <View style={styles.confirmModalCard}>
-              <Text style={styles.confirmModalLabel}>You selected</Text>
+              <Text style={styles.confirmModalLabel}>{t('test.modal.youSelected')}</Text>
               <Text style={styles.confirmModalTitle}>{pendingSelection?.selectedOption.name}</Text>
 
               {/* Color preview */}
@@ -1801,10 +1803,10 @@ export default function TestScreen() {
 
               <View style={styles.confirmModalButtons}>
                 <Pressable style={styles.confirmModalCancelButton} onPress={cancelSelection}>
-                  <Text style={styles.confirmModalCancelText}>Cancel</Text>
+                  <Text style={styles.confirmModalCancelText}>{t('test.modal.cancel')}</Text>
                 </Pressable>
                 <Pressable style={styles.confirmModalConfirmButton} onPress={confirmSelection}>
-                  <Text style={styles.confirmModalConfirmText}>Confirm</Text>
+                  <Text style={styles.confirmModalConfirmText}>{t('test.modal.confirm')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -1824,20 +1826,20 @@ export default function TestScreen() {
               <Text style={styles.transitionDescription}>{transitionData.description}</Text>
               <View style={styles.transitionTipsContainer}>
                 <View style={styles.transitionTipRow}>
-                  <Text style={styles.transitionTipLabel}>Guide:</Text>
+                  <Text style={styles.transitionTipLabel}>{t('test.transition.guide')}</Text>
                   <Text style={styles.transitionTipText}>{transitionData.guide}</Text>
                 </View>
                 <View style={styles.transitionTipRow}>
-                  <Text style={styles.transitionTipLabel}>Look for:</Text>
+                  <Text style={styles.transitionTipLabel}>{t('test.transition.lookFor')}</Text>
                   <Text style={styles.transitionTipText}>{transitionData.lookFor}</Text>
                 </View>
               </View>
               <View style={styles.transitionButtons}>
                 <Pressable style={styles.transitionBackButton} onPress={goBack}>
-                  <Text style={styles.transitionBackButtonText}>Back</Text>
+                  <Text style={styles.transitionBackButtonText}>{t('test.transition.back')}</Text>
                 </Pressable>
                 <Pressable style={styles.transitionButton} onPress={advanceToNextTest}>
-                  <Text style={styles.transitionButtonText}>Next</Text>
+                  <Text style={styles.transitionButtonText}>{t('test.transition.next')}</Text>
                 </Pressable>
               </View>
             </View>
