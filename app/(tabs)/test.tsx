@@ -1393,7 +1393,7 @@ export default function TestScreen() {
             Discover your perfect colors
           </Text>
           <Text style={styles.introPrivacyNote}>
-            Your photos are never uploaded or sent anywhere.
+            To protect your privacy, your photos are never uploaded or sent anywhere.
           </Text>
 
           <Pressable style={styles.startButton} onPress={startTest}>
