@@ -1764,7 +1764,7 @@ export default function TestScreen() {
           <Pressable style={styles.backButton} onPress={goBack}>
             <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
           </Pressable>
-          <View style={styles.compareHeaderCenter}>
+          <View style={[styles.compareHeaderCenter, { top: insets.top + 12 }]}>
             <Text style={styles.compareOptionTitle}>{currentOption.name}</Text>
             <Text style={styles.compareOptionSubtitle}>{currentOption.description}</Text>
           </View>
@@ -2431,8 +2431,11 @@ const styles = StyleSheet.create({
     height: screenHeight,
   },
   compareHeaderCenter: {
-    flex: 1,
+    position: 'absolute',
+    left: 0,
+    right: 0,
     alignItems: 'center',
+    pointerEvents: 'none',
   },
   compareOptionTitle: {
     fontSize: 24,
