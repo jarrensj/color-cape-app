@@ -1824,12 +1824,18 @@ export default function TestScreen() {
               <Text style={styles.transitionDescription}>{transitionData.description}</Text>
               <View style={styles.transitionTipsContainer}>
                 <View style={styles.transitionTipRow}>
-                  <Text style={styles.transitionTipLabel}>Guide:</Text>
-                  <Text style={styles.transitionTipText}>{transitionData.guide}</Text>
+                  <View style={styles.transitionTipAccent} />
+                  <View style={styles.transitionTipContent}>
+                    <Text style={styles.transitionTipLabel}>Guide</Text>
+                    <Text style={styles.transitionTipText}>{transitionData.guide}</Text>
+                  </View>
                 </View>
                 <View style={styles.transitionTipRow}>
-                  <Text style={styles.transitionTipLabel}>Look for:</Text>
-                  <Text style={styles.transitionTipText}>{transitionData.lookFor}</Text>
+                  <View style={[styles.transitionTipAccent, styles.transitionTipAccentAlt]} />
+                  <View style={styles.transitionTipContent}>
+                    <Text style={styles.transitionTipLabel}>Look for</Text>
+                    <Text style={styles.transitionTipText}>{transitionData.lookFor}</Text>
+                  </View>
                 </View>
               </View>
               <View style={styles.transitionButtons}>
@@ -2566,27 +2572,40 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   transitionTipsContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 32,
-    gap: 16,
+    alignSelf: 'stretch',
+    marginBottom: 40,
+    gap: 24,
   },
   transitionTipRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 16,
+  },
+  transitionTipAccent: {
+    width: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    borderRadius: 2,
+    alignSelf: 'stretch',
+  },
+  transitionTipAccentAlt: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  transitionTipContent: {
+    flex: 1,
     gap: 6,
   },
   transitionTipLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(255, 255, 255, 0.5)',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   transitionTipText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    lineHeight: 22,
+    fontSize: 13,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.7)',
+    lineHeight: 20,
   },
   transitionButtons: {
     flexDirection: 'row',
