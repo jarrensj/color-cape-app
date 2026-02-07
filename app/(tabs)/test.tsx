@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SwitchCamera, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Camera, Home, Save } from 'lucide-react-native';
+import { SwitchCamera, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Camera, Home, Save, Info } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { useTabBar } from '@/contexts/tab-bar-context';
@@ -937,6 +937,7 @@ export default function TestScreen() {
   const [resultSaved, setResultSaved] = useState(false);
   const [resultInfoExpanded, setResultInfoExpanded] = useState(true);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [tipsModalVisible, setTipsModalVisible] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<{
     option: 'A' | 'B';
     scoreChange: number;
@@ -1743,38 +1744,63 @@ export default function TestScreen() {
             <Text style={styles.compareOptionTitle}>{currentOption.name}</Text>
             <Text style={styles.compareOptionSubtitle}>{currentOption.description}</Text>
           </View>
-          <Pressable style={styles.exitTestButtonHeader} onPress={exitTest}>
-            <Home size={22} color="#FFFFFF" strokeWidth={2} />
-          </Pressable>
+          <View style={styles.headerRightButtons}>
+            <Pressable style={styles.tipsButton} onPress={() => setTipsModalVisible(true)}>
+              <Info size={20} color="#FFFFFF" strokeWidth={2} />
+            </Pressable>
+            <Pressable style={styles.exitTestButtonHeader} onPress={exitTest}>
+              <Home size={22} color="#FFFFFF" strokeWidth={2} />
+            </Pressable>
+          </View>
         </View>
 
         {/* Footer - box-none allows swipes through but buttons still work */}
         <View style={[styles.compareFooterNew, { paddingBottom: insets.bottom + 20 }]} pointerEvents="box-none">
-          <Text style={styles.compareQuestion}>{currentTest.question}</Text>
+          {tipsModalVisible ? (
+            <>
+              <View style={styles.footerTipsContainer}>
+                <View style={styles.footerTipSection}>
+                  <Text style={styles.footerTipLabel}>Guide</Text>
+                  <Text style={styles.footerTipText}>{currentTest.guide}</Text>
+                </View>
+                <View style={styles.footerTipSection}>
+                  <Text style={styles.footerTipLabel}>Look for</Text>
+                  <Text style={styles.footerTipText}>{currentTest.lookFor}</Text>
+                </View>
+              </View>
+              <Pressable style={styles.closeTipsButton} onPress={() => setTipsModalVisible(false)}>
+                <Text style={styles.closeTipsButtonText}>Got it</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Text style={styles.compareQuestion}>{currentTest.question}</Text>
 
-          {/* Page indicators */}
-          <View style={styles.pageIndicators}>
-            <View style={[styles.pageIndicator, compareIndex === 0 && styles.pageIndicatorActive]} />
-            <View style={[styles.pageIndicator, compareIndex === 1 && styles.pageIndicatorActive]} />
-          </View>
+              {/* Page indicators */}
+              <View style={styles.pageIndicators}>
+                <View style={[styles.pageIndicator, compareIndex === 0 && styles.pageIndicatorActive]} />
+                <View style={[styles.pageIndicator, compareIndex === 1 && styles.pageIndicatorActive]} />
+              </View>
 
-          <Text style={styles.swipeHint}>Swipe to compare</Text>
+              <Text style={styles.swipeHint}>Swipe to compare</Text>
 
-          {/* Selection buttons */}
-          <View style={styles.selectionButtons}>
-            <Pressable
-              style={[styles.selectButton, compareIndex === 0 && styles.selectButtonHighlight]}
-              onPress={() => selectOption('A')}
-            >
-              <Text style={styles.selectButtonText}>Choose {currentTest.optionA.name}</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.selectButton, compareIndex === 1 && styles.selectButtonHighlight]}
-              onPress={() => selectOption('B')}
-            >
-              <Text style={styles.selectButtonText}>Choose {currentTest.optionB.name}</Text>
-            </Pressable>
-          </View>
+              {/* Selection buttons */}
+              <View style={styles.selectionButtons}>
+                <Pressable
+                  style={[styles.selectButton, compareIndex === 0 && styles.selectButtonHighlight]}
+                  onPress={() => selectOption('A')}
+                >
+                  <Text style={styles.selectButtonText}>Choose {currentTest.optionA.name}</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.selectButton, compareIndex === 1 && styles.selectButtonHighlight]}
+                  onPress={() => selectOption('B')}
+                >
+                  <Text style={styles.selectButtonText}>Choose {currentTest.optionB.name}</Text>
+                </Pressable>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Confirmation Modal */}
@@ -2303,6 +2329,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerRightButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tipsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   flipButtonSmall: {
     width: 48,
     height: 48,
@@ -2537,6 +2576,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#000000',
+  },
+  footerTipsContainer: {
+    gap: 20,
+    marginBottom: 20,
+  },
+  footerTipSection: {
+    gap: 6,
+  },
+  footerTipLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.5)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  footerTipText: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.85)',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  closeTipsButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 20,
+    alignSelf: 'center',
+  },
+  closeTipsButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   transitionOverlay: {
     ...StyleSheet.absoluteFillObject,
