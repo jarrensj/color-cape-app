@@ -936,6 +936,7 @@ export default function TestScreen() {
   const [previewSeason, setPreviewSeason] = useState<string | null>(null);
   const [resultSaved, setResultSaved] = useState(false);
   const [resultInfoExpanded, setResultInfoExpanded] = useState(true);
+  const [resultColorMode, setResultColorMode] = useState<'all8' | 'first4' | 'last4'>('all8');
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [tipsModalVisible, setTipsModalVisible] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<{
@@ -1537,12 +1538,32 @@ export default function TestScreen() {
       setResultInfoExpanded(!resultInfoExpanded);
     };
 
+    const toggleColorMode = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setResultColorMode(current =>
+        current === 'all8' ? 'first4' : current === 'first4' ? 'last4' : 'all8'
+      );
+    };
+
+    const getColorModeDisplay = () => {
+      if (resultColorMode === 'all8') return 'All 8';
+      if (resultColorMode === 'first4') return 'Core';
+      return 'Accent';
+    };
+
+    const getFilteredColors = () => {
+      const colors = displayedSeason.colors;
+      if (resultColorMode === 'all8') return colors;
+      if (resultColorMode === 'first4') return colors.slice(0, 4);
+      return colors.slice(4, 8);
+    };
+
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
         {isFocused ? (
           <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front'}>
-            <FullCape colors={displayedSeason.colors} opacity={capeOpacity} />
+            <FullCape colors={getFilteredColors()} opacity={capeOpacity} />
           </CameraView>
         ) : (
           <View style={styles.camera} />
@@ -1552,6 +1573,9 @@ export default function TestScreen() {
         <View style={[styles.resultHeader, { paddingTop: insets.top + 12 }]}>
           <Pressable style={styles.backButton} onPress={goHome}>
             <Home size={28} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
+          <Pressable style={styles.colorModeButton} onPress={toggleColorMode}>
+            <Text style={styles.colorModeButtonText}>{getColorModeDisplay()}</Text>
           </Pressable>
           <Pressable style={styles.flipButton} onPress={toggleCameraFacing}>
             <SwitchCamera size={24} color="#FFFFFF" strokeWidth={2} />
@@ -2744,6 +2768,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     zIndex: 10,
+  },
+  colorModeButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  colorModeButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   resultTitleContainer: {
     flex: 1,
