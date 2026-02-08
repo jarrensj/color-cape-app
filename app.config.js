@@ -4,7 +4,7 @@ export default {
   expo: {
     name: 'Color Cape',
     slug: 'my-app',
-    version: '1.0.2',
+    version: '1.0.3',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'myapp',
@@ -13,7 +13,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'app.colorcape.colorcape',
-      buildNumber: '29',
+      buildNumber: '2',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSCameraUsageDescription: 'Allow $(PRODUCT_NAME) to access your camera to show color capes over you for color comparison.',
