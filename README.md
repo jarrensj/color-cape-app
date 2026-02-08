@@ -81,11 +81,8 @@ Submit to App Store:
 eas submit --platform ios
 ```
 
-## Links
+Build with auto-submit to App Store:
 
-- [Privacy Policy](https://colorcape.app/privacy-policy)
-- [Terms of Service](https://colorcape.app/terms-of-service)
-
-## Version
-
-1.0.0-beta
+```bash
+eas build --platform ios --auto-submit                                        
+```
