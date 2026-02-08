@@ -1792,6 +1792,7 @@ export default function TestScreen() {
                   <Text style={styles.footerTipText}>{currentTest.lookFor}</Text>
                 </View>
               </View>
+              <Text style={styles.swipeHint}>Swipe to compare</Text>
               <Pressable style={styles.closeTipsButton} onPress={() => setTipsModalVisible(false)}>
                 <Text style={styles.closeTipsButtonText}>Got it</Text>
               </Pressable>
