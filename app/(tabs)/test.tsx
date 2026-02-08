@@ -1792,7 +1792,7 @@ export default function TestScreen() {
                   <Text style={styles.footerTipText}>{currentTest.lookFor}</Text>
                 </View>
               </View>
-              <Text style={styles.swipeHint}>Swipe to compare</Text>
+              <Text style={styles.swipeHint}>{compareIndex === 0 ? 'Swipe to compare →' : '← Swipe to compare'}</Text>
               <Pressable style={styles.closeTipsButton} onPress={() => setTipsModalVisible(false)}>
                 <Text style={styles.closeTipsButtonText}>Got it</Text>
               </Pressable>
@@ -1807,7 +1807,7 @@ export default function TestScreen() {
                 <View style={[styles.pageIndicator, compareIndex === 1 && styles.pageIndicatorActive]} />
               </View>
 
-              <Text style={styles.swipeHint}>Swipe to compare</Text>
+              <Text style={styles.swipeHint}>{compareIndex === 0 ? 'Swipe to compare →' : '← Swipe to compare'}</Text>
 
               {/* Selection buttons */}
               <View style={styles.selectionButtons}>
