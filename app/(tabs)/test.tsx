@@ -990,9 +990,10 @@ export default function TestScreen() {
     };
   });
 
-  // Load cape opacity setting when screen comes into focus
+  // Load cape opacity setting and reset tips when screen comes into focus
   useFocusEffect(
     useCallback(() => {
+      setTipsModalVisible(false);
       AsyncStorage.getItem('cape_opacity').then((value) => {
         setCapeOpacity(value !== null ? parseFloat(value) : 1.0);
       });
@@ -1167,6 +1168,7 @@ export default function TestScreen() {
 
   const goBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setTipsModalVisible(false);
     if (step === 'photo') {
       // Go back to intro
       setStep('intro');
