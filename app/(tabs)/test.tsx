@@ -1397,7 +1397,7 @@ export default function TestScreen() {
             Discover your perfect colors
           </Text>
           <Text style={styles.introPrivacyNote}>
-            For your privacy, your photos are never uploaded or sent anywhere.
+            For your privacy, this is a self-guided test and your photos are never uploaded or sent anywhere.
           </Text>
 
           <Pressable style={styles.startButton} onPress={startTest}>
