@@ -7,8 +7,7 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check, Download, Upload } from 'lucide-react-native';
-import RevenueCatUI from 'react-native-purchases-ui';
+import { RotateCcw, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check, Download, Upload } from 'lucide-react-native';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
@@ -404,44 +403,6 @@ export default function SettingsScreen() {
     }).start(() => {
       setHighlightedKey(null);
     });
-  };
-
-  const handleLogOut = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    Alert.alert(
-      'Log Out',
-      'This will clear all your data and return to the start. Are you sure?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Log Out',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.clear();
-            setHasOnboarded(false);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            router.replace('/onboarding');
-          },
-        },
-      ]
-    );
-  };
-
-  const handleManageSubscription = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    try {
-      await RevenueCatUI.presentCustomerCenter();
-    } catch (error) {
-      console.error('Error presenting customer center:', error);
-      Alert.alert(
-        'Unable to Open',
-        'Could not open subscription management. Please try again or manage your subscription in Settings > Apple ID > Subscriptions.'
-      );
-    }
   };
 
   const handleTogglePalette = (key: ColorPaletteKey) => {
@@ -1057,28 +1018,6 @@ export default function SettingsScreen() {
         </View>
 
         {/* Subscription Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Subscription</Text>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.settingButton,
-              pressed && styles.settingButtonPressed,
-            ]}
-            onPress={handleManageSubscription}
-          >
-            <View style={[styles.settingIcon, styles.settingIconGold]}>
-              <Crown size={22} color="#FFD700" strokeWidth={2} />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Manage Subscription</Text>
-              <Text style={styles.settingDescription}>
-                View or manage your subscription
-              </Text>
-            </View>
-          </Pressable>
-        </View>
-
         {/* App Data Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>App Data</Text>
@@ -1145,17 +1084,6 @@ export default function SettingsScreen() {
             </View>
           </Pressable>
         </View>
-
-        {/* Log Out */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.logOutButton,
-            pressed && styles.logOutButtonPressed,
-          ]}
-          onPress={handleLogOut}
-        >
-          <Text style={styles.logOutText}>Log Out</Text>
-        </Pressable>
 
         {/* Legal Section */}
         <View style={styles.section}>
@@ -1442,20 +1370,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.3)',
-  },
-  logOutButton: {
-    alignItems: 'center',
-    paddingVertical: 16,
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  logOutButtonPressed: {
-    opacity: 0.6,
-  },
-  logOutText: {
-    fontSize: 17,
-    fontWeight: '500',
-    color: '#FFFFFF',
   },
   settingIconCyan: {
     backgroundColor: 'rgba(90, 200, 250, 0.15)',

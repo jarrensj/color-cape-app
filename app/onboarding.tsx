@@ -350,7 +350,7 @@ export default function OnboardingScreen() {
       await AsyncStorage.setItem('onboarding_complete', 'true');
       await AsyncStorage.setItem('onboarding_answers', JSON.stringify(newAnswers));
       setHasOnboarded(true);
-      router.replace('/paywall');
+      router.replace('/(tabs)');
     } else {
       animateSlideTransition('forward', () => {
         setCurrentQuestion(currentQuestion + 1);
