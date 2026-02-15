@@ -7,8 +7,7 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check, Download, Upload } from 'lucide-react-native';
-import RevenueCatUI from 'react-native-purchases-ui';
+import { RotateCcw, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check, Download, Upload } from 'lucide-react-native';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
@@ -429,19 +428,6 @@ export default function SettingsScreen() {
         },
       ]
     );
-  };
-
-  const handleManageSubscription = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    try {
-      await RevenueCatUI.presentCustomerCenter();
-    } catch (error) {
-      console.error('Error presenting customer center:', error);
-      Alert.alert(
-        'Unable to Open',
-        'Could not open subscription management. Please try again or manage your subscription in Settings > Apple ID > Subscriptions.'
-      );
-    }
   };
 
   const handleTogglePalette = (key: ColorPaletteKey) => {
@@ -1057,28 +1043,6 @@ export default function SettingsScreen() {
         </View>
 
         {/* Subscription Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Subscription</Text>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.settingButton,
-              pressed && styles.settingButtonPressed,
-            ]}
-            onPress={handleManageSubscription}
-          >
-            <View style={[styles.settingIcon, styles.settingIconGold]}>
-              <Crown size={22} color="#FFD700" strokeWidth={2} />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Manage Subscription</Text>
-              <Text style={styles.settingDescription}>
-                View or manage your subscription
-              </Text>
-            </View>
-          </Pressable>
-        </View>
-
         {/* App Data Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>App Data</Text>
