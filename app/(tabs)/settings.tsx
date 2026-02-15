@@ -405,31 +405,6 @@ export default function SettingsScreen() {
     });
   };
 
-  const handleLogOut = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    Alert.alert(
-      'Log Out',
-      'This will clear all your data and return to the start. Are you sure?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Log Out',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.clear();
-            setHasOnboarded(false);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            router.replace('/onboarding');
-          },
-        },
-      ]
-    );
-  };
-
   const handleTogglePalette = (key: ColorPaletteKey) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     togglePalette(key);
@@ -1110,17 +1085,6 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
 
-        {/* Log Out */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.logOutButton,
-            pressed && styles.logOutButtonPressed,
-          ]}
-          onPress={handleLogOut}
-        >
-          <Text style={styles.logOutText}>Log Out</Text>
-        </Pressable>
-
         {/* Legal Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Legal</Text>
@@ -1406,20 +1370,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.3)',
-  },
-  logOutButton: {
-    alignItems: 'center',
-    paddingVertical: 16,
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  logOutButtonPressed: {
-    opacity: 0.6,
-  },
-  logOutText: {
-    fontSize: 17,
-    fontWeight: '500',
-    color: '#FFFFFF',
   },
   settingIconCyan: {
     backgroundColor: 'rgba(90, 200, 250, 0.15)',
