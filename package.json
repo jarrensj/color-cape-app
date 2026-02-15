@@ -1,7 +1,7 @@
 {
   "name": "my-app",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -17,6 +17,7 @@
     "@react-navigation/native": "^7.1.8",
     "expo": "~54.0.31",
     "expo-camera": "~17.0.10",
+    "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.13",
     "expo-font": "~14.0.10",
     "expo-haptics": "~15.0.8",

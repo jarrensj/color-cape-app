@@ -7,7 +7,6 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { OnboardingProvider, useOnboarding } from '@/context/onboarding-context';
-import { RevenueCatProvider, useRevenueCat } from '@/context/revenuecat-context';
 import { PalettePreferencesProvider } from '@/context/palette-preferences-context';
 import { TabBarProvider } from '@/contexts/tab-bar-context';
 
@@ -17,28 +16,21 @@ export const unstable_settings = {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { hasOnboarded, isLoading: onboardingLoading } = useOnboarding();
-  const { isProUser, isLoading: revenueCatLoading } = useRevenueCat();
+  const { hasOnboarded, isLoading } = useOnboarding();
   const router = useRouter();
   const segments = useSegments();
-
-  const isLoading = onboardingLoading || revenueCatLoading;
 
   useEffect(() => {
     if (isLoading) return;
 
     const inOnboarding = segments[0] === 'onboarding';
-    const inPaywall = segments[0] === 'paywall';
-    const inTabs = segments[0] === '(tabs)';
 
     if (!hasOnboarded && !inOnboarding) {
       router.replace('/onboarding');
-    } else if (hasOnboarded && !isProUser && !inPaywall) {
-      router.replace('/paywall');
-    } else if (hasOnboarded && isProUser && (inOnboarding || inPaywall)) {
+    } else if (hasOnboarded && inOnboarding) {
       router.replace('/(tabs)');
     }
-  }, [isLoading, hasOnboarded, isProUser, segments]);
+  }, [isLoading, hasOnboarded, segments]);
 
   if (isLoading) {
     return (
@@ -79,14 +71,12 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <RevenueCatProvider>
-      <OnboardingProvider>
-        <PalettePreferencesProvider>
-          <TabBarProvider>
-            <RootLayoutNav />
-          </TabBarProvider>
-        </PalettePreferencesProvider>
-      </OnboardingProvider>
-    </RevenueCatProvider>
+    <OnboardingProvider>
+      <PalettePreferencesProvider>
+        <TabBarProvider>
+          <RootLayoutNav />
+        </TabBarProvider>
+      </PalettePreferencesProvider>
+    </OnboardingProvider>
   );
 }

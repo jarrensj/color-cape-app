@@ -1,11 +1,11 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Modal } from 'react-native';
+import { StyleSheet, View, Text, Dimensions, Pressable, ScrollView, Modal, Alert, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SwitchCamera, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Camera, Home, Save } from 'lucide-react-native';
+import { SwitchCamera, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Camera, Home, Save, Info } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { useTabBar } from '@/contexts/tab-bar-context';
@@ -21,6 +21,8 @@ import Animated, {
   useSharedValue,
   interpolateColor,
   Easing,
+  FadeIn,
+  FadeOut,
 } from 'react-native-reanimated';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -152,6 +154,8 @@ const diagnosticTests = [
     category: 'undertone',
     weight: 1.5,
     question: 'Which metallic looks better against your complexion?',
+    guide: 'Notice which metal makes your skin glow and look healthy vs. appear dull, sallow, or washed out.',
+    lookFor: 'Look at the area under your eyes and along your jawline. The right metal will make your skin look even and luminous, while the wrong one may bring out redness, yellowing, or a grayish cast.',
     optionA: {
       name: 'Silver',
       description: 'Cool metallic',
@@ -179,6 +183,8 @@ const diagnosticTests = [
     category: 'undertone',
     weight: 1.0,
     question: 'Which neutral white flatters you more?',
+    guide: 'See which shade brightens your face and eyes vs. makes your skin look tired or yellowish.',
+    lookFor: 'Focus on your under-eye area and cheeks. The right shade will make shadows softer and your skin more radiant, while the wrong one can emphasize dark circles or make skin look uneven.',
     optionA: {
       name: 'Pure White',
       description: 'Crisp and cool',
@@ -206,6 +212,8 @@ const diagnosticTests = [
     category: 'value',
     weight: 1.2,
     question: 'Which color depth suits you better?',
+    guide: 'Compare which depth brings out your features vs. overwhelms them or makes you fade into the background.',
+    lookFor: 'Look at your eyes, brows, and lips. The right depth will make your features pop and look defined, while the wrong one will either overpower your face or make you look washed out.',
     optionA: {
       name: 'Light',
       description: 'Soft pastels',
@@ -233,6 +241,8 @@ const diagnosticTests = [
     category: 'value',
     weight: 1.0,
     question: 'Which intensity range looks better on you?',
+    guide: 'Look for which intensity makes your face the focal point vs. the colors stealing attention away.',
+    lookFor: 'Notice where your eye is drawn first. The right intensity keeps focus on your face, while the wrong one will make the color dominate or your features disappear.',
     optionA: {
       name: 'Delicate',
       description: 'Airy and light',
@@ -260,6 +270,8 @@ const diagnosticTests = [
     category: 'chroma',
     weight: 1.2,
     question: 'Which color clarity suits you?',
+    guide: 'Watch for which clarity makes you look vibrant and alive vs. harsh or washed out.',
+    lookFor: 'Check if your skin looks healthy and awake. Bright colors can make some people glow but look harsh on others. Soft colors can look elegant or make you appear tired.',
     optionA: {
       name: 'Bright',
       description: 'Clear and vivid',
@@ -287,6 +299,8 @@ const diagnosticTests = [
     category: 'chroma',
     weight: 1.0,
     question: 'Which saturation level flatters you?',
+    guide: 'Notice which saturation level harmonizes with your natural coloring vs. clashes or competes with it.',
+    lookFor: 'Notice if your eyes and skin appear vibrant or flat. The right saturation makes your coloring look richer, while the wrong one can make you look washed out or like the color is fighting for attention.',
     optionA: {
       name: 'Saturated',
       description: 'Punchy and electric',
@@ -649,7 +663,7 @@ function determineSubSeason(
   }
 }
 
-type TestStep = 'intro' | 'capture1' | 'capture2' | 'compare' | 'result';
+type TestStep = 'intro' | 'photo' | 'capture1' | 'capture2' | 'compare' | 'result';
 type TestScores = {
   undertone: number; // negative = cool, positive = warm
   value: number;     // negative = light, positive = deep
@@ -823,6 +837,48 @@ function RightHalfCape({ colors }: { colors: { name: string; hex: string }[] }) 
   );
 }
 
+// Outline-only cape for positioning guide
+function CapeOutline({ segments = 4 }: { segments?: number }) {
+  const centerX = screenWidth / 2;
+  const centerY = screenHeight * 0.50;
+  const neckRadius = 120;
+  const capeRadius = Math.max(screenWidth, screenHeight) * 2;
+  const anglePerSegment = Math.PI / segments;
+
+  return (
+    <View style={styles.fullCapeContainer} pointerEvents="none">
+      <Svg width={screenWidth} height={screenHeight} style={StyleSheet.absoluteFill}>
+        {Array.from({ length: segments }).map((_, index) => {
+          const startAngle = index * anglePerSegment;
+          const endAngle = (index + 1) * anglePerSegment;
+
+          const x1 = centerX + Math.cos(startAngle) * neckRadius;
+          const y1 = centerY + Math.sin(startAngle) * neckRadius;
+          const x2 = centerX + Math.cos(endAngle) * neckRadius;
+          const y2 = centerY + Math.sin(endAngle) * neckRadius;
+          const x3 = centerX + Math.cos(endAngle) * capeRadius;
+          const y3 = centerY + Math.sin(endAngle) * capeRadius;
+          const x4 = centerX + Math.cos(startAngle) * capeRadius;
+          const y4 = centerY + Math.sin(startAngle) * capeRadius;
+
+          const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
+
+          return (
+            <Polygon
+              key={index}
+              points={points}
+              fill="transparent"
+              stroke="rgba(255,255,255,0.5)"
+              strokeWidth={2}
+              strokeDasharray="10,5"
+            />
+          );
+        })}
+      </Svg>
+    </View>
+  );
+}
+
 // Full cape for result
 function FullCape({ colors, opacity = 0.85 }: { colors: { name: string; hex: string }[]; opacity?: number }) {
   const centerX = screenWidth / 2;
@@ -880,7 +936,9 @@ export default function TestScreen() {
   const [previewSeason, setPreviewSeason] = useState<string | null>(null);
   const [resultSaved, setResultSaved] = useState(false);
   const [resultInfoExpanded, setResultInfoExpanded] = useState(true);
+  const [resultColorMode, setResultColorMode] = useState<'all8' | 'first4' | 'last4'>('all8');
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [tipsModalVisible, setTipsModalVisible] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<{
     option: 'A' | 'B';
     scoreChange: number;
@@ -889,9 +947,13 @@ export default function TestScreen() {
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const compositeRef = useRef<View>(null);
+  const compareScrollRef = useRef<ScrollView>(null);
   const [pendingCapture, setPendingCapture] = useState<{ uri: string; forStep: 'capture1' | 'capture2' } | null>(null);
+  const [basePhoto, setBasePhoto] = useState<string | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
   const [capeOpacity, setCapeOpacity] = useState(1.0);
+  const [showTransition, setShowTransition] = useState(false);
+  const [transitionData, setTransitionData] = useState<{ title: string; category: string; description: string; guide: string; lookFor: string; isFirstTest?: boolean; goingBack?: boolean } | null>(null);
   const router = useRouter();
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
@@ -928,9 +990,10 @@ export default function TestScreen() {
     };
   });
 
-  // Load cape opacity setting when screen comes into focus
+  // Load cape opacity setting and reset tips when screen comes into focus
   useFocusEffect(
     useCallback(() => {
+      setTipsModalVisible(false);
       AsyncStorage.getItem('cape_opacity').then((value) => {
         setCapeOpacity(value !== null ? parseFloat(value) : 1.0);
       });
@@ -1039,15 +1102,24 @@ export default function TestScreen() {
   }
 
   if (!permission.granted) {
+    const wasDenied = !permission.canAskAgain;
+
     return (
       <View style={styles.permissionContainer}>
         <StatusBar style="light" />
         <Text style={styles.permissionTitle}>Camera Access Required</Text>
-        <Text style={styles.permissionText}>
-          We need your permission to access the camera for the color test.
-        </Text>
-        <Pressable style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Grant Permission</Text>
+        {wasDenied && (
+          <Text style={styles.permissionText}>
+            Permission was denied. Please enable in Settings.
+          </Text>
+        )}
+        <Pressable
+          style={styles.permissionButton}
+          onPress={wasDenied ? () => Linking.openSettings() : requestPermission}
+        >
+          <Text style={styles.permissionButtonText}>
+            {wasDenied ? 'Open Settings' : 'Continue'}
+          </Text>
         </Pressable>
       </View>
     );
@@ -1061,6 +1133,7 @@ export default function TestScreen() {
   const resetTest = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setStep('intro');
+    setBasePhoto(null);
     setCurrentTestIndex(0);
     setScores({ undertone: 0, value: 0, chroma: 0 });
     setTestPhotos(diagnosticTests.map(() => ({ photo1: null, photo2: null })));
@@ -1095,28 +1168,72 @@ export default function TestScreen() {
 
   const goBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (step === 'capture1') {
-      if (currentTestIndex === 0) {
-        // First test - go to intro
-        setStep('intro');
+    setTipsModalVisible(false);
+    if (step === 'photo') {
+      // Go back to intro
+      setStep('intro');
+      setBasePhoto(null);
+    } else if (step === 'capture1') {
+      if (showTransition) {
+        // If transition is showing, just dismiss it and go back to photo
+        setShowTransition(false);
+        setTransitionData(null);
+        setStep('photo');
+      } else if (currentTestIndex === 0) {
+        // First test - go back to photo step to retake
+        setStep('photo');
       } else {
-        // Go back to previous test's compare
+        // Go back to previous test - show transition for it
+        const prevTest = diagnosticTests[currentTestIndex - 1];
+        const categoryLabel = prevTest.category === 'undertone' ? 'Undertone Test' :
+                             prevTest.category === 'value' ? 'Value Test' : 'Chroma Test';
+        const categoryDesc = prevTest.category === 'undertone'
+          ? 'This test determines if your skin has warm, cool, or neutral undertones by comparing how metallic and neutral colors look against your complexion.'
+          : prevTest.category === 'value'
+          ? 'This test finds your ideal color depth — whether light, delicate shades or deep, bold colors complement you best.'
+          : 'This test measures your color clarity — whether you look better in bright, saturated colors or soft, muted tones.';
+
+        setTransitionData({
+          title: `${prevTest.optionA.name} vs ${prevTest.optionB.name}`,
+          category: categoryLabel,
+          description: categoryDesc,
+          guide: prevTest.guide,
+          lookFor: prevTest.lookFor,
+          goingBack: true,
+        });
+        setShowTransition(true);
         setCurrentTestIndex(currentTestIndex - 1);
-        setStep('compare');
+        setCompareIndex(0);
+        compareScrollRef.current?.scrollTo({ x: 0, animated: false });
       }
-    } else if (step === 'capture2') {
-      setStep('capture1');
-    } else if (step === 'compare') {
-      setStep('capture2');
     } else if (step === 'result') {
-      // Go back to last test's compare
-      setStep('compare');
+      // Go back to last test - show transition for it
+      const lastTest = diagnosticTests[TOTAL_TESTS - 1];
+      const categoryLabel = lastTest.category === 'undertone' ? 'Undertone Test' :
+                           lastTest.category === 'value' ? 'Value Test' : 'Chroma Test';
+      const categoryDesc = lastTest.category === 'undertone'
+        ? 'This test determines if your skin has warm, cool, or neutral undertones by comparing how metallic and neutral colors look against your complexion.'
+        : lastTest.category === 'value'
+        ? 'This test finds your ideal color depth — whether light, delicate shades or deep, bold colors complement you best.'
+        : 'This test measures your color clarity — whether you look better in bright, saturated colors or soft, muted tones.';
+
+      setTransitionData({
+        title: `${lastTest.optionA.name} vs ${lastTest.optionB.name}`,
+        category: categoryLabel,
+        description: categoryDesc,
+        guide: lastTest.guide,
+        lookFor: lastTest.lookFor,
+        goingBack: true,
+      });
+      setShowTransition(true);
+      setStep('capture1');
     }
   };
 
   const startTest = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setStep('capture1');
+    setStep('photo');
+    setBasePhoto(null);
     setCurrentTestIndex(0);
     setScores({ undertone: 0, value: 0, chroma: 0 });
     setTestPhotos(diagnosticTests.map(() => ({ photo1: null, photo2: null })));
@@ -1132,9 +1249,14 @@ export default function TestScreen() {
     try {
       const result = await cameraRef.current.takePictureAsync();
 
-      if (result && (step === 'capture1' || step === 'capture2')) {
-        // Set pending capture - this triggers the composite capture via useEffect
-        setPendingCapture({ uri: result.uri, forStep: step });
+      if (result) {
+        if (step === 'photo') {
+          // Base photo capture - store for confirmation
+          setBasePhoto(result.uri);
+        } else if (step === 'capture1' || step === 'capture2') {
+          // Set pending capture - this triggers the composite capture via useEffect
+          setPendingCapture({ uri: result.uri, forStep: step });
+        }
       }
     } catch (error) {
       // Camera may have unmounted during capture, ignore the error
@@ -1147,6 +1269,13 @@ export default function TestScreen() {
 
     const selectedOption = option === 'A' ? currentTest.optionA : currentTest.optionB;
     const scoreChange = (option === 'A' ? -1 : 1) * currentTest.weight;
+
+    // Scroll to show the selected option
+    const newIndex = option === 'A' ? 0 : 1;
+    if (newIndex !== compareIndex) {
+      setCompareIndex(newIndex);
+      compareScrollRef.current?.scrollTo({ x: newIndex * screenWidth, animated: true });
+    }
 
     setPendingSelection({ option, scoreChange, selectedOption });
     setConfirmModalVisible(true);
@@ -1173,9 +1302,24 @@ export default function TestScreen() {
 
     // Move to next test or show result
     if (currentTestIndex < TOTAL_TESTS - 1) {
-      setCurrentTestIndex(currentTestIndex + 1);
-      setCompareIndex(0);
-      setStep('capture1');
+      const nextTest = diagnosticTests[currentTestIndex + 1];
+      const categoryLabel = nextTest.category === 'undertone' ? 'Undertone Test' :
+                           nextTest.category === 'value' ? 'Value Test' : 'Chroma Test';
+      const categoryDesc = nextTest.category === 'undertone'
+        ? 'This test determines if your skin has warm, cool, or neutral undertones by comparing how metallic and neutral colors look against your complexion.'
+        : nextTest.category === 'value'
+        ? 'This test finds your ideal color depth — whether light, delicate shades or deep, bold colors complement you best.'
+        : 'This test measures your color clarity — whether you look better in bright, saturated colors or soft, muted tones.';
+
+      // Show transition overlay with comparison as title
+      setTransitionData({
+        title: `${nextTest.optionA.name} vs ${nextTest.optionB.name}`,
+        category: categoryLabel,
+        description: categoryDesc,
+        guide: nextTest.guide,
+        lookFor: nextTest.lookFor,
+      });
+      setShowTransition(true);
     } else {
       // Calculate result and top matches
       const subSeason = determineSubSeason(newScores.undertone, newScores.value, newScores.chroma);
@@ -1192,6 +1336,19 @@ export default function TestScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setConfirmModalVisible(false);
     setPendingSelection(null);
+  };
+
+  const advanceToNextTest = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Only increment if not the first test intro and not going back
+    if (!transitionData?.isFirstTest && !transitionData?.goingBack) {
+      setCurrentTestIndex(currentTestIndex + 1);
+    }
+    setCompareIndex(0);
+    setShowTransition(false);
+    setTransitionData(null);
+    // Scroll back to first option
+    compareScrollRef.current?.scrollTo({ x: 0, animated: false });
   };
 
   // Get current overlay colors based on which photo we're taking
@@ -1227,7 +1384,7 @@ export default function TestScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.introContent, { paddingTop: insets.top + 80 }]}>
+        <View style={[styles.introContent, { paddingTop: insets.top + 40 }]}>
           <Animated.View style={[styles.introImageContainer, introGlowStyle]}>
             <Image
               source={require('@/assets/images/icon.png')}
@@ -1239,6 +1396,9 @@ export default function TestScreen() {
           <Text style={styles.introSubtitle}>
             Discover your perfect colors
           </Text>
+          <Text style={styles.introPrivacyNote}>
+            For your privacy, this is a self-guided test and your photos are never uploaded or sent anywhere.
+          </Text>
 
           <Pressable style={styles.startButton} onPress={startTest}>
             <Text style={styles.startButtonText}>Start Test</Text>
@@ -1246,6 +1406,116 @@ export default function TestScreen() {
 
           <Pressable style={styles.goHomeButton} onPress={goHome}>
             <Text style={styles.goHomeButtonText}>Go back home</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  // Photo capture screen (take single base photo)
+  if (step === 'photo') {
+    const confirmAndStart = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      // Show transition for first test
+      const firstTest = diagnosticTests[0];
+      setTransitionData({
+        title: `${firstTest.optionA.name} vs ${firstTest.optionB.name}`,
+        category: 'Undertone Test',
+        description: 'This test determines if your skin has warm, cool, or neutral undertones by comparing how metallic and neutral colors look against your complexion.',
+        guide: firstTest.guide,
+        lookFor: firstTest.lookFor,
+        isFirstTest: true,
+      });
+      setShowTransition(true);
+      setStep('capture1');
+    };
+
+    const retakePhoto = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setBasePhoto(null);
+    };
+
+    // Show confirmation if photo taken, otherwise show camera
+    if (basePhoto) {
+      return (
+        <View style={styles.container}>
+          <StatusBar style="light" />
+
+          {/* Show captured photo with outline */}
+          <Image source={{ uri: basePhoto }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <CapeOutline segments={4} />
+
+          {/* Header */}
+          <View style={[styles.captureHeader, { paddingTop: insets.top + 12 }]}>
+            <Pressable style={styles.backButton} onPress={retakePhoto}>
+              <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
+            </Pressable>
+            <View style={styles.captureHeaderText}>
+              <Text style={styles.captureTitle}>Looking Good!</Text>
+              <Text style={styles.captureSubtitle}>Ready to start the color test?</Text>
+            </View>
+            <View style={{ width: 44 }} />
+          </View>
+
+          {/* Confirm buttons */}
+          <View style={[styles.photoConfirmControls, { paddingBottom: insets.bottom + 20 }]}>
+            <Pressable style={styles.retakePhotoButton} onPress={retakePhoto}>
+              <RefreshCw size={20} color="#FFFFFF" strokeWidth={2} />
+              <Text style={styles.retakePhotoButtonText}>Retake</Text>
+            </Pressable>
+            <Pressable style={styles.confirmStartButton} onPress={confirmAndStart}>
+              <Text style={styles.confirmStartButtonText}>Confirm & Start</Text>
+            </Pressable>
+          </View>
+        </View>
+      );
+    }
+
+    // Camera view for taking photo
+    return (
+      <View style={styles.container}>
+        <StatusBar style="light" />
+
+        {isFocused ? (
+          <CameraView
+            style={StyleSheet.absoluteFill}
+            facing={facing}
+            ref={cameraRef}
+            mirror={facing === 'front'}
+          >
+            <CapeOutline segments={4} />
+          </CameraView>
+        ) : (
+          <View style={StyleSheet.absoluteFill} />
+        )}
+
+        {/* Header */}
+        <View style={[styles.captureHeader, { paddingTop: insets.top + 12 }]}>
+          <Pressable style={styles.backButton} onPress={goBack}>
+            <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
+          <View style={styles.captureHeaderText}>
+            <Text style={styles.captureTitle}>Take Your Photo</Text>
+            <Text style={styles.captureSubtitle}>This will be used for all comparisons</Text>
+          </View>
+          <View style={{ width: 44 }} />
+        </View>
+
+        {/* Instruction */}
+        <View style={styles.instructionBanner}>
+          <Text style={styles.instructionText}>Position yourself within the cape outline</Text>
+        </View>
+
+        {/* Capture button */}
+        <View style={[styles.captureControls, { paddingBottom: insets.bottom + 20 }]}>
+          <Pressable style={styles.exitTestButton} onPress={exitTest}>
+            <Home size={20} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
+          <Pressable style={styles.captureButton} onPress={takePhoto}>
+            <Camera size={32} color="#000000" strokeWidth={2} />
+          </Pressable>
+          <Pressable style={styles.flipButtonSmall} onPress={toggleCameraFacing}>
+            <SwitchCamera size={20} color="#FFFFFF" strokeWidth={2} />
           </Pressable>
         </View>
       </View>
@@ -1270,12 +1540,32 @@ export default function TestScreen() {
       setResultInfoExpanded(!resultInfoExpanded);
     };
 
+    const toggleColorMode = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setResultColorMode(current =>
+        current === 'all8' ? 'first4' : current === 'first4' ? 'last4' : 'all8'
+      );
+    };
+
+    const getColorModeDisplay = () => {
+      if (resultColorMode === 'all8') return 'All 8';
+      if (resultColorMode === 'first4') return 'Core';
+      return 'Accent';
+    };
+
+    const getFilteredColors = () => {
+      const colors = displayedSeason.colors;
+      if (resultColorMode === 'all8') return colors;
+      if (resultColorMode === 'first4') return colors.slice(0, 4);
+      return colors.slice(4, 8);
+    };
+
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
         {isFocused ? (
           <CameraView style={styles.camera} facing={facing} ref={cameraRef} mirror={facing === 'front'}>
-            <FullCape colors={displayedSeason.colors} opacity={capeOpacity} />
+            <FullCape colors={getFilteredColors()} opacity={capeOpacity} />
           </CameraView>
         ) : (
           <View style={styles.camera} />
@@ -1285,6 +1575,9 @@ export default function TestScreen() {
         <View style={[styles.resultHeader, { paddingTop: insets.top + 12 }]}>
           <Pressable style={styles.backButton} onPress={goHome}>
             <Home size={28} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
+          <Pressable style={styles.colorModeButton} onPress={toggleColorMode}>
+            <Text style={styles.colorModeButtonText}>{getColorModeDisplay()}</Text>
           </Pressable>
           <Pressable style={styles.flipButton} onPress={toggleCameraFacing}>
             <SwitchCamera size={24} color="#FFFFFF" strokeWidth={2} />
@@ -1424,80 +1717,9 @@ export default function TestScreen() {
     );
   }
 
-  // Capture screens (capture1 and capture2)
-  if (step === 'capture1' || step === 'capture2') {
-    const overlay = getCurrentOverlay();
-    const isFirst = step === 'capture1';
-    const instruction = isFirst
-      ? `Take a photo with ${overlay.name} colors`
-      : `Now take a photo with ${overlay.name} colors`;
-
-    return (
-      <View style={styles.container}>
-        <StatusBar style="light" />
-
-        {isFocused ? (
-          <CameraView
-            style={StyleSheet.absoluteFill}
-            facing={facing}
-            ref={cameraRef}
-            mirror={facing === 'front'}
-          >
-            <FullCape colors={overlay.colors} opacity={capeOpacity} />
-          </CameraView>
-        ) : (
-          <View style={StyleSheet.absoluteFill} />
-        )}
-
-        {/* Hidden composite view for capturing photo + overlay */}
-        {pendingCapture && (
-          <View
-            ref={compositeRef}
-            style={styles.compositeView}
-            collapsable={false}
-          >
-            <Image source={{ uri: pendingCapture.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-            <FullCape colors={overlay.colors} opacity={capeOpacity} />
-          </View>
-        )}
-
-        {/* Header */}
-        <View style={[styles.captureHeader, { paddingTop: insets.top + 12 }]}>
-          <Pressable style={styles.backButton} onPress={goBack}>
-            <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
-          </Pressable>
-          <View style={styles.captureHeaderText}>
-            <Text style={styles.captureTitle}>{overlay.name}</Text>
-            <Text style={styles.captureSubtitle}>{overlay.description}</Text>
-          </View>
-          <View style={{ width: 44 }} />
-        </View>
-
-        {/* Instruction */}
-        <View style={styles.instructionBanner}>
-          <Text style={styles.instructionText}>{instruction}</Text>
-        </View>
-
-        {/* Capture button */}
-        <View style={[styles.captureControls, { paddingBottom: insets.bottom + 20 }]}>
-          <Pressable style={styles.exitTestButton} onPress={exitTest}>
-            <Home size={20} color="#FFFFFF" strokeWidth={2} />
-          </Pressable>
-          <Pressable style={styles.captureButton} onPress={takePhoto}>
-            <Camera size={32} color="#000000" strokeWidth={2} />
-          </Pressable>
-          <Pressable style={styles.flipButtonSmall} onPress={toggleCameraFacing}>
-            <SwitchCamera size={20} color="#FFFFFF" strokeWidth={2} />
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
-
-  // Compare screen
-  if (step === 'compare' && photo1 && photo2) {
+  // Compare screen - swipe between options with live overlays
+  if (step === 'capture1' && basePhoto) {
     const currentOption = compareIndex === 0 ? currentTest.optionA : currentTest.optionB;
-    const currentPhoto = compareIndex === 0 ? photo1 : photo2;
 
     const handleScroll = (event: any) => {
       const offsetX = event.nativeEvent.contentOffset.x;
@@ -1508,12 +1730,19 @@ export default function TestScreen() {
       }
     };
 
+    const handleConfirmPress = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const option = compareIndex === 0 ? 'A' : 'B';
+      selectOption(option);
+    };
+
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
 
-        {/* Full-screen swipeable photos */}
+        {/* Swipeable overlays on base photo */}
         <ScrollView
+          ref={compareScrollRef}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
@@ -1522,11 +1751,13 @@ export default function TestScreen() {
         >
           {/* Option A */}
           <View style={styles.compareFullPage}>
-            <Image source={{ uri: photo1 }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <Image source={{ uri: basePhoto }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <FullCape colors={currentTest.optionA.colors} opacity={capeOpacity} />
           </View>
           {/* Option B */}
           <View style={styles.compareFullPage}>
-            <Image source={{ uri: photo2 }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <Image source={{ uri: basePhoto }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <FullCape colors={currentTest.optionB.colors} opacity={capeOpacity} />
           </View>
         </ScrollView>
 
@@ -1535,42 +1766,68 @@ export default function TestScreen() {
           <Pressable style={styles.backButton} onPress={goBack}>
             <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
           </Pressable>
-          <View style={styles.compareHeaderCenter}>
+          <View style={[styles.compareHeaderCenter, { top: insets.top + 12 }]}>
             <Text style={styles.compareOptionTitle}>{currentOption.name}</Text>
             <Text style={styles.compareOptionSubtitle}>{currentOption.description}</Text>
           </View>
-          <Pressable style={styles.exitTestButtonHeader} onPress={exitTest}>
-            <Home size={22} color="#FFFFFF" strokeWidth={2} />
-          </Pressable>
+          <View style={styles.headerRightButtons}>
+            <Pressable style={styles.tipsButton} onPress={() => setTipsModalVisible(true)}>
+              <Info size={20} color="#FFFFFF" strokeWidth={2} />
+            </Pressable>
+            <Pressable style={styles.exitTestButtonHeader} onPress={exitTest}>
+              <Home size={22} color="#FFFFFF" strokeWidth={2} />
+            </Pressable>
+          </View>
         </View>
 
-        {/* Footer */}
-        <View style={[styles.compareFooterNew, { paddingBottom: insets.bottom + 20 }]}>
-          <Text style={styles.compareQuestion}>{currentTest.question}</Text>
+        {/* Footer - box-none allows swipes through but buttons still work */}
+        <View style={[styles.compareFooterNew, { paddingBottom: insets.bottom + 20 }]} pointerEvents="box-none">
+          {tipsModalVisible ? (
+            <>
+              <View style={styles.footerTipsContainer}>
+                <View style={styles.footerTipSection}>
+                  <Text style={styles.footerTipLabel}>Guide</Text>
+                  <Text style={styles.footerTipText}>{currentTest.guide}</Text>
+                </View>
+                <View style={styles.footerTipSection}>
+                  <Text style={styles.footerTipLabel}>Look for</Text>
+                  <Text style={styles.footerTipText}>{currentTest.lookFor}</Text>
+                </View>
+              </View>
+              <Text style={styles.swipeHint}>{compareIndex === 0 ? 'Swipe to compare →' : '← Swipe to compare'}</Text>
+              <Pressable style={styles.closeTipsButton} onPress={() => setTipsModalVisible(false)}>
+                <Text style={styles.closeTipsButtonText}>Got it</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Text style={styles.compareQuestion}>{currentTest.question}</Text>
 
-          {/* Page indicators */}
-          <View style={styles.pageIndicators}>
-            <View style={[styles.pageIndicator, compareIndex === 0 && styles.pageIndicatorActive]} />
-            <View style={[styles.pageIndicator, compareIndex === 1 && styles.pageIndicatorActive]} />
-          </View>
+              {/* Page indicators */}
+              <View style={styles.pageIndicators}>
+                <View style={[styles.pageIndicator, compareIndex === 0 && styles.pageIndicatorActive]} />
+                <View style={[styles.pageIndicator, compareIndex === 1 && styles.pageIndicatorActive]} />
+              </View>
 
-          <Text style={styles.swipeHint}>Swipe to compare</Text>
+              <Text style={styles.swipeHint}>{compareIndex === 0 ? 'Swipe to compare →' : '← Swipe to compare'}</Text>
 
-          {/* Selection buttons */}
-          <View style={styles.selectionButtons}>
-            <Pressable
-              style={[styles.selectButton, compareIndex === 0 && styles.selectButtonHighlight]}
-              onPress={() => selectOption('A')}
-            >
-              <Text style={styles.selectButtonText}>Choose {currentTest.optionA.name}</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.selectButton, compareIndex === 1 && styles.selectButtonHighlight]}
-              onPress={() => selectOption('B')}
-            >
-              <Text style={styles.selectButtonText}>Choose {currentTest.optionB.name}</Text>
-            </Pressable>
-          </View>
+              {/* Selection buttons */}
+              <View style={styles.selectionButtons}>
+                <Pressable
+                  style={[styles.selectButton, compareIndex === 0 && styles.selectButtonHighlight]}
+                  onPress={() => selectOption('A')}
+                >
+                  <Text style={styles.selectButtonText}>Choose {currentTest.optionA.name}</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.selectButton, compareIndex === 1 && styles.selectButtonHighlight]}
+                  onPress={() => selectOption('B')}
+                >
+                  <Text style={styles.selectButtonText}>Choose {currentTest.optionB.name}</Text>
+                </Pressable>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Confirmation Modal */}
@@ -1606,6 +1863,29 @@ export default function TestScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* Transition Overlay */}
+        {showTransition && transitionData && (
+          <Animated.View
+            style={styles.transitionOverlay}
+            entering={FadeIn.duration(400)}
+            exiting={FadeOut.duration(400)}
+          >
+            <View style={styles.transitionContent}>
+              <Text style={styles.transitionCategory}>{transitionData.category}</Text>
+              <Text style={styles.transitionTitle}>{transitionData.title}</Text>
+              <Text style={styles.transitionDescription}>{transitionData.description}</Text>
+              <View style={styles.transitionButtons}>
+                <Pressable style={styles.transitionBackButton} onPress={goBack}>
+                  <Text style={styles.transitionBackButtonText}>Back</Text>
+                </Pressable>
+                <Pressable style={styles.transitionButton} onPress={advanceToNextTest}>
+                  <Text style={styles.transitionButtonText}>Next</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Animated.View>
+        )}
       </View>
     );
   }
@@ -1722,7 +2002,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#CCCCCC',
     textAlign: 'center',
-    marginBottom: 48,
+    marginBottom: 16,
+  },
+  introPrivacyNote: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.5)',
+    textAlign: 'center',
+    marginBottom: 40,
   },
   startButton: {
     backgroundColor: '#FFFFFF',
@@ -1842,7 +2129,7 @@ const styles = StyleSheet.create({
   },
   instructionBanner: {
     position: 'absolute',
-    top: screenHeight * 0.19,
+    top: screenHeight * 0.14,
     alignSelf: 'center',
     left: 0,
     right: 0,
@@ -1876,6 +2163,167 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  continueButton: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 30,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  continueButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000000',
+  },
+  photoConfirmControls: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    gap: 16,
+  },
+  retakePhotoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    gap: 8,
+  },
+  retakePhotoButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  confirmStartButton: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 30,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+  },
+  confirmStartButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000000',
+  },
+  captureProgress: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  captureBottomPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    zIndex: 100,
+  },
+  captureQuestion: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  currentOptionBadge: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  currentOptionLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 4,
+  },
+  currentOptionName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  currentOptionNameCentered: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  optionsIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    gap: 8,
+  },
+  testProgressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 16,
+  },
+  testProgressDot: {
+    width: 28,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  testProgressDotComplete: {
+    backgroundColor: '#34C759',
+  },
+  testProgressDotCurrent: {
+    backgroundColor: '#FFFFFF',
+  },
+  pageDotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  pageDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  pageDotActive: {
+    width: 24,
+    backgroundColor: '#FFFFFF',
+  },
+  swipeHintText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  captureActionButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  captureActionButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#000000',
+  },
   exitTestButton: {
     width: 48,
     height: 48,
@@ -1888,6 +2336,19 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerRightButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tipsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1973,8 +2434,11 @@ const styles = StyleSheet.create({
     height: screenHeight,
   },
   compareHeaderCenter: {
-    flex: 1,
+    position: 'absolute',
+    left: 0,
+    right: 0,
     alignItems: 'center',
+    pointerEvents: 'none',
   },
   compareOptionTitle: {
     fontSize: 24,
@@ -2024,6 +2488,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.6)',
     marginBottom: 16,
+  },
+  swipeHintFloating: {
+    position: 'absolute',
+    bottom: 180,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   selectionButtons: {
     flexDirection: 'row',
@@ -2120,6 +2591,101 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000000',
   },
+  footerTipsContainer: {
+    gap: 20,
+    marginBottom: 20,
+  },
+  footerTipSection: {
+    gap: 6,
+  },
+  footerTipLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.5)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  footerTipText: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.85)',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  closeTipsButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 20,
+    alignSelf: 'center',
+  },
+  closeTipsButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  transitionOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  transitionContent: {
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  transitionCategory: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.6)',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  transitionTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 16,
+  },
+  transitionDescription: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  transitionButtons: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  transitionBackButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 30,
+  },
+  transitionBackButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  transitionButton: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 48,
+    paddingVertical: 14,
+    borderRadius: 30,
+  },
+  transitionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+  },
   splitContainer: {
     flex: 1,
     flexDirection: 'row',
@@ -2208,6 +2774,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     zIndex: 10,
+  },
+  colorModeButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  colorModeButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   resultTitleContainer: {
     flex: 1,

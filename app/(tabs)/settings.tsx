@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, Share, Linking, TextInput } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Alert, ScrollView, Switch, Animated, Modal, Share, Linking, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, Crown, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check } from 'lucide-react-native';
-import RevenueCatUI from 'react-native-purchases-ui';
+import { RotateCcw, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check, Download, Upload } from 'lucide-react-native';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
@@ -58,6 +58,10 @@ export default function SettingsScreen() {
   const [editingCapeId, setEditingCapeId] = useState<string | null>(null);
   const [hasLastViewedPalette, setHasLastViewedPalette] = useState(false);
   const [hasSavedTestResult, setHasSavedTestResult] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importJson, setImportJson] = useState('');
+  const [importError, setImportError] = useState('');
+  const [capeName, setCapeName] = useState('');
   const highlightAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -211,10 +215,12 @@ export default function SettingsScreen() {
       setEditingCapeId(existingCape.id);
       setCustomColorCount(existingCape.colors.length);
       setCustomColors(existingCape.colors.map(c => c.hex));
+      setCapeName(existingCape.name);
     } else {
       setEditingCapeId(null);
       setCustomColorCount(4);
       setCustomColors(['#FF0000', '#00FF00', '#0000FF', '#FFD700']);
+      setCapeName(getDefaultCapeName());
     }
     setEditingColorIndex(null);
     setShowCustomCapeSheet(true);
@@ -276,7 +282,7 @@ export default function SettingsScreen() {
     const existingCape = editingCapeId ? customCapes.find(c => c.id === editingCapeId) : null;
     const cape = {
       ...(editingCapeId && { id: editingCapeId }),
-      name: existingCape?.name || getDefaultCapeName(),
+      name: capeName.trim() || getDefaultCapeName(),
       colors: customColors.slice(0, customColorCount).map((hex, i) => ({
         name: `Color ${i + 1}`,
         hex,
@@ -309,6 +315,84 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleExportCape = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const existingCape = editingCapeId ? customCapes.find(c => c.id === editingCapeId) : null;
+    const exportData = {
+      name: existingCape?.name || capeName || getDefaultCapeName(),
+      colors: customColors.slice(0, customColorCount).map((hex, i) => ({
+        name: `Color ${i + 1}`,
+        hex,
+      })),
+    };
+    const jsonString = JSON.stringify(exportData, null, 2);
+    try {
+      await Share.share({
+        message: jsonString,
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  const handleImportCape = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setImportJson('');
+    setImportError('');
+    setShowImportModal(true);
+  };
+
+  const handlePasteFromClipboard = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const text = await Clipboard.getStringAsync();
+      setImportJson(text);
+    } catch (error) {
+      Alert.alert('Error', 'Could not read from clipboard');
+    }
+  };
+
+  const handleConfirmImport = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setImportError('');
+
+    try {
+      const data = JSON.parse(importJson);
+
+      // Validate structure
+      if (!data.colors || !Array.isArray(data.colors) || data.colors.length === 0) {
+        setImportError('Data must contain a "colors" array with at least one color.');
+        return;
+      }
+
+      // Validate colors
+      const validColorCounts = [1, 2, 4, 8];
+      const colorCount = data.colors.length;
+      if (!validColorCounts.includes(colorCount)) {
+        setImportError('Cape must have 1, 2, 4, or 8 colors.');
+        return;
+      }
+
+      // Validate each color has hex
+      for (const color of data.colors) {
+        if (!color.hex || typeof color.hex !== 'string' || !/^#[0-9A-Fa-f]{3,6}$/.test(color.hex)) {
+          setImportError('Each color must have a valid hex code (e.g., #FF0000).');
+          return;
+        }
+      }
+
+      // Import successful - load into form
+      setCapeName(data.name || getDefaultCapeName());
+      setCustomColorCount(colorCount);
+      setCustomColors(data.colors.map((c: { hex: string }) => c.hex.toUpperCase()));
+      setEditingColorIndex(null);
+      setShowImportModal(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      setImportError('Invalid JSON. Could not parse the data.');
+    }
+  };
+
   const triggerHighlight = (key: ColorPaletteKey) => {
     setHighlightedKey(key);
     highlightAnim.setValue(1);
@@ -319,44 +403,6 @@ export default function SettingsScreen() {
     }).start(() => {
       setHighlightedKey(null);
     });
-  };
-
-  const handleLogOut = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    Alert.alert(
-      'Log Out',
-      'This will clear all your data and return to the start. Are you sure?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Log Out',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.clear();
-            setHasOnboarded(false);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            router.replace('/onboarding');
-          },
-        },
-      ]
-    );
-  };
-
-  const handleManageSubscription = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    try {
-      await RevenueCatUI.presentCustomerCenter();
-    } catch (error) {
-      console.error('Error presenting customer center:', error);
-      Alert.alert(
-        'Unable to Open',
-        'Could not open subscription management. Please try again or manage your subscription in Settings > Apple ID > Subscriptions.'
-      );
-    }
   };
 
   const handleTogglePalette = (key: ColorPaletteKey) => {
@@ -596,6 +642,18 @@ export default function SettingsScreen() {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Cape Name */}
+              <Text style={styles.customCapeLabel}>Cape Name</Text>
+              <TextInput
+                style={styles.capeNameInput}
+                value={capeName}
+                onChangeText={setCapeName}
+                placeholder="Enter cape name"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                autoCorrect={false}
+                maxLength={30}
+              />
+
               {/* Color Count Selector */}
               <Text style={styles.customCapeLabel}>Number of Colors</Text>
               <View style={styles.colorCountSelector}>
@@ -669,6 +727,82 @@ export default function SettingsScreen() {
                   </View>
                 </>
               )}
+
+              {/* Import Modal */}
+              <Modal
+                visible={showImportModal}
+                animationType="fade"
+                transparent={true}
+                onRequestClose={() => setShowImportModal(false)}
+              >
+                <KeyboardAvoidingView
+                  style={styles.importModalOverlay}
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                  <View style={styles.importModalContent}>
+                    <View style={styles.sheetHeader}>
+                      <Text style={styles.sheetTitle}>Import Cape</Text>
+                      <Pressable onPress={() => setShowImportModal(false)} style={styles.sheetClose}>
+                        <X size={24} color="#FFFFFF" />
+                      </Pressable>
+                    </View>
+                    <Text style={styles.importDescription}>
+                      Paste the exported cape JSON data below
+                    </Text>
+                    <TextInput
+                      style={[styles.importTextInput, importError && styles.importTextInputError]}
+                      value={importJson}
+                      onChangeText={(text) => {
+                        setImportJson(text);
+                        setImportError('');
+                      }}
+                      placeholder='{"name": "My Cape", "colors": [{"hex": "#FF0000"}]}'
+                      placeholderTextColor="rgba(255,255,255,0.2)"
+                      multiline
+                      numberOfLines={6}
+                      autoCorrect={false}
+                      autoCapitalize="none"
+                    />
+                    {importError ? (
+                      <Text style={styles.importErrorText}>{importError}</Text>
+                    ) : null}
+                    <View style={styles.importActions}>
+                      <Pressable
+                        style={styles.pasteButton}
+                        onPress={handlePasteFromClipboard}
+                      >
+                        <Text style={styles.pasteButtonText}>Paste from Clipboard</Text>
+                      </Pressable>
+                      <Pressable
+                        style={[styles.customCapeButton, styles.customCapeButtonSave]}
+                        onPress={handleConfirmImport}
+                      >
+                        <Check size={18} color="#000000" strokeWidth={2} />
+                        <Text style={styles.customCapeButtonSaveText}>Import</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </KeyboardAvoidingView>
+              </Modal>
+
+              {/* Import/Export Section */}
+              <Text style={styles.customCapeLabel}>Import / Export</Text>
+              <View style={styles.importExportRow}>
+                <Pressable
+                  style={styles.importExportButton}
+                  onPress={handleImportCape}
+                >
+                  <Download size={18} color="#5AC8FA" strokeWidth={2} />
+                  <Text style={styles.importExportButtonText}>Import</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.importExportButton}
+                  onPress={handleExportCape}
+                >
+                  <Upload size={18} color="#5AC8FA" strokeWidth={2} />
+                  <Text style={styles.importExportButtonText}>Export</Text>
+                </Pressable>
+              </View>
 
               {/* Action Buttons */}
               <View style={styles.customCapeActions}>
@@ -805,6 +939,21 @@ export default function SettingsScreen() {
               thumbColor={mirrorFrontCamera ? '#34C759' : '#f4f3f4'}
             />
           </View>
+
+          <Pressable
+            style={[styles.settingButton, styles.settingButtonMarginTop]}
+            onPress={() => Linking.openSettings()}
+          >
+            <View style={[styles.settingIcon, styles.settingIconPurple]}>
+              <Shield size={22} color="#AF52DE" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Camera Permissions</Text>
+              <Text style={styles.settingDescription}>
+                Manage camera access in Settings
+              </Text>
+            </View>
+          </Pressable>
         </View>
 
         {/* Cape Section */}
@@ -869,28 +1018,6 @@ export default function SettingsScreen() {
         </View>
 
         {/* Subscription Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Subscription</Text>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.settingButton,
-              pressed && styles.settingButtonPressed,
-            ]}
-            onPress={handleManageSubscription}
-          >
-            <View style={[styles.settingIcon, styles.settingIconGold]}>
-              <Crown size={22} color="#FFD700" strokeWidth={2} />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Manage Subscription</Text>
-              <Text style={styles.settingDescription}>
-                View or manage your subscription
-              </Text>
-            </View>
-          </Pressable>
-        </View>
-
         {/* App Data Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>App Data</Text>
@@ -958,17 +1085,6 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
 
-        {/* Log Out */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.logOutButton,
-            pressed && styles.logOutButtonPressed,
-          ]}
-          onPress={handleLogOut}
-        >
-          <Text style={styles.logOutText}>Log Out</Text>
-        </Pressable>
-
         {/* Legal Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Legal</Text>
@@ -1007,7 +1123,7 @@ export default function SettingsScreen() {
 
         {/* App Version */}
         <View style={[styles.versionContainer, { paddingBottom: insets.bottom + 20 }]}>
-          <Text style={styles.versionText}>Version 1.0.0-beta</Text>
+          <Text style={styles.versionText}>Version 1.0.1-beta</Text>
         </View>
       </ScrollView>
     </View>
@@ -1255,20 +1371,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.3)',
   },
-  logOutButton: {
-    alignItems: 'center',
-    paddingVertical: 16,
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  logOutButtonPressed: {
-    opacity: 0.6,
-  },
-  logOutText: {
-    fontSize: 17,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
   settingIconCyan: {
     backgroundColor: 'rgba(90, 200, 250, 0.15)',
   },
@@ -1410,5 +1512,86 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#000000',
+  },
+  capeNameInput: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  importExportRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  importExportButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(90, 200, 250, 0.15)',
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 8,
+  },
+  importExportButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#5AC8FA',
+  },
+  importModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  importModalContent: {
+    backgroundColor: '#1C1C1E',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 400,
+  },
+  importDescription: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.5)',
+    marginBottom: 16,
+  },
+  importTextInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 14,
+    fontFamily: 'monospace',
+    color: '#FFFFFF',
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
+  importTextInputError: {
+    borderWidth: 1,
+    borderColor: '#FF3B30',
+  },
+  importErrorText: {
+    color: '#FF3B30',
+    fontSize: 13,
+    marginTop: 8,
+  },
+  importActions: {
+    marginTop: 16,
+    gap: 12,
+  },
+  pasteButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  pasteButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
 });

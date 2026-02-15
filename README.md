@@ -25,6 +25,7 @@ A personal color analysis app that helps you discover which colors look best on 
 - Choose 1, 2, 4, or 8 colors per cape
 - Pick colors from a preset grid or enter custom hex codes
 - Toggle and reorder custom capes alongside built-in palettes
+- Share custom capes via import/export
 
 ### Palette Management
 - Enable/disable individual palettes
@@ -88,11 +89,8 @@ Submit to App Store:
 eas submit --platform ios
 ```
 
-## Links
+Build with auto-submit to App Store:
 
-- [Privacy Policy](https://colorcape.app/privacy-policy)
-- [Terms of Service](https://colorcape.app/terms-of-service)
-
-## Version
-
-1.0.0-beta
+```bash
+eas build --platform ios --auto-submit                                        
+```
