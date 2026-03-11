@@ -5,7 +5,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SwitchCamera, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Camera, Home, Save, Info } from 'lucide-react-native';
+import { SwitchCamera, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Camera, Home, Save, Info, Star, X } from 'lucide-react-native';
+import * as StoreReview from 'expo-store-review';
 import { useRouter } from 'expo-router';
 import { useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { useTabBar } from '@/contexts/tab-bar-context';
@@ -958,6 +959,38 @@ export default function TestScreen() {
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
 
+  // Rating prompt state
+  const [showRatingPrompt, setShowRatingPrompt] = useState(false);
+  const [ratingStars, setRatingStars] = useState(0);
+
+  // Check if rating prompt should be shown on first visit to intro
+  useEffect(() => {
+    AsyncStorage.getItem('app_rating_prompt_shown').then((value) => {
+      if (value !== 'true') {
+        setShowRatingPrompt(true);
+      }
+    });
+  }, []);
+
+  const dismissRatingPrompt = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowRatingPrompt(false);
+    await AsyncStorage.setItem('app_rating_prompt_shown', 'true');
+  };
+
+  const handleStarRating = async (star: number) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setRatingStars(star);
+    // Brief delay so user sees their selection, then trigger store review
+    setTimeout(async () => {
+      setShowRatingPrompt(false);
+      await AsyncStorage.setItem('app_rating_prompt_shown', 'true');
+      if (await StoreReview.isAvailableAsync()) {
+        await StoreReview.requestReview();
+      }
+    }, 400);
+  };
+
   // Rainbow glow animation for intro image
   const glowProgress = useSharedValue(0);
   const pulseProgress = useSharedValue(0);
@@ -1408,6 +1441,39 @@ export default function TestScreen() {
             <Text style={styles.goHomeButtonText}>Go back home</Text>
           </Pressable>
         </View>
+
+        {/* Rating Prompt Modal */}
+        <Modal
+          visible={showRatingPrompt}
+          transparent
+          animationType="fade"
+          onRequestClose={dismissRatingPrompt}
+        >
+          <View style={styles.ratingOverlay}>
+            <View style={styles.ratingCard}>
+              <Pressable style={styles.ratingCloseButton} onPress={dismissRatingPrompt}>
+                <X size={20} color="#999" strokeWidth={2} />
+              </Pressable>
+              <Text style={styles.ratingTitle}>Enjoying Color Cape?</Text>
+              <Text style={styles.ratingSubtitle}>We'd love your feedback!</Text>
+              <View style={styles.ratingStarsRow}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Pressable key={star} onPress={() => handleStarRating(star)} style={styles.ratingStarButton}>
+                    <Star
+                      size={36}
+                      color="#FFD700"
+                      fill={star <= ratingStars ? '#FFD700' : 'transparent'}
+                      strokeWidth={2}
+                    />
+                  </Pressable>
+                ))}
+              </View>
+              <Pressable style={styles.ratingNotNowButton} onPress={dismissRatingPrompt}>
+                <Text style={styles.ratingNotNowText}>Not Now</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -3179,5 +3245,57 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     pointerEvents: 'none',
     zIndex: 5,
+  },
+  ratingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ratingCard: {
+    backgroundColor: '#1C1C1E',
+    borderRadius: 20,
+    paddingTop: 32,
+    paddingBottom: 24,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    width: screenWidth - 64,
+    maxWidth: 340,
+  },
+  ratingCloseButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    padding: 4,
+  },
+  ratingTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  ratingSubtitle: {
+    fontSize: 15,
+    color: '#AAAAAA',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  ratingStarsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 24,
+  },
+  ratingStarButton: {
+    padding: 4,
+  },
+  ratingNotNowButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+  },
+  ratingNotNowText: {
+    fontSize: 15,
+    color: '#888888',
+    fontWeight: '500',
   },
 });
