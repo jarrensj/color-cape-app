@@ -6,38 +6,36 @@ import { ChevronLeft } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useRevenueCat } from '@/context/revenuecat-context';
-import { useOnboarding } from '@/context/onboarding-context';
 
 export default function PaywallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { checkSubscriptionStatus, currentOffering, setDevBypass } = useRevenueCat();
-  const { setHasOnboarded } = useOnboarding();
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setHasOnboarded(false);
-    router.replace('/onboarding');
+    router.back();
   };
 
   const handleDismiss = () => {
-    // Do nothing - paywall is mandatory
+    // User dismissed - just go back
+    router.back();
   };
 
   const handleDevSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setDevBypass(true);
-    router.replace('/(tabs)');
+    router.back();
   };
 
   const handlePurchaseCompleted = async () => {
     await checkSubscriptionStatus();
-    router.replace('/(tabs)');
+    router.back();
   };
 
   const handleRestoreCompleted = async () => {
     await checkSubscriptionStatus();
-    router.replace('/(tabs)');
+    router.back();
   };
 
   return (

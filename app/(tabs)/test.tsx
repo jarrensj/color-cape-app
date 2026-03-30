@@ -9,6 +9,7 @@ import { SwitchCamera, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Camera, H
 import { useRouter } from 'expo-router';
 import { useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { useTabBar } from '@/contexts/tab-bar-context';
+import { useRevenueCat } from '@/context/revenuecat-context';
 import * as Haptics from 'expo-haptics';
 import Svg, { Polygon } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
@@ -957,6 +958,7 @@ export default function TestScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
   const { setTabBarVisible } = useTabBar();
+  const { isProUser } = useRevenueCat();
 
   // Rainbow glow animation for intro image
   const glowProgress = useSharedValue(0);
@@ -1232,6 +1234,13 @@ export default function TestScreen() {
 
   const startTest = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // Check if user has paid - if not, show paywall
+    if (!isProUser) {
+      router.push('/paywall');
+      return;
+    }
+
     setStep('photo');
     setBasePhoto(null);
     setCurrentTestIndex(0);

@@ -9,6 +9,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { OnboardingProvider, useOnboarding } from '@/context/onboarding-context';
 import { PalettePreferencesProvider } from '@/context/palette-preferences-context';
 import { TabBarProvider } from '@/contexts/tab-bar-context';
+import { RevenueCatProvider } from '@/context/revenuecat-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
