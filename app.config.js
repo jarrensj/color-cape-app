@@ -1,5 +1,3 @@
-import 'dotenv/config';
-
 export default {
   expo: {
     name: 'Color Cape',
@@ -41,7 +39,6 @@ export default {
       reactCompiler: true,
     },
     extra: {
-      revenueCatApiKey: process.env.REVENUECAT_API_KEY,
       eas: {
         projectId: '07afac34-c9d8-40e2-a1cf-2a80b8c4f520',
       },
