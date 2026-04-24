@@ -1347,6 +1347,7 @@ export default function TestScreen() {
     setCompareIndex(0);
     setShowTransition(false);
     setTransitionData(null);
+    setTipsModalVisible(true);
     // Scroll back to first option
     compareScrollRef.current?.scrollTo({ x: 0, animated: false });
   };
