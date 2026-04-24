@@ -1811,21 +1811,10 @@ export default function TestScreen() {
 
               <Text style={styles.swipeHint}>{compareIndex === 0 ? 'Swipe to compare →' : '← Swipe to compare'}</Text>
 
-              {/* Selection buttons */}
-              <View style={styles.selectionButtons}>
-                <Pressable
-                  style={[styles.selectButton, compareIndex === 0 && styles.selectButtonHighlight]}
-                  onPress={() => selectOption('A')}
-                >
-                  <Text style={styles.selectButtonText}>Choose {currentTest.optionA.name}</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.selectButton, compareIndex === 1 && styles.selectButtonHighlight]}
-                  onPress={() => selectOption('B')}
-                >
-                  <Text style={styles.selectButtonText}>Choose {currentTest.optionB.name}</Text>
-                </Pressable>
-              </View>
+              {/* Selection button */}
+              <Pressable style={styles.selectButton} onPress={handleConfirmPress}>
+                <Text style={styles.selectButtonText}>Choose {currentOption.name}</Text>
+              </Pressable>
             </>
           )}
         </View>
@@ -2496,28 +2485,17 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
   },
-  selectionButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    width: '100%',
-  },
   selectButton: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 14,
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
     borderRadius: 24,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  selectButtonHighlight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderColor: 'rgba(255, 255, 255, 0.6)',
   },
   selectButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#000000',
   },
   confirmModalOverlay: {
     flex: 1,
