@@ -27,17 +27,17 @@ export default function PaywallScreen() {
   const handleDevSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setDevBypass(true);
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/test');
   };
 
   const handlePurchaseCompleted = async () => {
     await checkSubscriptionStatus();
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/test');
   };
 
   const handleRestoreCompleted = async () => {
     await checkSubscriptionStatus();
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/test');
   };
 
   return (
