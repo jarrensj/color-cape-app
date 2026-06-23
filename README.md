@@ -2,6 +2,12 @@
 
 A personal color analysis app that helps you discover which colors look best on you using virtual color caping.
 
+## Status
+
+🚀 **v1.0.4-beta** is live on the App Store.
+
+The version in this repo (`app.config.js` / `package.json`) is **v1.0.5**, currently in development. The App Store release stays one version behind while the next version is being worked on here.
+
 ## Features
 
 ### Virtual Color Caping
