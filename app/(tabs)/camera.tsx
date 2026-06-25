@@ -6,7 +6,7 @@ import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RotateCw, Home, Download, ChevronLeft } from 'lucide-react-native';
+import { RotateCw, Home, Download, ChevronLeft, X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
@@ -273,6 +273,13 @@ export default function CameraScreen() {
           <Image source={{ uri: photo }} style={styles.preview} contentFit="cover" />
           <ColorCape colors={getCurrentColors()} opacity={capeOpacity} />
         </View>
+        {/* Top-left close button */}
+        <TouchableOpacity
+          style={[styles.photoCloseButton, { top: insets.top + 12 }]}
+          onPress={retake}
+        >
+          <X size={28} color="#FFFFFF" strokeWidth={2} />
+        </TouchableOpacity>
         {/* Bottom controls */}
         <View style={[styles.photoButtonContainer, { paddingBottom: insets.bottom + 20 }]}>
           <TouchableOpacity style={styles.retakeButton} onPress={retake}>
@@ -736,6 +743,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     gap: 16,
+  },
+  photoCloseButton: {
+    position: 'absolute',
+    left: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   retakeButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
