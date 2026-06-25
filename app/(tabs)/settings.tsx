@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RotateCcw, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check, Download, Upload } from 'lucide-react-native';
+import { RotateCcw, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check, Download, Upload, Lightbulb } from 'lucide-react-native';
 import { useOnboarding } from '@/context/onboarding-context';
 import { usePalettePreferences } from '@/context/palette-preferences-context';
 import { colorPalettes, ColorPaletteKey } from '@/constants/palettes';
@@ -206,6 +206,11 @@ export default function SettingsScreen() {
   const openTermsOfService = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Linking.openURL('https://colorcape.app/terms-of-service');
+  };
+
+  const openBacklighter = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Linking.openURL('https://apps.apple.com/us/app/backlighter/id6758597062');
   };
 
   const openCustomCapeCreator = (capeId?: string) => {
@@ -1012,6 +1017,29 @@ export default function SettingsScreen() {
               <Text style={styles.settingLabel}>Share with Friends</Text>
               <Text style={styles.settingDescription}>
                 Spread the word about Color Cape
+              </Text>
+            </View>
+          </Pressable>
+        </View>
+
+        {/* More Apps Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>More Apps</Text>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingButton,
+              pressed && styles.settingButtonPressed,
+            ]}
+            onPress={openBacklighter}
+          >
+            <View style={[styles.settingIcon, styles.settingIconGold]}>
+              <Lightbulb size={22} color="#FFD700" strokeWidth={2} />
+            </View>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>Backlighter</Text>
+              <Text style={styles.settingDescription}>
+                Turn your screen into a backlight
               </Text>
             </View>
           </Pressable>
