@@ -2,7 +2,7 @@ export default {
   expo: {
     name: 'Color Cape',
     slug: 'my-app',
-    version: '1.0.4',
+    version: '1.0.5',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'myapp',
