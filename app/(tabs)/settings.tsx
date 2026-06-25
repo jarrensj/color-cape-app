@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
+import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RotateCcw, ChevronUp, ChevronDown, Palette, X, Camera, FlipHorizontal, Share2, Sparkles, RefreshCw, Shield, FileText, Plus, Trash2, Check, Download, Upload, Lightbulb } from 'lucide-react-native';
 import { useOnboarding } from '@/context/onboarding-context';
@@ -1151,7 +1152,7 @@ export default function SettingsScreen() {
 
         {/* App Version */}
         <View style={[styles.versionContainer, { paddingBottom: insets.bottom + 20 }]}>
-          <Text style={styles.versionText}>Version 1.0.4-beta</Text>
+          <Text style={styles.versionText}>Version {Constants.expoConfig?.version}</Text>
         </View>
       </ScrollView>
     </View>
