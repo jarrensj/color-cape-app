@@ -1,6 +1,6 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useRef, useCallback } from 'react';
-import { StyleSheet, TouchableOpacity, View, Text, Dimensions, ScrollView, Pressable, Alert } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Text, Dimensions, ScrollView, Pressable, Alert, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { Image } from 'expo-image';
@@ -193,15 +193,25 @@ export default function CameraScreen() {
   }
 
   if (!permission.granted) {
+    // Once permission is permanently denied, requestPermission() no longer shows
+    // the OS prompt, so send the user to Settings instead of a dead "Continue" button.
+    const isBlocked = !permission.canAskAgain;
     return (
       <View style={styles.permissionContainer}>
         <StatusBar style="light" />
         <Text style={styles.permissionTitle}>Camera Access Required</Text>
         <Text style={styles.permissionText}>
-          We need your permission to access the camera.
+          {isBlocked
+            ? 'Camera access is turned off. Enable it in Settings to use color capes.'
+            : 'We need your permission to access the camera.'}
         </Text>
-        <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Continue</Text>
+        <TouchableOpacity
+          style={styles.permissionButton}
+          onPress={isBlocked ? () => Linking.openSettings() : requestPermission}
+        >
+          <Text style={styles.permissionButtonText}>
+            {isBlocked ? 'Open Settings' : 'Continue'}
+          </Text>
         </TouchableOpacity>
       </View>
     );
